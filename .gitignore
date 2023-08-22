@@ -1,0 +1,16 @@
+to_send.tar.gz
+
+tests/
+scripts/
+nnp
+
+backend/be
+backend/bedocker
+backend/pb_data/
+backend/config.yml
+nnpextension.zip
+
+*.sh
+docker-compose*
+
+_readme.md

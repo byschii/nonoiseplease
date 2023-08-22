@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="user">
+<head>
+    <meta charset="UTF-8">
+    <title>NNP</title>
+    <link rel="stylesheet" href="/static_import/icon/icons.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mono-icons@latest/iconfont/icons.css"> <!-- https://icons.mono.company/# -->
+    <link rel="stylesheet" href="/static_import/mvp.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css"> -->
+    <script defer src="/static_import/js.cookie.min.js"></script> <!-- <script src="https://cdn.jsdelivr.net/npm/js-cookie@3/dist/js.cookie.min.js"></script> -->
+    <script defer src="/static_import/alpinejs3120.js"></script> <!-- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script> -->
+    <link rel="stylesheet" href="/static_import/text_style.css">
+    <link rel="stylesheet" href="/static_import/mvpcss_adaptations.css">
+</head>
+<body>
+    <header>
+        <h1>No Noise Please</h1>
+    </header>
+    <main x-data="search">
+        <h2>Results</h2>
+        <div x-init="goSearch">
+            <template x-if="jwtPresent && searchResult">
+                <div>
+                    <template x-for="result in searchResult">
+                        <div>
+                            <h3 x-text="result.page.page_title"></h3>
+                            <p>URL: <a x-bind:href="result.page.link" x-text="result.page.link"></a></p>
+                            <p>Categories: <template x-for=" c in result.categories"> <span><span x-text="c.name"></span>, </span> </template></p>
+                            <p>Content <code x-text="result.ftsdoc.content.substring(0, 800)"></code></p>
+                            <p>Added: <span x-text="result.page.created"></span> UCT</p>
+                            <hr>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+    </main>
+    <footer>
+
+    </footer>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('search', ()=>({
+                searchResult: false,
+                topMessage: false,
+                jwtPresent: !(Cookies.get('jwt') == null || Cookies.get('jwt') == undefined),
+                goSearch(){
+                    // get query and categories (as array)
+                    // from url params
+                    let params = new URLSearchParams(window.location.search);
+                    let query = params.get('query');
+                    let categories = params.getAll('categories');
+
+                    let searchParams = new URLSearchParams({
+                        query: query,
+                        categories: categories.join(',')
+                    })
+                    
+                    fetch("/api/search?" + searchParams, {
+                        method: 'GET',
+                        headers: {
+                            Authorization: Cookies.get('jwt')
+                        }
+                    }).then(response => response.json())
+                    .then(data => {
+                        if(data.error){
+                            this.topMessage = data.error;
+                        }else if (data.pages.length == 0){
+                            this.topMessage = "No Results";
+                        }else{
+                            this.topMessage = false;
+                            this.searchResult = data.pages;
+                            console.log(data.pages)
+                        }
+                    })
+                }
+            }))
+        })
+    </script>    
+</body>
+</html>
+

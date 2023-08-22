@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="user">
+<head>
+    <!-- meta utorefresh -->
+    <meta charset="UTF-8">
+    <title>NNP</title>
+    <link rel="stylesheet" href="/static_import/icon/icons.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mono-icons@latest/iconfont/icons.css"> <!-- https://icons.mono.company/# -->
+    <link rel="stylesheet" href="/static_import/mvp.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css"> -->
+    <script defer src="/static_import/js.cookie.min.js"></script> <!-- <script src="https://cdn.jsdelivr.net/npm/js-cookie@3/dist/js.cookie.min.js"></script> -->
+    <script defer src="/static_import/alpinejs3120.js"></script> <!-- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script> -->
+    <link rel="stylesheet" href="/static_import/text_style.css">
+    <link rel="stylesheet" href="/static_import/mvpcss_adaptations.css">
+    <style>
+        #searchInput {
+            display: inline;
+        }
+    </style>
+</head>
+<body>
+
+
+    <header>
+        <h1>No Noise Please</h1>
+    </header>
+    <main>
+        <h2>Me</h2>
+        <div x-data="me">
+            <template x-if="!missingJwt()" >  
+                <div x-init="downloadSearchInfo">
+                    <h3>Search</h3>
+                    <form  action="/search.html" method="get">
+                        <input type="text" name="query" placeholder="Search by key word"> 
+                        <template x-if="preSearchInfo">
+                            <div>
+                                <!-- table with categories in first row and checkbox in second row-->
+                                <table>
+                                    <tr>
+                                        <th>Category</th>
+                                        <template x-for="category in preSearchInfo.categories">
+                                            <td x-text="category.name"></td>
+                                        </template>
+                                    </tr>
+                                    <tr>
+                                        <th>Include</th>
+                                        <template x-for="category in preSearchInfo.categories">
+                                            <td><input name="categories" type="checkbox" x-model="postSearchInfo.categories" x-bind:value="category.name"></td>
+                                        </template>
+                                    </tr>
+    
+                            </div>
+                        </template>
+                        <button type="submit"><i class="mi-search"></i>Search</button>
+                    </form>
+                    <h3>Add URL</h3>
+                    <input type="url" name="url" id="url" placeholder="URL">
+                    <button x-on:click="addUrl">Scrape</button><span x-text="lastMsg"></span>
+                    <br>
+                    <span>(or download <a href="/static_import/nonoisepleaseextention.xpi" download="nonoisepleaseextention.xpi">Firefox Add On</a>, 
+                        here <a href="https://extensionworkshop.com/documentation/publish/distribute-sideloading/#install-addon-from-file">instructions</a> to install.
+                        Actually, i ve managed to installa the extention on Chromium for Ubuntu by unpacking the extention and going to chrome://extensions )</span>
+                    <p>Check Your alerady saved <a href="/me/pages"> <button>Pages</button> </a> </p>
+                    <hr>
+                    <span>Go To Your <a href="/me/account"> Account details </a> or <button x-on:click="logout"> Logout </button></span>                    
+                </div>
+            </template>
+            <template x-if="missingJwt()">
+                <div>
+                    <p>Not logged in</p>
+                    <div>
+                        <a href="/login"> Login </a>
+                    </div>
+                    <div>
+                        <a href="/register"> Register </a>
+                    </div>
+                </div> 
+            </template>
+        </div>
+    </main>
+    <footer>
+
+    </footer>
+    <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('me', ()=>({
+            preSearchInfo: false,
+            postSearchInfo: {
+                categories: []
+            },
+            lastMsg: '',
+            downloadSearchInfo(){
+                fetch('/api/search/info', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: Cookies.get('jwt')
+                    }
+                }).then(response => response.json())
+                .then(data => {
+                    this.preSearchInfo = data
+                })
+            },
+            addUrl(){
+                this.lastMsg = 'Adding url'
+                let url = document.getElementById('url').value
+                fetch('/api/url/scrape', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: Cookies.get('jwt')
+                    },
+                    body: JSON.stringify({ url: url })
+                })
+                .then(data => {
+                    // clear input
+                    this.lastMsg = 'Url added'
+                    document.getElementById('url').value = ''
+                    console.log('Success:', data);
+                })
+                .catch((error) => {
+                    console.error('Error:', error);
+                });
+
+            },
+            missingJwt() {
+                let jwt = Cookies.get('jwt')
+                let jwtUndef = jwt == undefined
+                let jwtNull = jwt == null
+                return jwtUndef || jwtNull
+            },
+            logout() {
+                Cookies.remove('jwt')
+                Cookies.remove('uid')
+                window.location.href = '/'
+            }
+            
+        }))
+    })
+
+    </script>
+
+</body>
+</html>

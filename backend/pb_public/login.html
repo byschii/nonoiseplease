@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="user">
+<head>
+    <meta charset="UTF-8">
+    <title>NNP</title>
+    <link rel="stylesheet" href="/static_import/icon/icons.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mono-icons@latest/iconfont/icons.css"> <!-- https://icons.mono.company/# -->
+    <link rel="stylesheet" href="/static_import/mvp.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css"> -->
+    <script defer src="/static_import/js.cookie.min.js"></script> <!-- <script src="https://cdn.jsdelivr.net/npm/js-cookie@3/dist/js.cookie.min.js"></script> -->
+    <script defer src="/static_import/alpinejs3120.js"></script> <!-- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script> -->
+    <link rel="stylesheet" href="/static_import/mvpcss_adaptations.css">
+
+</head>
+<body>
+<header>
+    <h1>No Noise Please</h1>
+</header>
+<main>
+    <h2>Login</h2>
+    <div x-data="login">
+        <form method="post">
+            <span>Email:</span><input type="email" name="email" id="email" placeholder="Email" required>
+            <span>Password</span><input type="password" name="password" id="password" placeholder="Password" required>
+            <button type="submit" x-on:click="login">Login</button>
+            <button x-on:click="forgotPassword">Forgot Password</button>
+            <p x-text="lastMessage"></p>
+        </form>
+    </div>
+
+</main>
+<footer>
+
+</footer>
+<script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('login', ()=>({
+            lastMessage: "",
+            forgotPassword(event){
+                event.preventDefault();
+                // read current email
+                let email = document.getElementById("email").value;
+                if (email == ""){
+                    this.lastMessage = "Please enter just your email address in the input field above, then click again on the button. ty"
+                    return
+                }
+                fetch("/api/collections/users/request-password-reset", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ email: email })
+                    }).catch((error) => {
+                        this.lastMessage = "Error: " + error
+                    }).then((response) => {
+                        if (response.status == 204){
+                            this.lastMessage = "Please check your email for a link to reset your password."
+                        } else {
+                            this.lastMessage = "Error: " + response.status + " " + response.statusText
+                        }
+                    }
+                )
+            },
+            login(event){
+                event.preventDefault();
+                let email = document.getElementById("email").value;
+                let password = document.getElementById("password").value;
+                let data = {identity: email, password: password};
+                fetch("/api/collections/users/auth-with-password", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                }).then((response)=>{
+                    return response.json()
+                }).then(response => {
+                    if (response.code == 400){
+                        this.lastMessage = response.message + "["+ JSON.stringify(response.data) +"]"
+                    } else if (response.record.verified === false){
+                        this.lastMessage = "Please verify your email address first."
+                        return
+                    } else {
+                        Cookies.set('jwt', response.token, {expires: 7})
+                        Cookies.set('uid', response.record.id, {expires: 7})
+                        window.location.href = "/me.html";
+                    }
+                });
+            }
+        }));
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+{
+  "manifest_version": 2,
+  "name": "Nonoiseplease",
+  "version": "1.0",
+  "description": "Scrape your own web",
+  "icons": {
+    "48": "icons/icon-48.png"
+  },
+  "devserver": "http://127.0.0.1:8090",
+  "permissions": [
+    "activeTab"
+  ],
+  "browser_action": {
+    "default_icon": "icons/icon-48.png",
+    "default_title": "Nonoiseplease",
+    "default_popup": "popup/nnpext.html"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "extention@nonoiseplease.com"
+    }
+  }
+}
+  

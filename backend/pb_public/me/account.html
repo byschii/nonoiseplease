@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="user">
+<head>
+    <!-- meta utorefresh -->
+    <meta charset="UTF-8">
+    <title>NNP</title>
+    <link rel="stylesheet" href="/static_import/icon/icons.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mono-icons@latest/iconfont/icons.css">  https://icons.mono.company/# -->
+    <link rel="stylesheet" href="/static_import/mvp.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css"> -->
+    <script defer src="/static_import/js.cookie.min.js"></script> <!-- <script src="https://cdn.jsdelivr.net/npm/js-cookie@3/dist/js.cookie.min.js"></script> -->
+    <script defer src="/static_import/alpinejs3120.js"></script> <!-- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script> -->
+    <link rel="stylesheet" href="/static_import/text_style.css">
+    <link rel="stylesheet" href="/static_import/mvpcss_adaptations.css">
+
+</head>
+<body>
+
+
+    <header>
+        <h1>No Noise Please </h1>
+    </header>
+    <main>
+        <h2>Account</h2>
+        <div x-data="me">
+            <template x-if="myJwt">  
+                <div x-init="downloadUser">
+                    <p x-text="lastMessage"></p>
+                    <div>
+                        <h3>Access</h3>
+                        <div><snap>Id: <code> {{ .UserId }} </code> </span></div>
+                        <div><snap>JWT: <code style="overflow-y: auto;" x-text="myJwt"></code></span></div>
+                        <div><snap>Email: <code> {{ .Email }} </code></span></div>
+                        <div><snap>New Email: <input id="newEmail" placeholder="New Email"></span></div>
+                        <button x-on:click="requestEmailChange"> Change Email </button>
+                        <button x-on:click="requestPasswordReset"> Reset Password </button>
+                        <button x-on:click="showCancellationConfirmation = true"> Delete Account </button>
+                        <div x-show="showCancellationConfirmation">
+                            <p class="nack"><b>Are you sure you want to delete your account?</b></p>
+                            <button x-on:click="requestAccountDrop()"> <b>Yes</b> </button>
+                            <button x-on:click="showCancellationConfirmation = false"> No </button>
+                        </div>
+                    </div>   
+                    <div x-init="downloadDetails">
+                        <h3>Details</h3>
+                        <div><snap>Nickname: <code> {{ .Nickname }} </code></span></div>
+                        <div><snap>New Nickname: <input id="newNickname" placeholder="New Nickname"></span></div>
+                        <button x-on:click="requestNicknameChange"> Change Nickname </button>
+                    </div>
+                    
+                </div>
+            </template>
+        </div>
+    </main>
+    <footer>
+
+    </footer>
+    <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('me', ()=>({
+            user:{},
+            details: {},
+            lastMessage: "",
+            showCancellationConfirmation: false,
+            myJwt() {
+                return Cookies.get('jwt')
+            },
+            kindaLogout() {
+                // wait 10 secs
+                this.lastMessage = "Ok, now i m gonna send you to login. \n If you misclicked, don't worry, just input same credentials. \n If you didn't, check your email/spam."
+
+                setTimeout(function(){
+                    Cookies.remove('jwt')
+                    Cookies.remove('uid')
+                    window.location.href = '/login.html'
+                }, 10000)
+            },
+            requestEmailChange(){
+                fetch("/api/collections/users/request-email-change", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: Cookies.get('jwt')
+                    },
+                    body: JSON.stringify({
+                        newEmail: document.getElementById("newEmail").value
+                    })
+                }).catch(error => {
+                    this.lastMessage = 'Error: ' + error
+                }).then(data => {
+                    this.kindaLogout()
+                })
+            },
+            requestPasswordReset(){
+                console.log(this.user)
+                fetch("/api/collections/users/request-password-reset", {
+                    method: 'POST',
+                    headers: {
+                        Authorization: Cookies.get('jwt'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: this.user.email
+                    })
+                }).catch(error => {
+                    this.lastMessage = 'Error: ' + error
+                }).then(data => {
+                    this.kindaLogout()
+                })
+
+            },
+            requestAccountDrop(){
+                if(this.showCancellationConfirmation){
+                    console.log("Bye!")
+                    fetch("/api/drop-account", {
+                        method: 'DELETE',
+                        headers: {
+                            Authorization: Cookies.get('jwt'),
+                            'Content-Type': 'application/json'
+                        }
+                    }).then( () => {
+                        console.warn("Account deleted")
+                        Cookies.remove('jwt')
+                        Cookies.remove('uid')
+                        window.location.href = "/bye.html"
+                    })
+                }else{
+                    this.lastMessage = "Please confirm account cancellation."
+                }
+            },
+            requestNicknameChange(){
+                fetch("/api/collections/user_details/records/"+this.details.id, {
+                    method: 'PATCH',
+                    headers: {
+                        Authorization: Cookies.get('jwt'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        related_user: Cookies.get('uid'),
+                        nickname: document.getElementById("newNickname").value
+                    })
+                }).then(response => response.json()
+                ).then(data => { this.lastMessage = JSON.stringify(data) })
+            },
+
+            makeDownloadRequest(collectionName, withUid){
+                let url = "/api/collections/"+collectionName+"/records"
+                if(withUid){
+                    //url += "?id="+Cookies.get('uid')
+                    url += "/"+Cookies.get('uid')
+                }else{
+                    url += "?filter(related_user='"+Cookies.get('uid')+"')"
+                }
+                return new Request(url, {
+                        method: 'GET',
+                        headers: {
+                            Authorization: Cookies.get('jwt')
+                        }
+                    }
+                )
+            },
+            downloadUser(){
+                fetch(this.makeDownloadRequest("users", true)).then(response => response.json()
+                ).then(data => { this.user = data}
+                ).catch(error => {
+                    this.lastMessage = 'Plaease log in againt to reset jwt. sorry :('
+                })
+            },
+            downloadDetails(){
+                fetch(this.makeDownloadRequest("user_details", false)).then(response => response.json()
+                ).then(data => { this.details = data.items[0] })
+            },
+                        
+        }))
+    })
+
+    </script>
+
+</body>
+</html>

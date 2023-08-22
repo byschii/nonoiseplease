@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="user">
+<head>
+    <!-- meta utorefresh -->
+    <meta charset="UTF-8">
+    <title>NNP</title>
+    <link rel="stylesheet" href="/static_import/icon/icons.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mono-icons@latest/iconfont/icons.css">  https://icons.mono.company/# -->
+    <link rel="stylesheet" href="/static_import/mvp.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css"> -->
+    <script defer src="/static_import/js.cookie.min.js"></script> <!-- <script src="https://cdn.jsdelivr.net/npm/js-cookie@3/dist/js.cookie.min.js"></script> -->
+    <link rel="stylesheet" href="/static_import/text_style.css">
+    <link rel="stylesheet" href="/static_import/mvpcss_adaptations.css">
+    <script defer src="/static_import/alpinejs3120.js"></script> <!-- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script> -->
+    <link rel="stylesheet" href="/static_import/mvpcss_adaptations.css">
+
+</head>
+<body>
+    <header>
+        <h1>No Noise Please</h1>
+    </header>
+    <main>
+        <h2>Pages</h2>
+        <div x-data="pages">
+            <template x-if="myJwt">  
+                <div x-init="downloadPages">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Url</th>
+                                <th>FTS Ref</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template x-if="pageList"> 
+                                <template x-for="page in pageList.items">
+                                    <tr x-on:click="selectRow(page.id, page.page_title)">
+                                        <td x-text="page.page_title" > </td>
+                                        <td x-text="page.link" > </td>
+                                        <td x-text="page.fts_ref" ></td>
+                                    </tr>
+                                </template>
+                            </template>
+                            <template x-if="!pageList">
+                                <span>No pages found</span>
+                            </template>
+                        </tbody>
+                    </table> 
+                    <hr>
+                    <template x-if="selected">
+                        <div>
+                            <p x-text="selected.title"></p>
+                            <button x-on:click="deleteSelected">
+                                <i class="mi-delete"></i>Delete
+                            </button>
+                            <button x-on:click="manageCategoriesSelected">
+                                <i class="mi-edit"></i>Manage Categories
+                            </button>
+                        </div>
+                    </template>   
+                </div>
+ 
+            </template>
+        </div>
+    </main>
+    <footer>
+
+    </footer>
+    <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('pages', ()=>({
+            pageList: {},
+            errorMsg: "",
+            selected: false,
+            myJwt() {
+                return Cookies.get('jwt')
+            },
+            selectRow(id, title){
+                this.selected = {
+                    id: id,
+                    title: title
+                }
+                console.log("selected: " + this.selected)
+            },
+            deleteSelected(){
+                console.log("delete selected: " + this.selected.id)
+                fetch("/api/collections/pages/records/" + this.selected.id , {
+                    method: "DELETE",
+                    headers: {
+                        Authorization: this.myJwt()
+                    }
+                }).then(data => {
+                    console.log('Success:', data);
+                    this.downloadPages()
+                    this.selected = false; // reset the selection
+                }).catch(error => {
+                    console.error('Error:', error);
+                    this.errorMsg = error
+                });
+            },
+            manageCategoriesSelected(){
+                console.log("manage categories selected: " + this.selected.id)
+                window.location.href = "/me/pages/manage.html?id=" + this.selected.id
+            },
+            downloadPages(){
+                fetch("/api/collections/pages/records", {
+                    method: "GET",
+                    headers: {
+                        Authorization: this.myJwt()
+                    }
+                }).then(response => response.json())
+                .then(data => {
+                    this.pageList = data
+                }).catch(error => {
+                    console.error('Error:', error);
+                    this.errorMsg = error
+                });
+                
+            },
+
+                        
+        }))
+    })
+
+    </script>
+
+</body>
+</html>

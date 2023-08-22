@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="user">
+<head>
+    <!-- meta utorefresh -->
+    <meta charset="UTF-8">
+    <title>NNP</title>
+    <link rel="stylesheet" href="/static_import/icon/icons.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mono-icons@latest/iconfont/icons.css">  https://icons.mono.company/# -->
+    <link rel="stylesheet" href="/static_import/mvp.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css"> -->
+    <script defer src="/static_import/js.cookie.min.js"></script> <!-- <script src="https://cdn.jsdelivr.net/npm/js-cookie@3/dist/js.cookie.min.js"></script> -->
+    <link rel="stylesheet" href="/static_import/text_style.css">
+    <link rel="stylesheet" href="/static_import/mvpcss_adaptations.css">
+    <script defer src="/static_import/alpinejs3120.js"></script> <!-- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script> -->
+    <style>
+        #categoryInput {
+            display: inline;
+        }
+    </style>
+
+</head>
+<body>
+    <header>
+        <h1>No Noise Please</h1>
+    </header>
+    <main>
+        <h2>Manage Pages</h2>
+        <div x-data="manage">
+            <template x-if="myJwt">  
+                <div x-init="getPageData">
+                    <template x-if="pageData">
+                        <div>
+                            <template x-if="pageData.page">
+                                <div>
+                                    <h3>Page details</h3>
+                                    <table>
+                                        <tr>
+                                            <td>Created</td>
+                                            <td x-text="pageData.page.created"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Id</td>
+                                            <td x-text="pageData.page.id"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Title</td>
+                                            <td x-text="pageData.page.page_title"></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Link</td>
+                                            <td x-text="pageData.page.link"></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </template>
+                            <div>
+                                <h3>Categories</h3>
+                                <input type="text" placeholder="Category name" id="categoryInput"> <button x-on:click="addCategory"><i class="mi-add"></i>Add</button>
+                                <template x-for="category in pageData.categories">
+                                    <div>
+                                        <span x-text="category.name"></span> 
+                                        <button x-on:click="removeCategory($el)"><i class="mi-delete"></i>Remove Category</button>
+                                         
+                                    </div>
+                                </template>
+                            </div>
+                            <template x-if="pageData.ftsdoc">
+                                <div>
+                                    <h3>FTS details</h3>
+                                    <code x-text="pageData.ftsdoc.content"></code>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>                
+            </template>
+        </div>
+    </main>
+    <footer>
+
+    </footer>
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('manage', ()=>({
+                pageData: false,
+                myJwt() {
+                    return Cookies.get('jwt')
+                },
+                getPageData(){
+                    let pageId = window.location.href
+                    // read id parameter from url
+                    pageId = pageId.split('?')[1]
+                    pageId = pageId.split('=')[1]
+                    fetch("/api/page-manage?id=" + pageId, {
+                        method: 'GET',
+                        headers: {
+                            Authorization: this.myJwt()
+                        }
+                    }).then((response) => {
+                        return response.json()
+                    }).then(data => {
+                        console.log("page:", data)
+                        if(data.categories == null || data.categories == undefined)
+                            data.categories = []
+                        this.pageData = data
+
+                        console.log(this.pageData.categories)
+                        console.log(this.pageData.ftsdoc.category)
+
+                    })
+                },
+                addCategory(){
+                    let pageId = window.location.href
+                    // read id parameter from url
+                    pageId = pageId.split('?')[1]
+                    pageId = pageId.split('=')[1]
+                    let categoryName = document.querySelector('input').value
+                    if(categoryName == "") return
+                    if(this.pageData.categories == null || this.pageData.categories == undefined)
+                        this.pageData.categories = []
+            
+                    this.pageData.categories.push({
+                        id: 0,
+                        name: categoryName
+                    })
+                    fetch( "/api/page-manage/category", {
+                        method: 'POST',
+                        headers: {
+                            Authorization: this.myJwt(),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            category_name: categoryName,
+                            page_id: pageId
+                        })
+                    }).then((response) => console.log(response))
+                    .catch((error) => console.log(error))
+                },
+                removeCategory(el){
+                    let category = el.parentElement.children[0].innerText
+
+                    // remove from UI array
+                    this.pageData.categories.splice(this.getIndexFromCategoryName(category), 1)
+
+                    // delete from database
+                    fetch("/api/page-manage/category", {
+                        method: 'DELETE',
+                        headers: {
+                            Authorization: this.myJwt(),
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            category_name: category,
+                            page_id: this.pageData.page.id
+                        })
+                    }).then((response) => console.log(response))
+                    
+                },
+                getIndexFromCategoryName(name){
+                    for(let i = 0; i < this.pageData.categories.length; i++){
+                        if(this.pageData.categories[i].name == name)
+                            return i
+                    }
+                    return -1
+                }
+
+            }))
+        })
+    </script>
+</body>
+</html>
+
+

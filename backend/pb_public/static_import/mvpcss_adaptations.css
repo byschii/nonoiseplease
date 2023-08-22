@@ -1,0 +1,21 @@
+button{
+  padding: 0.5rem 1rem !important;
+  margin: 0.1rem 0.2rem !important;
+}
+hr{
+  margin: 1rem 0 !important;
+}
+main{
+  padding: 2rem 0.5rem !important;
+}
+header{
+  padding: 1.9rem 0.5rem !important; 
+}
+footer{
+  padding: 2rem 0.5rem !important;
+}
+
+code {
+  max-width: 100%;
+  scrollbar-width: none;
+}

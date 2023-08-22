@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" color-mode="user">
+<head>
+    <!-- meta utorefresh -->
+    <meta charset="UTF-8">
+    <title>NNP</title>
+    <link rel="stylesheet" href="/static_import/icon/icons.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mono-icons@latest/iconfont/icons.css"> <!-- https://icons.mono.company/# -->
+    <link rel="stylesheet" href="/static_import/mvp.css"> <!-- <link rel="stylesheet" href="https://unpkg.com/mvp.css@1.12/mvp.css"> -->
+    <script defer src="/static_import/js.cookie.min.js"></script> <!-- <script src="https://cdn.jsdelivr.net/npm/js-cookie@3/dist/js.cookie.min.js"></script> -->
+    <script defer src="/static_import/alpinejs3120.js"></script> <!-- <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.12.0/dist/cdn.min.js"></script> -->
+    <link rel="stylesheet" href="/static_import/text_style.css">
+    <link rel="stylesheet" href="/static_import/mvpcss_adaptations.css">
+
+</head>
+<body>
+
+
+    <header>
+        <h1>No Noise Please</h1>
+    </header>
+    <main>
+        <h2>Register</h2>
+        <div x-data="registration">
+            <template x-if="!sent" >  
+                <form method="post">
+                    <span>Email:</span><input type="email" name="email" id="email" placeholder="Email" required>
+                    <span>Password</span><input type="password" name="password" id="password" placeholder="Password" required>
+                    <span>Confirm Password</span><input type="password" name="confirm_password" id="confirm_password" placeholder="Confirm Password" required>
+                    <button type="submit" x-on:click="register">Register</button>
+                    <p x-text="errorMessage" class="nack"></p>
+
+                </form>
+            </template>
+            <template x-if="sent">
+                <span class="ack">
+                    <p>Registration successful.</p>
+                    <p> {{ .GoToMailMessage }} <a href="/login">login</a>.</p>
+                </span>
+            </template>
+        </div>
+    </main>
+    <footer>
+
+    </footer>
+    <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('registration', ()=>({
+            sent:false,
+            errorMessage: "",
+            validPwd(pwd){
+                let re = /^(?=.*\d)(?=.*[a-z])(?=.*[A-Z]).{6,20}$/;
+                return re.test(pwd);
+            },
+            checkPwds(pwd1, pwd2){
+                // validate data
+                if (!this.validPwd(pwd1)){
+                    this.errorMessage = "Password must be between 6 and 20 characters and contain at least one numeric digit, one uppercase and one lowercase letter";
+                    return false;
+                }
+                if(pwd1 != pwd2){
+                    this.errorMessage = "Passwords do not match";
+                    return false;
+                }
+
+                return true;
+            },
+            makeRegistrationRequestBody(email, password, passwordConfirm){
+                // prepare data
+                let data = {
+                    email: email,
+                    password: password,
+                    passwordConfirm: passwordConfirm
+                }
+                return {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }
+            },
+            makeVerificationRequestBody(email){
+                // prepare data
+                let data = {
+                    email: email
+                }
+                return {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                }
+            },
+            register(event){
+                // prevent default
+                event.preventDefault();
+                // grab data
+                let email = document.getElementById("email").value;
+                let password = document.getElementById("password").value;
+                let passwordConfirm = document.getElementById("confirm_password").value;
+                if(!this.checkPwds(password, passwordConfirm)){
+                    return;
+                }
+
+                // send data
+                fetch('/api/collections/users/records', this.makeRegistrationRequestBody(email, password, passwordConfirm )
+                ).then((response) => {
+                    return response.json()
+                }).then((jsonResp) => {
+                    if (jsonResp.code == 400){
+                        let errorDetails = "["+ jsonResp.code +"|"+ jsonResp.message+"|"+ JSON.stringify(jsonResp.data) + "]"
+                        this.errorMessage = "Registration failed, please try again " + errorDetails;
+                    } else {
+                        this.sent = true;
+                        console.log(jsonResp)
+                        console.log("Registration successful, sending verification email");
+                        fetch("/api/collections/users/request-verification", this.makeVerificationRequestBody(email))
+                        return;
+                    }
+                }).catch((error) => {
+                    console.error('Error:', error);
+                    this.errorMessage = "Registration failed, please try again ["+ error +"]";
+                })
+                
+
+            }
+        }))
+    })
+
+    </script>
+
+</body>
+</html>
