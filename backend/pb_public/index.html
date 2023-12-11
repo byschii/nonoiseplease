@@ -16,12 +16,21 @@
     </header>
     <main x-data="index">
         <p>
-            <a href="/login.html"><button>Login</button></a> <template x-if="jwtPresent"><span> or go to your <a href="/me.html"><button>Me</button></a> page</span></template>
-            <template x-if="jwtPresent"> <br> </template>
-            <a href="/register.html"><button>Register</button></a>
+            <template x-if="jwtPresent">
+                <span>
+                    <a href="/login.html"><button>Login to another account</button></a>  <span> or go to your <a href="/me.html"><button>Me</button></a> page</span>
+                    <br>
+                    <a href="/register.html"><button>Register another account</button></a>
+                </span>
+            </template>
+            <template x-if="!jwtPresent">
+                <span>
+                    <a href="/login.html"><button>Login</button></a> <span> or </span>  <a href="/register.html"><button>Register</button></a>
+                </span>
+            </template>
         </p>
         <h2>
-            What
+            Whats
         </h2>
         <p>
             This is a tool that allows you to create a personal index of web pages. You can then search for pages in your index using keywords. </br>
