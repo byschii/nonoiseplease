@@ -20,7 +20,7 @@ import (
 	"github.com/spf13/cast"
 )
 
-func ActivityLoggerWittPostAndAuthSupport(app core.App) echo.MiddlewareFunc {
+func ActivityLoggerWithPostAndAuthSupport(app core.App) echo.MiddlewareFunc {
 	return func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 

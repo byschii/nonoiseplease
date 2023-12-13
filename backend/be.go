@@ -113,11 +113,11 @@ func main() {
 
 		middlewares := []echo.MiddlewareFunc{
 			apis.RequireRecordAuth("users"),
-			rest.ActivityLoggerWittPostAndAuthSupport(app),
+			rest.ActivityLoggerWithPostAndAuthSupport(app),
 		}
 
 		middlewaresNoAuths := []echo.MiddlewareFunc{
-			rest.ActivityLoggerWittPostAndAuthSupport(app),
+			rest.ActivityLoggerWithPostAndAuthSupport(app),
 		}
 
 		e.Router.AddRoute(echo.Route{

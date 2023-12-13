@@ -19,18 +19,6 @@ import (
 	"github.com/pocketbase/pocketbase/daos"
 )
 
-type html struct {
-	Body body `xml:"body"`
-}
-type body struct {
-	Content string `xml:",innerxml"`
-}
-
-type ParsedPage struct {
-	Title       string `json:"title"`
-	TextContent string `json:"text_content"`
-}
-
 func GetArticle(pageUrl string, onlyArticle bool, dao *daos.Dao) (*ParsedPage, bool, error) {
 
 	// get html
