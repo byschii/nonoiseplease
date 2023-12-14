@@ -1,6 +1,7 @@
 package rest
 
 import (
+	"be/controllers"
 	categories "be/model/categories"
 	fts_page_doc "be/model/fts_page_doc"
 	"fmt"
@@ -9,7 +10,6 @@ import (
 	"time"
 
 	"github.com/meilisearch/meilisearch-go"
-	"github.com/pocketbase/pocketbase/daos"
 )
 
 // OnRecordAfterCreateRequest - users
@@ -40,17 +40,6 @@ func CreateNewFTSIndex(meiliClient *meilisearch.Client, indexName string, waitTi
 	return err
 }
 
-// OnRecordAfterCreateRequest - users
-func SaveNewUser(dao *daos.Dao, relatedUser string, nickname string) error {
-
-	err := StoreNewUserDetails(dao, nickname, relatedUser)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // OnRecordAfterDeleteRequest - users
 func DeleteIndexFromFTS(meiliClient *meilisearch.Client, indexName string) error {
 	_, err := meiliClient.DeleteIndex(indexName)
@@ -60,10 +49,10 @@ func DeleteIndexFromFTS(meiliClient *meilisearch.Client, indexName string) error
 // OnRecordBeforeDeleteRequest - pages
 // this function doesn't explicitly delete the page
 // it s supposed to be called OnRecordBeforeDeleteRequest
-func BeforeRemovePage(pageId string, meiliClient *meilisearch.Client, dao *daos.Dao) error {
+func BeforeRemovePage(pageId string, fulltextsearchController controllers.FTSController) error {
 
 	// elimina da FTD
-	err := DeleteDocFTSIndex(meiliClient, dao, pageId)
+	err := fulltextsearchController.DeleteDocFTSIndex(pageId)
 	if err != nil {
 		log.Printf("failed to delete page from FTS, %v\n", err)
 		return err
@@ -74,9 +63,9 @@ func BeforeRemovePage(pageId string, meiliClient *meilisearch.Client, dao *daos.
 }
 
 // OnRecordAfterDeleteRequest - pages
-func AfterRemovePage(dao *daos.Dao) error {
+func AfterRemovePage(categoryController controllers.CategoryController) error {
 	// get all categories
-	categories, err := categories.GetAllCategories(dao)
+	categories, err := categories.GetAllCategories(categoryController.PBDao)
 	if err != nil {
 		log.Printf("failed to get all categories, %v\n", err)
 		return err
@@ -84,7 +73,7 @@ func AfterRemovePage(dao *daos.Dao) error {
 
 	// delete orphan categories
 	for _, category := range categories {
-		err = DeleteOrphanCategory(&category, dao)
+		err = categoryController.DeleteOrphanCategory(&category)
 		if err != nil {
 			log.Printf("failed to delete orphan category, %v\n", err)
 			return err

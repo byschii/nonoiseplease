@@ -1,20 +1,17 @@
 package rest
 
 import (
+	"be/controllers"
 	page "be/model/page"
+	"be/model/rest"
 	u "be/utils"
 	webscraping "be/webscraping"
-	"strings"
 
 	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
-	"github.com/meilisearch/meilisearch-go"
-	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
-
-	users "be/model/users"
 )
 
 func GerVersion(version string) echo.HandlerFunc {
@@ -23,7 +20,7 @@ func GerVersion(version string) echo.HandlerFunc {
 	}
 }
 
-func PostUrlScrape(meiliClient *meilisearch.Client, dao *daos.Dao, maxScrapePerMonth int) echo.HandlerFunc {
+func PostUrlScrape(pageController controllers.PageController, maxScrapePerMonth int) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// retrive user id from get params
 		userRecord, _ := c.Get("authRecord").(*models.Record)
@@ -32,7 +29,7 @@ func PostUrlScrape(meiliClient *meilisearch.Client, dao *daos.Dao, maxScrapePerM
 			return nil
 		}
 
-		pagesAlreadyScraped, err := CountUserPagesByOriginThisMonth(userRecord.Id, dao, page.AvailableOriginScrape)
+		pagesAlreadyScraped, err := pageController.CountUserPagesByOriginThisMonth(userRecord.Id, page.AvailableOriginScrape)
 		if err != nil {
 			log.Printf("failed to count user pages, %v\n", err)
 			c.String(http.StatusInternalServerError, "failed to count user pages")
@@ -46,22 +43,22 @@ func PostUrlScrape(meiliClient *meilisearch.Client, dao *daos.Dao, maxScrapePerM
 		}
 
 		// get url from json body
-		var urlData Url
+		var urlData rest.Url
 		if err := c.Bind(&urlData); err != nil {
 			log.Printf("failed to parse json body, %v\n", err)
 			c.String(http.StatusBadRequest, "failed to parse json body")
 			return nil
 		}
 		// scrape url and get info
-		article, withProxy, err := webscraping.GetArticle(urlData.Url, false, dao)
+		article, withProxy, err := webscraping.GetArticle(urlData.Url, false, pageController.PBDao)
 		if err != nil {
 			log.Printf("failed to parse %s, %v\n", urlData.Url, err)
 			c.String(http.StatusBadRequest, "failed to parse url")
 			return nil
 		}
 
-		meili_ref, err := SaveNewPage(
-			userRecord.Id, urlData.Url, article.Title, []string{}, article.TextContent, page.AvailableOriginScrape, withProxy, meiliClient, dao,
+		meili_ref, err := pageController.SaveNewPage(
+			userRecord.Id, urlData.Url, article.Title, []string{}, article.TextContent, page.AvailableOriginScrape, withProxy,
 		)
 		if err != nil {
 			log.Printf("failed to save page, %v\n", err)
@@ -73,18 +70,18 @@ func PostUrlScrape(meiliClient *meilisearch.Client, dao *daos.Dao, maxScrapePerM
 	}
 }
 
-func PostPagemanageLoad(meiliClient *meilisearch.Client, dao *daos.Dao, tokenSecret string) echo.HandlerFunc {
+func PostPagemanageLoad(pageController controllers.PageController, authController controllers.AuthController, tokenSecret string) echo.HandlerFunc {
 	return func(c echo.Context) error {
 
 		// get url from json body
-		var postData UrlWithHTML
+		var postData rest.UrlWithHTML
 		if err := c.Bind(&postData); err != nil {
 			log.Printf("failed to parse json body, %v\n", err)
 			c.String(http.StatusBadRequest, "failed to parse json body")
 			return nil
 		}
 
-		userRecord, err := users.GetUserFromJWT(postData.AuthCode, dao, tokenSecret)
+		userRecord, err := authController.GetUserFromJWT(postData.AuthCode)
 		if err != nil {
 			log.Printf("failed to get user from request, %v\n", err)
 			c.String(http.StatusUnauthorized, "unauthorized, user not verified")
@@ -99,8 +96,8 @@ func PostPagemanageLoad(meiliClient *meilisearch.Client, dao *daos.Dao, tokenSec
 			return nil
 		}
 
-		meili_ref, err := SaveNewPage(
-			userRecord.Id, postData.Url, postData.Title, []string{}, article.TextContent, page.AvailableOriginExtention, false, meiliClient, dao,
+		meili_ref, err := pageController.SaveNewPage(
+			userRecord.Id, postData.Url, postData.Title, []string{}, article.TextContent, page.AvailableOriginExtention, false,
 		)
 		if err != nil {
 			log.Printf("failed to save page, %v\n", err)
@@ -112,7 +109,7 @@ func PostPagemanageLoad(meiliClient *meilisearch.Client, dao *daos.Dao, tokenSec
 	}
 }
 
-func GetPagemanage(meiliClient *meilisearch.Client, dao *daos.Dao) echo.HandlerFunc {
+func GetPagemanage(pageController controllers.PageController) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// retrive user id from get params
 		record, _ := c.Get("authRecord").(*models.Record)
@@ -125,7 +122,7 @@ func GetPagemanage(meiliClient *meilisearch.Client, dao *daos.Dao) echo.HandlerF
 		// read page id from params
 		pageID := c.QueryParam("id")
 
-		page, categories, ref, err := GetFullPageDataByID(userID, pageID, meiliClient, dao)
+		page, categories, ref, err := pageController.GetFullPageDataByID(userID, pageID)
 		if err != nil || ref == nil {
 			log.Printf("failed to get page, %v\n", err)
 			c.String(http.StatusBadRequest, u.WrapError("failed to get page ", err).Error())
@@ -154,10 +151,10 @@ func GetPagemanage(meiliClient *meilisearch.Client, dao *daos.Dao) echo.HandlerF
 			log.Println("meili categories", ref.Category, len(ref.Category))
 			c.String(http.StatusBadRequest, "categories are not the same")
 			return nil*/
-			SetDBCategoriesForFTSDoc(meiliClient, userID, page.FTSRef, categories)
+			pageController.FTSController.SetDBCategoriesForFTSDoc(userID, page.FTSRef, categories)
 		}
 
-		result := PageResponse{
+		result := rest.PageResponse{
 			Page:       *page,
 			Categories: categories,
 			FTSDoc:     *ref,
@@ -167,7 +164,7 @@ func GetPagemanage(meiliClient *meilisearch.Client, dao *daos.Dao) echo.HandlerF
 	}
 }
 
-func PostPagemanageCategory(meiliClient *meilisearch.Client, dao *daos.Dao) echo.HandlerFunc {
+func PostPagemanageCategory(pageController controllers.PageController) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// retrive user id from get params
 		userRecord, _ := c.Get("authRecord").(*models.Record)
@@ -177,7 +174,7 @@ func PostPagemanageCategory(meiliClient *meilisearch.Client, dao *daos.Dao) echo
 		}
 
 		// read page and category id from body
-		var data PostCategoryRequest
+		var data rest.PostCategoryRequest
 		if err := c.Bind(&data); err != nil {
 			log.Printf("failed to parse json body, %v\n", err)
 			c.String(http.StatusBadRequest, "failed to parse json body")
@@ -185,7 +182,7 @@ func PostPagemanageCategory(meiliClient *meilisearch.Client, dao *daos.Dao) echo
 		}
 
 		log.Println("data", data)
-		err := AddCategoryToPage(userRecord.Id, data.PageID, data.CategoryName, meiliClient, dao)
+		err := pageController.CategoryController.AddCategoryToPage(*pageController.FTSController, userRecord.Id, data.PageID, data.CategoryName)
 
 		if err != nil {
 			log.Printf("failed to add category, %v\n", err)
@@ -197,7 +194,7 @@ func PostPagemanageCategory(meiliClient *meilisearch.Client, dao *daos.Dao) echo
 	}
 }
 
-func DeletePagemanagePage(meiliClient *meilisearch.Client, dao *daos.Dao) echo.HandlerFunc {
+func DeletePagemanagePage(pageController controllers.PageController) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// retrive user id from get params
 		userRecord, _ := c.Get("authRecord").(*models.Record)
@@ -206,28 +203,28 @@ func DeletePagemanagePage(meiliClient *meilisearch.Client, dao *daos.Dao) echo.H
 			return nil
 		}
 
-		var data DeletePageRequest
+		var data rest.DeletePageRequest
 		if err := c.Bind(&data); err != nil {
 			log.Printf("failed to parse json body, %v\n", err)
 			c.String(http.StatusBadRequest, "failed to parse json body")
 			return nil
 		}
 
-		err := DeleteDocFTSIndex(meiliClient, dao, data.PageID)
+		err := pageController.FTSController.DeleteDocFTSIndex(data.PageID)
 		if err != nil {
 			log.Print("error deleting page from index ", err)
 			c.String(http.StatusBadRequest, "error deleting page from index")
 			return nil
 		}
 
-		page, categories, _, err := GetFullPageDataByID(userRecord.Id, data.PageID, meiliClient, dao)
+		page, categories, _, err := pageController.GetFullPageDataByID(userRecord.Id, data.PageID)
 		if err != nil {
 			log.Printf("failed to get page, %v\n", err)
 			c.String(http.StatusBadRequest, u.WrapError("failed to get page ", err).Error())
 			return nil
 		}
 		for _, cat := range categories {
-			err := DeleteCategoryFromPageWithOwner(userRecord.Id, page.Id, cat.Name, meiliClient, dao)
+			err := pageController.DeleteCategoryFromPageWithOwner(userRecord.Id, page.Id, cat.Name)
 			if err != nil {
 				log.Printf("failed to delete category, %v\n", err)
 				c.String(http.StatusBadRequest, u.WrapError("failed to delete category ", err).Error())
@@ -235,7 +232,7 @@ func DeletePagemanagePage(meiliClient *meilisearch.Client, dao *daos.Dao) echo.H
 			}
 		}
 
-		err = dao.Delete(page)
+		err = pageController.PBDao.Delete(page)
 		if err != nil {
 			log.Printf("failed to delete page, %v\n", err)
 			c.String(http.StatusBadRequest, u.WrapError("failed to delete page ", err).Error())
@@ -247,7 +244,7 @@ func DeletePagemanagePage(meiliClient *meilisearch.Client, dao *daos.Dao) echo.H
 
 }
 
-func DeletePagemanageCategory(meiliClient *meilisearch.Client, dao *daos.Dao) echo.HandlerFunc {
+func DeletePagemanageCategory(pageController controllers.PageController) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		// retrive user id from get params
 		record, _ := c.Get("authRecord").(*models.Record)
@@ -258,14 +255,14 @@ func DeletePagemanageCategory(meiliClient *meilisearch.Client, dao *daos.Dao) ec
 		userID := record.Id
 
 		// read page and category id from body
-		var data DeleteCategoryRequest
+		var data rest.DeleteCategoryRequest
 		if err := c.Bind(&data); err != nil {
 			log.Printf("failed to parse json body, %v\n", err)
 			c.String(http.StatusBadRequest, "failed to parse json body")
 			return nil
 		}
 
-		err := DeleteCategoryFromPageWithOwner(userID, data.PageID, data.CategoryName, meiliClient, dao)
+		err := pageController.DeleteCategoryFromPageWithOwner(userID, data.PageID, data.CategoryName)
 		if err != nil {
 			log.Printf("failed to delete category, %v\n", err)
 			c.String(http.StatusBadRequest, u.WrapError("failed to delete category ", err).Error())
@@ -273,95 +270,5 @@ func DeletePagemanageCategory(meiliClient *meilisearch.Client, dao *daos.Dao) ec
 		}
 
 		return c.NoContent(http.StatusOK)
-	}
-}
-
-// delete user in auth table
-// shoud trigger
-//   - delete user important data in db
-//   - delete user details in db
-//
-// then
-//   - delete user meili index
-func DeleteDropaccount(meiliClient *meilisearch.Client, dao *daos.Dao) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		// retrive user id from get params
-		record, _ := c.Get("authRecord").(*models.Record)
-		if record == nil || !record.GetBool("verified") {
-			c.String(http.StatusUnauthorized, "unauthorized, user not verified")
-			return nil
-		}
-		userID := record.Id
-
-		go func() {
-			meiliClient.Index(userID).DeleteAllDocuments()
-			meiliClient.DeleteIndex(userID)
-		}()
-
-		go func() {
-			// delete user data
-			details, _ := GetUserPartFromId(dao, userID)
-			dao.Delete(details)
-			dao.Delete(record)
-		}()
-
-		return c.NoContent(http.StatusOK)
-	}
-}
-
-func GetSearchInfo(meiliClient *meilisearch.Client, dao *daos.Dao) echo.HandlerFunc {
-	return func(c echo.Context) error {
-
-		record, _ := c.Get("authRecord").(*models.Record)
-		if record == nil || !record.GetBool("verified") {
-			c.String(http.StatusUnauthorized, "unauthorized, user not verified")
-			return nil
-		}
-		userID := record.Id
-
-		// get all categories from user pages
-		categories, err := GetCategoriesByUserId(dao, userID)
-		if err != nil {
-			log.Printf("failed to get categories, %v\n", err)
-			c.String(http.StatusBadRequest, u.WrapError("failed to get categories ", err).Error())
-			return nil
-		}
-
-		preSearchInfo := PreSearchInfoResponse{
-			Categories: categories,
-		}
-		c.JSON(http.StatusOK, preSearchInfo)
-
-		return nil
-	}
-}
-
-func GetSearch(meiliClient *meilisearch.Client, dao *daos.Dao) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		record, _ := c.Get("authRecord").(*models.Record)
-		if record == nil || !record.GetBool("verified") {
-			c.String(http.StatusUnauthorized, "unauthorized, user not verified")
-			return nil
-		}
-		userID := record.Id
-
-		// read query and list of categories from url params
-		query := c.QueryParam("query")
-		categoriesParam := c.QueryParam("categories")
-
-		// split categories over comma
-		categories := strings.Split(categoriesParam, ",")
-
-		pageResp, err := PageSearch(query, []string{userID}, categories, meiliClient, dao)
-		if err != nil {
-			log.Print("failed to search ", err)
-			return c.String(http.StatusBadRequest, u.WrapError("failed to search ", err).Error())
-		}
-
-		resp := SearchResponse{
-			Pages: *pageResp,
-		}
-		return c.JSON(http.StatusOK, resp)
-
 	}
 }

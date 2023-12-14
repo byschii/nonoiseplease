@@ -10,9 +10,8 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v5"
-	"github.com/pocketbase/pocketbase/daos"
 
-	users "be/model/users"
+	controllers "be/controllers"
 )
 
 func completeName(fileSystem fs.FS, name string) string {
@@ -41,11 +40,11 @@ func completeName(fileSystem fs.FS, name string) string {
 // if indexFallback is true, it will try to serve index.html if file not found
 // dao and tokenSecret are used for templating
 // also '.html' will be added to the end of name if it doesnt ends with '.html'
-func StaticDirectoryHandlerWOptionalHTML(fileSystem fs.FS, indexFallback bool, dao *daos.Dao, tokenSecret string) echo.HandlerFunc {
-	return StaticDirectoryHandlerWHTMLAdder(fileSystem, indexFallback, true, dao, tokenSecret)
+func StaticDirectoryHandlerWOptionalHTML(fileSystem fs.FS, indexFallback bool, uc controllers.UserController, ac controllers.AuthController) echo.HandlerFunc {
+	return StaticDirectoryHandlerWHTMLAdder(fileSystem, indexFallback, true, uc, ac)
 }
 
-func StaticDirectoryHandlerWHTMLAdder(fileSystem fs.FS, indexFallback bool, autoAddHtml bool, dao *daos.Dao, tokenSecret string) echo.HandlerFunc {
+func StaticDirectoryHandlerWHTMLAdder(fileSystem fs.FS, indexFallback bool, autoAddHtml bool, uc controllers.UserController, ac controllers.AuthController) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		p := c.PathParam("*")
 
@@ -71,15 +70,15 @@ func StaticDirectoryHandlerWHTMLAdder(fileSystem fs.FS, indexFallback bool, auto
 				// get go template
 				pageTemplate := templatedPage.ParsedTemplate
 				// try to extract user from request
-				user, err := users.GetUserFromJWTInContext(c, dao, tokenSecret)
+				user, err := ac.GetUserFromJWTInContext(c)
 				data := interface{}(nil)
 				// if no user found, use simple DataRetriever
 				if err != nil {
 					log.Print("templating: no user found")
-					data = templatedPage.DataRetriever(dao)
+					data = templatedPage.DataRetriever(uc)
 				} else { // if user found, use DataRetrieverWithUser
 					log.Print("templating: user found")
-					data = templatedPage.DataRetrieverWithUser(dao, user.Id)
+					data = templatedPage.DataRetrieverWithUser(uc, user.Id)
 				}
 				// build page with data and put it in response
 				pageTemplate.Execute(c.Response().Writer, data)

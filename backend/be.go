@@ -8,6 +8,7 @@ import (
 
 	_ "be/migrations"
 
+	controllers "be/controllers"
 	conf "be/model/config"
 	rest "be/rest"
 	servepublic "be/serve_public"
@@ -98,6 +99,33 @@ func main() {
 		return nil
 	})
 
+	userController := controllers.SimpleUserController{
+		PBDao:       app.Dao(),
+		MeiliClient: meiliClient,
+	}
+
+	authController := controllers.AuthController{
+		PBDao:       app.Dao(),
+		TokenSecret: app.Settings().RecordAuthToken.Secret,
+	}
+	categoryController := controllers.CategoryController{
+		PBDao: app.Dao(),
+	}
+	fulltextsearchController := controllers.FTSController{
+		PBDao:       app.Dao(),
+		MeiliClient: meiliClient,
+	}
+	pageController := controllers.PageController{
+		PBDao:              app.Dao(),
+		MeiliClient:        meiliClient,
+		CategoryController: &categoryController,
+		FTSController:      &fulltextsearchController,
+	}
+
+	appController := controllers.WebController{
+		PageController: pageController,
+	}
+
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		log.Println("lessgoozz!!")
 
@@ -107,8 +135,8 @@ func main() {
 		e.Router.GET("/*", servepublic.StaticDirectoryHandlerWOptionalHTML(
 			echo.MustSubFS(e.Router.Filesystem, FRONTEND_FOLDER),
 			false,
-			app.Dao(),
-			app.Settings().RecordAuthToken.Secret),
+			userController,
+			authController),
 		)
 
 		middlewares := []echo.MiddlewareFunc{
@@ -129,63 +157,63 @@ func main() {
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodPost,
 			Path:        "/api/url/scrape",
-			Handler:     rest.PostUrlScrape(meiliClient, app.Dao(), MAX_SCRAPE_PER_MONTH),
+			Handler:     rest.PostUrlScrape(pageController, MAX_SCRAPE_PER_MONTH),
 			Middlewares: middlewares,
 		})
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodGet,
 			Path:        "/api/page-manage",
-			Handler:     rest.GetPagemanage(meiliClient, app.Dao()),
+			Handler:     rest.GetPagemanage(pageController),
 			Middlewares: middlewares,
 		})
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodPost,
 			Path:        "/api/page-manage/load",
-			Handler:     rest.PostPagemanageLoad(meiliClient, app.Dao(), app.Settings().RecordAuthToken.Secret),
+			Handler:     rest.PostPagemanageLoad(pageController, authController, app.Settings().RecordAuthToken.Secret),
 			Middlewares: middlewaresNoAuths,
 		})
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodPost,
 			Path:        "/api/page-manage/category",
-			Handler:     rest.PostPagemanageCategory(meiliClient, app.Dao()),
+			Handler:     rest.PostPagemanageCategory(pageController),
 			Middlewares: middlewares,
 		})
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodDelete,
 			Path:        "/api/page-manage/category",
-			Handler:     rest.DeletePagemanageCategory(meiliClient, app.Dao()),
+			Handler:     rest.DeletePagemanageCategory(pageController),
 			Middlewares: middlewares,
 		})
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodDelete,
 			Path:        "/api/page-manage/page",
-			Handler:     rest.DeletePagemanagePage(meiliClient, app.Dao()),
+			Handler:     rest.DeletePagemanagePage(pageController),
 			Middlewares: middlewares,
 		})
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodDelete,
 			Path:        "/api/drop-account",
-			Handler:     rest.DeleteDropaccount(meiliClient, app.Dao()),
+			Handler:     userController.DeleteDropaccount,
 			Middlewares: middlewares,
 		})
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodGet,
 			Path:        "/api/search/info",
-			Handler:     rest.GetSearchInfo(meiliClient, app.Dao()),
+			Handler:     appController.GetSearchInfo,
 			Middlewares: middlewares,
 		})
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodGet,
 			Path:        "/api/search",
-			Handler:     rest.GetSearch(meiliClient, app.Dao()),
+			Handler:     appController.GetSearch,
 			Middlewares: middlewares,
 		})
 
@@ -244,13 +272,13 @@ func main() {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "users" {
 			log.Print("creating user")
-			err := rest.SaveNewUser(app.Dao(), e.Record.Id, "")
+			err := userController.StoreNewUserDetails(e.Record.Id, "")
 			if err != nil {
 				log.Print("error creating user details or important data ")
 				log.Println(err)
 				return err
 			}
-			log.Print("SaveNewUser ok")
+			log.Print("StoreNewUserDetails ok")
 
 			err = rest.CreateNewFTSIndex(meiliClient, e.Record.Id, 2)
 			if err != nil {
@@ -280,7 +308,7 @@ func main() {
 	app.OnRecordBeforeDeleteRequest().Add(func(e *core.RecordDeleteEvent) error {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "pages" {
-			err := rest.BeforeRemovePage(e.Record.Id, meiliClient, app.Dao())
+			err := rest.BeforeRemovePage(e.Record.Id, fulltextsearchController)
 			if err != nil {
 				log.Print("error deleting page ", err)
 			}
@@ -290,7 +318,7 @@ func main() {
 	app.OnRecordAfterDeleteRequest().Add(func(e *core.RecordDeleteEvent) error {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "pages" {
-			err := rest.AfterRemovePage(app.Dao())
+			err := rest.AfterRemovePage(categoryController)
 			if err != nil {
 				log.Print("error deleting page ", err)
 			}

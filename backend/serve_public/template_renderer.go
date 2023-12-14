@@ -5,17 +5,15 @@ import (
 	"io/fs"
 	"log"
 
+	controller "be/controllers"
 	conf "be/model/config"
-	u "be/rest"
-
-	"github.com/pocketbase/pocketbase/daos"
 )
 
 type TemplateRenderer struct {
 	TemplateName          string
 	ParsedTemplate        template.Template
-	DataRetrieverWithUser func(*daos.Dao, string) interface{}
-	DataRetriever         func(*daos.Dao) interface{}
+	DataRetrieverWithUser func(controller.UserController, string) interface{}
+	DataRetriever         func(controller.UserController) interface{}
 }
 
 // returns a list of all templates that are used in the app
@@ -38,10 +36,10 @@ func RegisterTemplate(name string, subFs fs.FS) *TemplateRenderer {
 	return &TemplateRenderer{
 		TemplateName:   name,
 		ParsedTemplate: *templateToLoad,
-		DataRetriever: func(dao *daos.Dao) interface{} {
+		DataRetriever: func(uc controller.UserController) interface{} {
 
 			msg := ""
-			if conf.IsRequireMailVerification(dao) {
+			if conf.IsRequireMailVerification(uc.GetDao()) {
 				msg = "Go check your email, than "
 			}
 
@@ -53,9 +51,9 @@ func RegisterTemplate(name string, subFs fs.FS) *TemplateRenderer {
 
 			return retrivedData
 		},
-		DataRetrieverWithUser: func(dao *daos.Dao, userId string) interface{} {
+		DataRetrieverWithUser: func(uc controller.UserController, userId string) interface{} {
 			msg := ""
-			if conf.IsRequireMailVerification(dao) {
+			if conf.IsRequireMailVerification(uc.GetDao()) {
 				msg = "Go check your email, than "
 			}
 
@@ -78,18 +76,18 @@ func MeAccountTemplate(name string, subFs fs.FS) *TemplateRenderer {
 	return &TemplateRenderer{
 		TemplateName:   name,
 		ParsedTemplate: *templateToLoad,
-		DataRetrieverWithUser: func(dao *daos.Dao, userId string) interface{} {
+		DataRetrieverWithUser: func(uc controller.UserController, userId string) interface{} {
 
 			if userId == "" {
 				return nil
 			}
 
 			// get user email
-			email, err := u.GetUserEmailFromId(dao, userId)
+			email, err := uc.GetUserEmailFromId(userId)
 			if err != nil {
 				log.Printf("error getting user email from id %s", userId)
 			}
-			details, err := u.GetUserPartFromId(dao, userId)
+			details, err := uc.GetUserDetails(userId)
 			if err != nil {
 				log.Println("error getting user part from id, ", err.Error())
 			}
