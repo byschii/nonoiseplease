@@ -21,6 +21,7 @@ func GerVersion(version string) echo.HandlerFunc {
 }
 
 func PostUrlScrape(pageController controllers.PageController, maxScrapePerMonth int) echo.HandlerFunc {
+
 	return func(c echo.Context) error {
 		// retrive user id from get params
 		userRecord, _ := c.Get("authRecord").(*models.Record)
@@ -35,6 +36,8 @@ func PostUrlScrape(pageController controllers.PageController, maxScrapePerMonth 
 			c.String(http.StatusInternalServerError, "failed to count user pages")
 			return nil
 		}
+
+		log.Println("pagesAlreadyScraped", pagesAlreadyScraped)
 
 		// if user has reached the limit, return error
 		if pagesAlreadyScraped >= maxScrapePerMonth {

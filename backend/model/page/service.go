@@ -17,6 +17,7 @@ func GetPagesByUserId(dao *daos.Dao, userId string) ([]Page, error) {
 
 // get all pages from 'userId'
 func GetPagesByUserIdAndOrigin(dao *daos.Dao, userId string, originType AvailableOrigin) ([]Page, error) {
+
 	var pages []Page
 	err := dao.ModelQuery(&Page{}).
 		AndWhere(dbx.HashExp{"owner": userId}).

@@ -103,7 +103,6 @@ func main() {
 		PBDao:       app.Dao(),
 		MeiliClient: meiliClient,
 	}
-
 	authController := controllers.AuthController{
 		PBDao:       app.Dao(),
 		TokenSecret: app.Settings().RecordAuthToken.Secret,
@@ -121,13 +120,18 @@ func main() {
 		CategoryController: &categoryController,
 		FTSController:      &fulltextsearchController,
 	}
-
 	appController := controllers.WebController{
 		PageController: pageController,
 	}
 
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		log.Println("lessgoozz!!")
+		userController.PBDao = app.Dao()
+		authController.PBDao = app.Dao()
+		authController.TokenSecret = app.Settings().RecordAuthToken.Secret
+		categoryController.PBDao = app.Dao()
+		fulltextsearchController.PBDao = app.Dao()
+		pageController.PBDao = app.Dao()
 
 		// SETUP SERVER
 		conf.InitConfig(app.Dao())

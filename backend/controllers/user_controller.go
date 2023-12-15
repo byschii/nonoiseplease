@@ -75,7 +75,7 @@ func (controller SimpleUserController) SaveActivity(activity users.UserActivity)
 	return err
 }
 
-func (controller SimpleUserController) StoreNewUserDetails(nickname string, relatedUserId string) error {
+func (controller SimpleUserController) StoreNewUserDetails(relatedUserId string, nickname string) error {
 	details := &users.UserDetails{
 		Nickname:    nickname,
 		RelatedUser: relatedUserId,

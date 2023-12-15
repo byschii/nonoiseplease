@@ -77,7 +77,7 @@ func MeAccountTemplate(name string, subFs fs.FS) *TemplateRenderer {
 		TemplateName:   name,
 		ParsedTemplate: *templateToLoad,
 		DataRetrieverWithUser: func(uc controller.UserController, userId string) interface{} {
-
+			log.Println("retrive data for user", userId)
 			if userId == "" {
 				return nil
 			}

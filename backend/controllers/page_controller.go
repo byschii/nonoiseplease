@@ -33,12 +33,15 @@ func (controller PageController) CountUserPagesByOriginThisMonth(userid string, 
 		return 0, err
 	}
 
+	log.Println("pages", pages)
 	counter := 0
 	for _, page := range pages {
 		if page.Created.Time().Month() == time.Now().Month() && page.Created.Time().Year() == time.Now().Year() {
 			counter++
 		}
 	}
+
+	log.Println("counter", counter)
 
 	return counter, nil
 }
