@@ -39,7 +39,7 @@ func RegisterTemplate(name string, subFs fs.FS) *TemplateRenderer {
 		DataRetriever: func(uc controller.UserController) interface{} {
 
 			msg := ""
-			if conf.IsRequireMailVerification(uc.GetDao()) {
+			if conf.IsRequireMailVerification(uc.AppDao()) {
 				msg = "Go check your email, than "
 			}
 
@@ -53,7 +53,7 @@ func RegisterTemplate(name string, subFs fs.FS) *TemplateRenderer {
 		},
 		DataRetrieverWithUser: func(uc controller.UserController, userId string) interface{} {
 			msg := ""
-			if conf.IsRequireMailVerification(uc.GetDao()) {
+			if conf.IsRequireMailVerification(uc.AppDao()) {
 				msg = "Go check your email, than "
 			}
 

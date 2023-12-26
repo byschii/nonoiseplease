@@ -2,6 +2,7 @@ package rest
 
 import (
 	"be/controllers"
+	categories "be/model/categories"
 	page "be/model/page"
 	"be/model/rest"
 	u "be/utils"
@@ -13,12 +14,6 @@ import (
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/models"
 )
-
-func GerVersion(version string) echo.HandlerFunc {
-	return func(c echo.Context) error {
-		return c.String(http.StatusOK, version)
-	}
-}
 
 func PostUrlScrape(pageController controllers.PageController, maxScrapePerMonth int) echo.HandlerFunc {
 
@@ -36,9 +31,6 @@ func PostUrlScrape(pageController controllers.PageController, maxScrapePerMonth 
 			c.String(http.StatusInternalServerError, "failed to count user pages")
 			return nil
 		}
-
-		log.Println("pagesAlreadyScraped", pagesAlreadyScraped)
-
 		// if user has reached the limit, return error
 		if pagesAlreadyScraped >= maxScrapePerMonth {
 			c.String(http.StatusForbidden, "you have reached the limit of pages you can scrape")
@@ -84,7 +76,7 @@ func PostPagemanageLoad(pageController controllers.PageController, authControlle
 			return nil
 		}
 
-		userRecord, err := authController.GetUserFromJWT(postData.AuthCode)
+		userRecord, err := authController.FindUserFromJWT(postData.AuthCode)
 		if err != nil {
 			log.Printf("failed to get user from request, %v\n", err)
 			c.String(http.StatusUnauthorized, "unauthorized, user not verified")
@@ -125,7 +117,7 @@ func GetPagemanage(pageController controllers.PageController) echo.HandlerFunc {
 		// read page id from params
 		pageID := c.QueryParam("id")
 
-		page, categories, ref, err := pageController.GetFullPageDataByID(userID, pageID)
+		page, categories, ref, err := pageController.PageID2FullPageData(userID, pageID)
 		if err != nil || ref == nil {
 			log.Printf("failed to get page, %v\n", err)
 			c.String(http.StatusBadRequest, u.WrapError("failed to get page ", err).Error())
@@ -154,7 +146,7 @@ func GetPagemanage(pageController controllers.PageController) echo.HandlerFunc {
 			log.Println("meili categories", ref.Category, len(ref.Category))
 			c.String(http.StatusBadRequest, "categories are not the same")
 			return nil*/
-			pageController.FTSController.SetDBCategoriesForFTSDoc(userID, page.FTSRef, categories)
+			pageController.FTSController.SetDBCategoriesOnFTSDoc(userID, page.FTSRef, categories)
 		}
 
 		result := rest.PageResponse{
@@ -213,21 +205,21 @@ func DeletePagemanagePage(pageController controllers.PageController) echo.Handle
 			return nil
 		}
 
-		err := pageController.FTSController.DeleteDocFTSIndex(data.PageID)
+		err := pageController.FTSController.RemoveDocFTSIndex(data.PageID)
 		if err != nil {
 			log.Print("error deleting page from index ", err)
 			c.String(http.StatusBadRequest, "error deleting page from index")
 			return nil
 		}
 
-		page, categories, _, err := pageController.GetFullPageDataByID(userRecord.Id, data.PageID)
+		page, categories, _, err := pageController.PageID2FullPageData(userRecord.Id, data.PageID)
 		if err != nil {
 			log.Printf("failed to get page, %v\n", err)
 			c.String(http.StatusBadRequest, u.WrapError("failed to get page ", err).Error())
 			return nil
 		}
 		for _, cat := range categories {
-			err := pageController.DeleteCategoryFromPageWithOwner(userRecord.Id, page.Id, cat.Name)
+			err := pageController.RemoveCategoryFromPageWithOwner(userRecord.Id, page.Id, cat.Name)
 			if err != nil {
 				log.Printf("failed to delete category, %v\n", err)
 				c.String(http.StatusBadRequest, u.WrapError("failed to delete category ", err).Error())
@@ -265,7 +257,7 @@ func DeletePagemanageCategory(pageController controllers.PageController) echo.Ha
 			return nil
 		}
 
-		err := pageController.DeleteCategoryFromPageWithOwner(userID, data.PageID, data.CategoryName)
+		err := pageController.RemoveCategoryFromPageWithOwner(userID, data.PageID, data.CategoryName)
 		if err != nil {
 			log.Printf("failed to delete category, %v\n", err)
 			c.String(http.StatusBadRequest, u.WrapError("failed to delete category ", err).Error())
@@ -274,4 +266,24 @@ func DeletePagemanageCategory(pageController controllers.PageController) echo.Ha
 
 		return c.NoContent(http.StatusOK)
 	}
+}
+
+// OnRecordAfterDeleteRequest - pages
+func AfterRemovePage(categoryController controllers.CategoryController) error {
+	// get all categories
+	categories, err := categories.GetAllCategories(categoryController.PBDao)
+	if err != nil {
+		log.Printf("failed to get all categories, %v\n", err)
+		return err
+	}
+
+	// delete orphan categories
+	for _, category := range categories {
+		err = categoryController.RemoveOrphanCategory(&category)
+		if err != nil {
+			log.Printf("failed to delete orphan category, %v\n", err)
+			return err
+		}
+	}
+	return nil
 }

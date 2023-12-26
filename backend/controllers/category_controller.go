@@ -5,6 +5,7 @@ import (
 
 	cats "be/model/categories"
 	"be/model/page"
+	users "be/model/users"
 
 	u "be/utils"
 
@@ -16,18 +17,10 @@ type CategoryController struct {
 	PBDao *daos.Dao
 }
 
-func (controller CategoryController) DeleteOrphanCategoryFromCategoryId(categoryId string) error {
-	category, err := cats.CategoryFromId(controller.PBDao, categoryId)
-	if err != nil {
-		return err
-	}
-	return controller.DeleteOrphanCategory(category)
-}
-
 // checks if category is linked to page
 // if not it will be deleted
-func (controller CategoryController) DeleteOrphanCategory(category *cats.Category) error {
-	return controller.DeleteOrphanCategoryWithException(category, []string{})
+func (controller CategoryController) RemoveOrphanCategory(category *cats.Category) error {
+	return controller.RemoveOrphanCategoryWithException(category, []string{})
 }
 
 // add a category to a page
@@ -84,7 +77,7 @@ func (controller CategoryController) AddCategoryToPage(fulltextsearchController 
 	return nil
 }
 
-func (controller CategoryController) DeleteOrphanCategoryWithException(category *cats.Category, expeptPageId []string) error {
+func (controller CategoryController) RemoveOrphanCategoryWithException(category *cats.Category, expeptPageId []string) error {
 	if category == nil {
 		return errors.New("category not found")
 	}
@@ -107,11 +100,11 @@ func (controller CategoryController) DeleteOrphanCategoryWithException(category 
 	return err
 }
 
-func (controller CategoryController) GetCategoriesByUserId(pageId string) ([]cats.Category, error) {
+func (controller CategoryController) FindCategoriesFromUser(user *users.Users) ([]cats.Category, error) {
 	// get every page owned by user
 	var pages []page.Page
 	err := controller.PBDao.ModelQuery(&page.Page{}).
-		AndWhere(dbx.HashExp{"owner": pageId}).All(&pages)
+		AndWhere(dbx.HashExp{"owner": user.Id}).All(&pages)
 
 	if err != nil {
 		return nil, err

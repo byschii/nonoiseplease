@@ -16,6 +16,7 @@ import (
 
 type WebController struct {
 	PageController PageController
+	UserController UserController
 }
 
 type NoNoiseController interface {
@@ -23,6 +24,7 @@ type NoNoiseController interface {
 	AppMeiliClient() *meilisearch.Client
 	GetSearch(c echo.Context) error
 	GetSearchInfo(c echo.Context) error
+	DeleteAccount(c echo.Context) error
 }
 
 func (controller WebController) AppDao() *daos.Dao {
@@ -33,17 +35,25 @@ func (controller WebController) AppMeiliClient() *meilisearch.Client {
 	return controller.PageController.MeiliClient
 }
 
+func (controller WebController) DeleteAccount(c echo.Context) error {
+	// retrive user id from get params
+	record, _ := controller.UserController.UserRecordFromRequest(c, true)
+
+	controller.UserController.DropAccount(record)
+	return c.NoContent(http.StatusOK)
+}
+
 func (controller WebController) GetSearchInfo(c echo.Context) error {
 
-	record, _ := c.Get("authRecord").(*models.Record)
-	if record == nil || !record.GetBool("verified") {
-		c.String(http.StatusUnauthorized, "unauthorized, user not verified")
+	user, err := controller.UserController.UserFromRequest(c, false)
+	if err != nil {
+		log.Printf("failed to get user from request, %v\n", err)
+		c.String(http.StatusBadRequest, u.WrapError("failed to get user from request ", err).Error())
 		return nil
 	}
-	userID := record.Id
 
 	// get all categories from user pages
-	categories, err := controller.PageController.CategoryController.GetCategoriesByUserId(userID)
+	categories, err := controller.PageController.CategoryController.FindCategoriesFromUser(user)
 	if err != nil {
 		log.Printf("failed to get categories, %v\n", err)
 		c.String(http.StatusBadRequest, u.WrapError("failed to get categories ", err).Error())

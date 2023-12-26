@@ -46,18 +46,18 @@ func (controller PageController) CountUserPagesByOriginThisMonth(userid string, 
 	return counter, nil
 }
 
-func (controller PageController) DeleteCategoryFromPage(pageId string, categoryName string) error {
+func (controller PageController) RemoveCategoryFromPage(pageId string, categoryName string) error {
 	page, err := page.GetPageFromPageId(controller.PBDao, pageId)
 	if err != nil {
 		return err
 	}
 
-	return controller.DeleteCategoryFromPageWithOwner(page.Owner, pageId, categoryName)
+	return controller.RemoveCategoryFromPageWithOwner(page.Owner, pageId, categoryName)
 }
 
 // delete category just for this page
 // (it s not destroing all categories with this name on other pages)
-func (controller PageController) DeleteCategoryFromPageWithOwner(owner string, pageId string, categoryName string) error {
+func (controller PageController) RemoveCategoryFromPageWithOwner(owner string, pageId string, categoryName string) error {
 	var page page.Page
 	err := page.FillWithUserAndId(controller.PBDao, owner, pageId)
 	if err != nil {
@@ -85,7 +85,7 @@ func (controller PageController) DeleteCategoryFromPageWithOwner(owner string, p
 	}
 
 	log.Print("check if last category", pageId, category.Name)
-	err = controller.CategoryController.DeleteOrphanCategory(category)
+	err = controller.CategoryController.RemoveOrphanCategory(category)
 	if err != nil {
 		return err
 	}
@@ -110,6 +110,7 @@ func (controller PageController) PageSearch(query string, users []string, catego
 	}
 	log.Println(categoryFilterQuery)
 
+	// build meili search request
 	var meiliSearchRequest meilisearch.SearchRequest
 	if categoryFilterQuery != "" {
 		meiliSearchRequest = meilisearch.SearchRequest{
@@ -126,38 +127,49 @@ func (controller PageController) PageSearch(query string, users []string, catego
 			return nil, u.WrapError("couldnt search "+userIndex+" index", err)
 		}
 		for _, hit := range resp.Hits {
-			// get doc
-			doc, err := tfs_page_doc.FromMeiliResultInterface(hit)
+			result, err := controller.parseMeiliResponse(hit)
 			if err != nil {
-				return nil, u.WrapError("couldnt convert meili result to fts doc", err)
-			}
-
-			// get page
-			var page page.Page
-			err = page.FillWithRef(controller.PBDao, doc.ID)
-			if err != nil {
-				return nil, u.WrapError("couldnt get page with ref "+doc.ID, err)
-			}
-
-			// get categories
-			categories, err := cats.GetCategoriesByPageId(controller.PBDao, page.Id)
-			if err != nil {
-				return nil, u.WrapError("couldnt get categories for page "+page.Id, err)
-			}
-
-			result := rest.PageResponse{
-				Page:       page,
-				Categories: categories,
-				FTSDoc:     doc,
+				return nil, u.WrapError("couldnt parse meili response", err)
 			}
 			pages = append(pages, result)
+
 		}
 	}
 
 	return &pages, nil
 }
 
-func (controller PageController) GetFullPageDataByID(owner string, pageId string) (*page.Page, []cats.Category, *tfs_page_doc.FTSPageDoc, error) {
+func (controller PageController) parseMeiliResponse(hit interface{}) (rest.PageResponse, error) {
+	pageResp := rest.PageResponse{}
+
+	// get doc
+	doc, err := tfs_page_doc.FromMeiliResultInterface(hit)
+	if err != nil {
+		return pageResp, u.WrapError("couldnt convert meili result to fts doc", err)
+	}
+
+	// get page
+	var page page.Page
+	err = page.FillWithRef(controller.PBDao, doc.ID)
+	if err != nil {
+		return pageResp, u.WrapError("couldnt get page with ref "+doc.ID, err)
+	}
+
+	// get categories
+	categories, err := cats.GetCategoriesByPageId(controller.PBDao, page.Id)
+	if err != nil {
+		return pageResp, u.WrapError("couldnt get categories for page "+page.Id, err)
+	}
+
+	// build response
+	pageResp.Page = page
+	pageResp.Categories = categories
+	pageResp.FTSDoc = doc
+
+	return pageResp, nil
+}
+
+func (controller PageController) PageID2FullPageData(owner string, pageId string) (*page.Page, []cats.Category, *tfs_page_doc.FTSPageDoc, error) {
 
 	// get page
 	var page page.Page

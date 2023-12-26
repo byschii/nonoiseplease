@@ -2,37 +2,66 @@ package controllers
 
 import (
 	users "be/model/users"
-	"net/http"
+	"fmt"
+	"log"
 
 	"github.com/labstack/echo/v5"
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/pocketbase/dbx"
+	"github.com/pocketbase/pocketbase"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 )
 
+// controls users (not users pages)
+type SimpleUserController struct {
+	App            *pocketbase.PocketBase
+	MeiliClient    *meilisearch.Client
+	AuthController AuthController
+}
+
 type UserController interface {
+	CommonController
 	GetUserDetails(relatedUserId string) (*users.UserDetails, error)
-	DeleteDropaccount(c echo.Context) error
+	DropAccount(record *models.Record)
 	SaveActivity(activity users.UserActivity) error
 	StoreNewUserDetails(nickname string, relatedUserId string) error
 	GetUserEmailFromId(userId string) (string, error)
-	GetDao() *daos.Dao
+	UserFromRequest(c echo.Context, mustBeVerified bool) (*users.Users, error)
+	UserRecordFromRequest(c echo.Context, mustBeVerified bool) (*models.Record, error)
 }
 
-// controls users (not users pages)
-type SimpleUserController struct {
-	PBDao       *daos.Dao
-	MeiliClient *meilisearch.Client
+func (controller SimpleUserController) AppDao() *daos.Dao {
+	return controller.App.Dao()
 }
 
-func (controller SimpleUserController) GetDao() *daos.Dao {
-	return controller.PBDao
+func (controller SimpleUserController) UserFromRequest(c echo.Context, mustBeVerified bool) (*users.Users, error) {
+
+	// retrive user id from get params
+	record, _ := c.Get("authRecord").(*models.Record)
+	if record == nil || (mustBeVerified && !record.GetBool("verified")) {
+		return nil, fmt.Errorf("unauthorized, user not verified")
+	}
+
+	user, err := controller.AuthController.FindUserById(record.Id)
+	return user, err
+}
+
+func (controller SimpleUserController) UserRecordFromRequest(c echo.Context, mustBeVerified bool) (*models.Record, error) {
+
+	// retrive user id from get params
+	record, _ := c.Get("authRecord").(*models.Record)
+	if record == nil || (mustBeVerified && !record.GetBool("verified")) {
+		return nil, fmt.Errorf("unauthorized, user not verified")
+	}
+
+	return record, nil
 }
 
 func (controller SimpleUserController) GetUserDetails(relatedUserId string) (*users.UserDetails, error) {
 	details := &users.UserDetails{}
-	err := controller.PBDao.DB().Select("*").From(details.TableName()).Where(dbx.In("related_user", relatedUserId)).One(details)
+	log.Println("controller.AppDao()", controller.AppDao() == nil)
+	err := controller.AppDao().DB().Select("*").From(details.TableName()).Where(dbx.In("related_user", relatedUserId)).One(details)
 	if err != nil {
 		return nil, err
 	}
@@ -46,32 +75,23 @@ func (controller SimpleUserController) GetUserDetails(relatedUserId string) (*us
 //
 // then
 //   - delete user meili index
-func (controller SimpleUserController) DeleteDropaccount(c echo.Context) error {
-	// retrive user id from get params
-	record, _ := c.Get("authRecord").(*models.Record)
-	if record == nil || !record.GetBool("verified") {
-		c.String(http.StatusUnauthorized, "unauthorized, user not verified")
-		return nil
-	}
-	userID := record.Id
-
+func (controller SimpleUserController) DropAccount(u *models.Record) {
 	go func() {
-		controller.MeiliClient.Index(userID).DeleteAllDocuments()
-		controller.MeiliClient.DeleteIndex(userID)
+		controller.MeiliClient.Index(u.GetId()).DeleteAllDocuments()
+		controller.MeiliClient.DeleteIndex(u.GetId())
 	}()
 
 	go func() {
 		// delete user data
-		details, _ := controller.GetUserDetails(userID)
-		controller.PBDao.Delete(details)
-		controller.PBDao.Delete(record)
+		details, _ := controller.GetUserDetails(u.GetId())
+		controller.AppDao().Delete(details)
+		controller.AppDao().Delete(u)
 	}()
 
-	return c.NoContent(http.StatusOK)
 }
 
 func (controller SimpleUserController) SaveActivity(activity users.UserActivity) error {
-	err := controller.PBDao.Save(&activity)
+	err := controller.AppDao().Save(&activity)
 	return err
 }
 
@@ -80,13 +100,13 @@ func (controller SimpleUserController) StoreNewUserDetails(relatedUserId string,
 		Nickname:    nickname,
 		RelatedUser: relatedUserId,
 	}
-	err := controller.PBDao.Save(details)
+	err := controller.AppDao().Save(details)
 	return err
 }
 
 func (controller SimpleUserController) GetUserEmailFromId(userId string) (string, error) {
 	userToFill := &users.Users{}
-	err := controller.PBDao.FindById(userToFill, userId)
+	err := controller.AppDao().FindById(userToFill, userId)
 	if err != nil {
 		return "", err
 	}

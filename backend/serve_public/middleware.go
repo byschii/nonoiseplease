@@ -70,7 +70,7 @@ func StaticDirectoryHandlerWHTMLAdder(fileSystem fs.FS, indexFallback bool, auto
 				// get go template
 				pageTemplate := templatedPage.ParsedTemplate
 				// try to extract user from request
-				user, err := ac.GetUserFromJWTInContext(c)
+				user, err := ac.FindUserFromJWTInContext(c)
 				data := interface{}(nil)
 				// if no user found, use simple DataRetriever
 				if err != nil {

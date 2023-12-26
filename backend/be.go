@@ -99,13 +99,14 @@ func main() {
 		return nil
 	})
 
-	userController := controllers.SimpleUserController{
-		PBDao:       app.Dao(),
-		MeiliClient: meiliClient,
-	}
 	authController := controllers.AuthController{
-		PBDao:       app.Dao(),
+		App:         app,
 		TokenSecret: app.Settings().RecordAuthToken.Secret,
+	}
+	userController := controllers.SimpleUserController{
+		App:            app,
+		MeiliClient:    meiliClient,
+		AuthController: authController,
 	}
 	categoryController := controllers.CategoryController{
 		PBDao: app.Dao(),
@@ -120,14 +121,16 @@ func main() {
 		CategoryController: &categoryController,
 		FTSController:      &fulltextsearchController,
 	}
+
 	appController := controllers.WebController{
 		PageController: pageController,
+		UserController: userController,
 	}
 
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		log.Println("lessgoozz!!")
-		userController.PBDao = app.Dao()
-		authController.PBDao = app.Dao()
+		userController.App = app
+		authController.App = app
 		authController.TokenSecret = app.Settings().RecordAuthToken.Secret
 		categoryController.PBDao = app.Dao()
 		fulltextsearchController.PBDao = app.Dao()
@@ -153,9 +156,12 @@ func main() {
 		}
 
 		e.Router.AddRoute(echo.Route{
-			Method:  http.MethodGet,
-			Path:    "/api/version",
-			Handler: rest.GerVersion(VERSION),
+			Method: http.MethodGet,
+			Path:   "/api/version",
+			Handler: func(c echo.Context) error {
+				return c.String(http.StatusOK, VERSION)
+			},
+			Middlewares: middlewaresNoAuths,
 		})
 
 		e.Router.AddRoute(echo.Route{
@@ -203,7 +209,7 @@ func main() {
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodDelete,
 			Path:        "/api/drop-account",
-			Handler:     userController.DeleteDropaccount,
+			Handler:     appController.DeleteAccount,
 			Middlewares: middlewares,
 		})
 
@@ -284,10 +290,9 @@ func main() {
 			}
 			log.Print("StoreNewUserDetails ok")
 
-			err = rest.CreateNewFTSIndex(meiliClient, e.Record.Id, 2)
+			err = fulltextsearchController.CreateNewFTSIndex(e.Record.Id, 2)
 			if err != nil {
-				log.Print("error creating user index ")
-				log.Println(err)
+				log.Println("error creating user index ", err)
 				return err
 			}
 			log.Print("CreateNewFTSIndex ok")
@@ -300,10 +305,9 @@ func main() {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "users" {
 			log.Print("deleting user, reflect on fts")
-			err := rest.DeleteIndexFromFTS(meiliClient, e.Record.Id)
+			_, err := meiliClient.DeleteIndex(e.Record.Id)
 			if err != nil {
-				log.Print("error deleting user index ")
-				log.Println(err)
+				log.Println("error deleting user index ", err)
 			}
 		}
 		return nil
@@ -312,7 +316,7 @@ func main() {
 	app.OnRecordBeforeDeleteRequest().Add(func(e *core.RecordDeleteEvent) error {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "pages" {
-			err := rest.BeforeRemovePage(e.Record.Id, fulltextsearchController)
+			err := fulltextsearchController.RemoveDocFTSIndex(e.Record.Id)
 			if err != nil {
 				log.Print("error deleting page ", err)
 			}
