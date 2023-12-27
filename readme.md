@@ -91,11 +91,10 @@ With what i see as pros or cons.
 
 ##### Cons
 
+### [Pinboard](pinboard.in)
+##### Pros
 
-## [Pinboard](pinboard.in)
-#### Pros
-
-#### Cons
+##### Cons
 
 Future
 ------
