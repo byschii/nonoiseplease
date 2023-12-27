@@ -51,6 +51,52 @@ I ask only for an email and save only 2 cookies (that a know of): a JWT and an i
 There are no analitycs.  
 The extention is 1.6kB of js, you can look it up. (just rename the file from .xpi to .zip)  
 
+Alternatives
+---
+With what i see as pros or cons.
+
+### [Grimoire](https://github.com/goniszewski/grimoire)
+##### Pros
+- add your personal notes to bookmarks
+##### Cons
+- has to be self-hosted
+
+### [Linkwarden](linkwarden.app)
+##### Pros
+- stores the page
+##### Cons
+- free only if self-hosted
+- a little "cumbersome" when adding new links
+
+### [Readclip](https://readclip.site/)
+##### Pros
+- stores the page
+- easy bookmark add
+##### Cons
+- no source
+
+### [Raindrop](https://raindrop.io)
+##### Pros
+- full optional
+##### Cons
+- requires apps
+
+### [xbrowsersync](https://github.com/xbrowsersync)
+##### Pros
+- free, open source, anonymous
+#### Cons
+
+### [Zotero](https://www.zotero.org/)
+##### Pros
+
+##### Cons
+
+
+## [Pinboard](pinboard.in)
+#### Pros
+
+#### Cons
+
 Future
 ------
 
