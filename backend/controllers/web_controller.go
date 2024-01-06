@@ -2,10 +2,12 @@ package controllers
 
 import (
 	u "be/utils"
+	"be/webscraping"
 	"log"
 	"net/http"
 	"strings"
 
+	"be/model/page"
 	rest "be/model/rest"
 
 	"github.com/labstack/echo/v5"
@@ -15,8 +17,9 @@ import (
 )
 
 type WebController struct {
-	PageController PageController
-	UserController UserController
+	PageController   PageController
+	UserController   UserController
+	ConfigController ConfigController
 }
 
 type NoNoiseController interface {
@@ -93,4 +96,51 @@ func (controller WebController) GetSearch(c echo.Context) error {
 		Pages: *pageResp,
 	}
 	return c.JSON(http.StatusOK, resp)
+}
+
+func (controller WebController) PostUrlScrape(c echo.Context) error {
+	// retrive user id from get params
+	userRecord, _ := c.Get("authRecord").(*models.Record)
+	if userRecord == nil || !userRecord.GetBool("verified") {
+		c.String(http.StatusUnauthorized, "unauthorized, user not verified")
+		return nil
+	}
+
+	pagesAlreadyScraped, err := controller.PageController.CountUserPagesByOriginThisMonth(userRecord.Id, page.AvailableOriginScrape)
+	if err != nil {
+		log.Printf("failed to count user pages, %v\n", err)
+		c.String(http.StatusInternalServerError, "failed to count user pages")
+		return nil
+	}
+	// if user has reached the limit, return error
+	if pagesAlreadyScraped >= controller.ConfigController.maxScrapePerMonth {
+		c.String(http.StatusForbidden, "you have reached the limit of pages you can scrape")
+		return nil
+	}
+
+	// get url from json body
+	var urlData rest.Url
+	if err := c.Bind(&urlData); err != nil {
+		log.Printf("failed to parse json body, %v\n", err)
+		c.String(http.StatusBadRequest, "failed to parse json body")
+		return nil
+	}
+	// scrape url and get info
+	article, withProxy, err := webscraping.GetArticle(urlData.Url, false, controller.PageController.PBDao)
+	if err != nil {
+		log.Printf("failed to parse %s, %v\n", urlData.Url, err)
+		c.String(http.StatusBadRequest, "failed to parse url")
+		return nil
+	}
+
+	meili_ref, err := controller.PageController.SaveNewPage(
+		userRecord.Id, urlData.Url, article.Title, []string{}, article.TextContent, page.AvailableOriginScrape, withProxy,
+	)
+	if err != nil {
+		log.Printf("failed to save page, %v\n", err)
+		c.String(http.StatusBadRequest, u.WrapError("failed to save page ", err).Error())
+		return nil
+	}
+
+	return c.String(http.StatusOK, meili_ref)
 }

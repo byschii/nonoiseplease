@@ -1,7 +1,6 @@
-package rest
+package controllers
 
 import (
-	"be/controllers"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -12,10 +11,13 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 )
 
+type BrowserExtentionController struct {
+}
+
 func AddEndpointBookmarkSyncFromExtention(
 	app *pocketbase.PocketBase,
 	e *core.ServeEvent,
-	authController *controllers.AuthController,
+	authController *AuthController,
 	method string,
 	path string) error {
 

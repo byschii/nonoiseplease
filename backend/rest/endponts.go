@@ -15,56 +15,6 @@ import (
 	"github.com/pocketbase/pocketbase/models"
 )
 
-func PostUrlScrape(pageController controllers.PageController, maxScrapePerMonth int) echo.HandlerFunc {
-
-	return func(c echo.Context) error {
-		// retrive user id from get params
-		userRecord, _ := c.Get("authRecord").(*models.Record)
-		if userRecord == nil || !userRecord.GetBool("verified") {
-			c.String(http.StatusUnauthorized, "unauthorized, user not verified")
-			return nil
-		}
-
-		pagesAlreadyScraped, err := pageController.CountUserPagesByOriginThisMonth(userRecord.Id, page.AvailableOriginScrape)
-		if err != nil {
-			log.Printf("failed to count user pages, %v\n", err)
-			c.String(http.StatusInternalServerError, "failed to count user pages")
-			return nil
-		}
-		// if user has reached the limit, return error
-		if pagesAlreadyScraped >= maxScrapePerMonth {
-			c.String(http.StatusForbidden, "you have reached the limit of pages you can scrape")
-			return nil
-		}
-
-		// get url from json body
-		var urlData rest.Url
-		if err := c.Bind(&urlData); err != nil {
-			log.Printf("failed to parse json body, %v\n", err)
-			c.String(http.StatusBadRequest, "failed to parse json body")
-			return nil
-		}
-		// scrape url and get info
-		article, withProxy, err := webscraping.GetArticle(urlData.Url, false, pageController.PBDao)
-		if err != nil {
-			log.Printf("failed to parse %s, %v\n", urlData.Url, err)
-			c.String(http.StatusBadRequest, "failed to parse url")
-			return nil
-		}
-
-		meili_ref, err := pageController.SaveNewPage(
-			userRecord.Id, urlData.Url, article.Title, []string{}, article.TextContent, page.AvailableOriginScrape, withProxy,
-		)
-		if err != nil {
-			log.Printf("failed to save page, %v\n", err)
-			c.String(http.StatusBadRequest, u.WrapError("failed to save page ", err).Error())
-			return nil
-		}
-
-		return c.String(http.StatusOK, meili_ref)
-	}
-}
-
 func PostPagemanageLoad(pageController controllers.PageController, authController controllers.AuthController, tokenSecret string) echo.HandlerFunc {
 	return func(c echo.Context) error {
 

@@ -2,9 +2,36 @@ package utils
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 )
+
+// Returns the "real" user IP from common proxy headers (or fallbackIp if none is found).
+//
+// The returned IP value shouldn't be trusted if not behind a trusted reverse proxy!
+func RealUserIp(r *http.Request, fallbackIp string) string {
+	if ip := r.Header.Get("CF-Connecting-IP"); ip != "" {
+		return ip
+	}
+
+	if ip := r.Header.Get("X-Real-IP"); ip != "" {
+		return ip
+	}
+
+	if ipsList := r.Header.Get("X-Forwarded-For"); ipsList != "" {
+		ips := strings.Split(ipsList, ",")
+		// extract the rightmost ip
+		for i := len(ips) - 1; i >= 0; i-- {
+			ip := strings.TrimSpace(ips[i])
+			if ip != "" {
+				return ip
+			}
+		}
+	}
+
+	return fallbackIp
+}
 
 func GetTodayDate() string {
 	t := time.Now()

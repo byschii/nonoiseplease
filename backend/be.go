@@ -99,6 +99,8 @@ func main() {
 		return nil
 	})
 
+	c := controllers.NewConfigController(MAX_SCRAPE_PER_MONTH)
+
 	authController := controllers.AuthController{
 		App:         app,
 		TokenSecret: app.Settings().RecordAuthToken.Secret,
@@ -123,8 +125,9 @@ func main() {
 	}
 
 	appController := controllers.WebController{
-		PageController: pageController,
-		UserController: userController,
+		PageController:   pageController,
+		UserController:   userController,
+		ConfigController: c,
 	}
 
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
@@ -148,11 +151,11 @@ func main() {
 
 		middlewares := []echo.MiddlewareFunc{
 			apis.RequireRecordAuth("users"),
-			rest.ActivityLoggerWithPostAndAuthSupport(app),
+			servepublic.ActivityLoggerWithPostAndAuthSupport(app),
 		}
 
 		middlewaresNoAuths := []echo.MiddlewareFunc{
-			rest.ActivityLoggerWithPostAndAuthSupport(app),
+			servepublic.ActivityLoggerWithPostAndAuthSupport(app),
 		}
 
 		e.Router.AddRoute(echo.Route{
@@ -167,7 +170,7 @@ func main() {
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodPost,
 			Path:        "/api/url/scrape",
-			Handler:     rest.PostUrlScrape(pageController, MAX_SCRAPE_PER_MONTH),
+			Handler:     appController.PostUrlScrape,
 			Middlewares: middlewares,
 		})
 
