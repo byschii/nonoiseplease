@@ -15,20 +15,35 @@ import (
 )
 
 type AuthController struct {
-	App         *pocketbase.PocketBase
-	TokenSecret string
+	App *pocketbase.PocketBase
 }
 
 type AuthControllerInterface interface {
 	CommonController
+	TokenSecret() string
+	SetApp(app *pocketbase.PocketBase)
 	FindUserFromJWT(jwt string) (*models.Record, error)
 	FindUserFromJWTInContext(c echo.Context) (*models.Record, error)
 	FindUserById(id string) (*users.Users, error)
 	CheckAuthCredentials(email string, password string, endpoint string) error
 }
 
+func NewAuthController(pbApp *pocketbase.PocketBase) AuthControllerInterface {
+	return &AuthController{
+		App: pbApp,
+	}
+}
+
+func (controller *AuthController) SetApp(app *pocketbase.PocketBase) {
+	controller.App = app
+}
+
 func (controller AuthController) AppDao() *daos.Dao {
 	return controller.App.Dao()
+}
+
+func (controller *AuthController) TokenSecret() string {
+	return controller.App.Settings().RecordAuthToken.Secret
 }
 
 // get user from token
@@ -36,7 +51,7 @@ func (authController AuthController) FindUserFromJWT(jwt string) (*models.Record
 
 	userRecord, err := authController.AppDao().FindAuthRecordByToken(
 		jwt,
-		authController.TokenSecret)
+		authController.TokenSecret())
 	if err != nil {
 		return nil, err
 	}

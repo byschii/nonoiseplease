@@ -9,8 +9,8 @@ import (
 	_ "be/migrations"
 
 	controllers "be/controllers"
+	categories "be/model/categories"
 	conf "be/model/config"
-	rest "be/rest"
 	servepublic "be/serve_public"
 
 	"github.com/labstack/echo/v5"
@@ -101,43 +101,20 @@ func main() {
 
 	c := controllers.NewConfigController(MAX_SCRAPE_PER_MONTH)
 
-	authController := controllers.AuthController{
-		App:         app,
-		TokenSecret: app.Settings().RecordAuthToken.Secret,
-	}
-	userController := controllers.SimpleUserController{
-		App:            app,
-		MeiliClient:    meiliClient,
-		AuthController: authController,
-	}
-	categoryController := controllers.CategoryController{
-		PBDao: app.Dao(),
-	}
-	fulltextsearchController := controllers.FTSController{
-		PBDao:       app.Dao(),
-		MeiliClient: meiliClient,
-	}
-	pageController := controllers.PageController{
-		PBDao:              app.Dao(),
-		MeiliClient:        meiliClient,
-		CategoryController: &categoryController,
-		FTSController:      &fulltextsearchController,
-	}
-
-	appController := controllers.WebController{
-		PageController:   pageController,
-		UserController:   userController,
-		ConfigController: c,
-	}
+	authController := controllers.NewAuthController(app)
+	userController := controllers.NewUserController(app, meiliClient, authController)
+	categoryController := controllers.NewCategoryController(app.Dao())
+	fulltextsearchController := controllers.NewFTSController(app.Dao(), meiliClient)
+	pageController := controllers.NewPageController(app.Dao(), meiliClient, categoryController, fulltextsearchController)
+	appController := controllers.NewNoNoiseInterface(pageController, userController, c)
 
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		log.Println("lessgoozz!!")
-		userController.App = app
-		authController.App = app
-		authController.TokenSecret = app.Settings().RecordAuthToken.Secret
-		categoryController.PBDao = app.Dao()
-		fulltextsearchController.PBDao = app.Dao()
-		pageController.PBDao = app.Dao()
+		userController.SetApp(app)
+		authController.SetApp(app)
+		categoryController.SetPBDAO(app.Dao())
+		fulltextsearchController.SetPBDAO(app.Dao())
+		pageController.SetPBDAO(app.Dao())
 
 		// SETUP SERVER
 		conf.InitConfig(app.Dao())
@@ -177,35 +154,35 @@ func main() {
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodGet,
 			Path:        "/api/page-manage",
-			Handler:     rest.GetPagemanage(pageController),
+			Handler:     appController.GetPagemanage,
 			Middlewares: middlewares,
 		})
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodPost,
 			Path:        "/api/page-manage/load",
-			Handler:     rest.PostPagemanageLoad(pageController, authController, app.Settings().RecordAuthToken.Secret),
+			Handler:     appController.PostPagemanageLoad,
 			Middlewares: middlewaresNoAuths,
 		})
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodPost,
 			Path:        "/api/page-manage/category",
-			Handler:     rest.PostPagemanageCategory(pageController),
+			Handler:     appController.PostPagemanageCategory,
 			Middlewares: middlewares,
 		})
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodDelete,
 			Path:        "/api/page-manage/category",
-			Handler:     rest.DeletePagemanageCategory(pageController),
+			Handler:     appController.DeletePagemanageCategory,
 			Middlewares: middlewares,
 		})
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodDelete,
 			Path:        "/api/page-manage/page",
-			Handler:     rest.DeletePagemanagePage(pageController),
+			Handler:     appController.DeletePagemanagePage,
 			Middlewares: middlewares,
 		})
 
@@ -329,9 +306,20 @@ func main() {
 	app.OnRecordAfterDeleteRequest().Add(func(e *core.RecordDeleteEvent) error {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "pages" {
-			err := rest.AfterRemovePage(categoryController)
+			// get all categories
+			categories, err := categories.GetAllCategories(categoryController.DAO())
 			if err != nil {
-				log.Print("error deleting page ", err)
+				log.Printf("failed to get all categories, %v\n", err)
+				return err
+			}
+
+			// delete orphan categories
+			for _, category := range categories {
+				err = categoryController.RemoveOrphanCategory(&category)
+				if err != nil {
+					log.Printf("failed to delete orphan category, %v\n", err)
+					return err
+				}
 			}
 		}
 		return nil

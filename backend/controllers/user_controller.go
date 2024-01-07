@@ -17,11 +17,14 @@ import (
 type SimpleUserController struct {
 	App            *pocketbase.PocketBase
 	MeiliClient    *meilisearch.Client
-	AuthController AuthController
+	AuthController AuthControllerInterface
 }
 
-type UserController interface {
+type UserControllerInterface interface {
 	CommonController
+	AuthorizationController() AuthControllerInterface
+	AppDao() *daos.Dao
+	SetApp(app *pocketbase.PocketBase)
 	GetUserDetails(relatedUserId string) (*users.UserDetails, error)
 	DropAccount(record *models.Record)
 	SaveActivity(activity users.UserActivity) error
@@ -31,8 +34,24 @@ type UserController interface {
 	UserRecordFromRequest(c echo.Context, mustBeVerified bool) (*models.Record, error)
 }
 
+func NewUserController(pbApp *pocketbase.PocketBase, meilisearchClient *meilisearch.Client, authController AuthControllerInterface) UserControllerInterface {
+	return &SimpleUserController{
+		App:            pbApp,
+		MeiliClient:    meilisearchClient,
+		AuthController: authController,
+	}
+}
+
+func (controller SimpleUserController) AuthorizationController() AuthControllerInterface {
+	return controller.AuthController
+}
+
 func (controller SimpleUserController) AppDao() *daos.Dao {
 	return controller.App.Dao()
+}
+
+func (controller *SimpleUserController) SetApp(app *pocketbase.PocketBase) {
+	controller.App = app
 }
 
 func (controller SimpleUserController) UserFromRequest(c echo.Context, mustBeVerified bool) (*users.Users, error) {

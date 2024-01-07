@@ -11,31 +11,33 @@ import (
 	rest "be/model/rest"
 
 	"github.com/labstack/echo/v5"
-	"github.com/meilisearch/meilisearch-go"
-	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
 )
 
 type WebController struct {
-	PageController   PageController
-	UserController   UserController
+	PageController   PageControllerInterface
+	UserController   UserControllerInterface
 	ConfigController ConfigController
 }
 
-type NoNoiseController interface {
-	AppDao() *daos.Dao
-	AppMeiliClient() *meilisearch.Client
+type NoNoiseInterface interface {
 	GetSearch(c echo.Context) error
 	GetSearchInfo(c echo.Context) error
 	DeleteAccount(c echo.Context) error
+	PostUrlScrape(c echo.Context) error
+	PostPagemanageCategory(c echo.Context) error
+	GetPagemanage(c echo.Context) error
+	DeletePagemanageCategory(c echo.Context) error
+	PostPagemanageLoad(c echo.Context) error
+	DeletePagemanagePage(c echo.Context) error
 }
 
-func (controller WebController) AppDao() *daos.Dao {
-	return controller.PageController.PBDao
-}
-
-func (controller WebController) AppMeiliClient() *meilisearch.Client {
-	return controller.PageController.MeiliClient
+func NewNoNoiseInterface(pageController PageControllerInterface, userController UserControllerInterface, configController ConfigController) NoNoiseInterface {
+	return &WebController{
+		PageController:   pageController,
+		UserController:   userController,
+		ConfigController: configController,
+	}
 }
 
 func (controller WebController) DeleteAccount(c echo.Context) error {
@@ -56,7 +58,7 @@ func (controller WebController) GetSearchInfo(c echo.Context) error {
 	}
 
 	// get all categories from user pages
-	categories, err := controller.PageController.CategoryController.FindCategoriesFromUser(user)
+	categories, err := controller.PageController.FindCategoriesFromUser(user)
 	if err != nil {
 		log.Printf("failed to get categories, %v\n", err)
 		c.String(http.StatusBadRequest, u.WrapError("failed to get categories ", err).Error())
@@ -126,7 +128,7 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 		return nil
 	}
 	// scrape url and get info
-	article, withProxy, err := webscraping.GetArticle(urlData.Url, false, controller.PageController.PBDao)
+	article, withProxy, err := webscraping.GetArticle(urlData.Url, false, controller.PageController.AppDao())
 	if err != nil {
 		log.Printf("failed to parse %s, %v\n", urlData.Url, err)
 		c.String(http.StatusBadRequest, "failed to parse url")
@@ -143,4 +145,195 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 	}
 
 	return c.String(http.StatusOK, meili_ref)
+}
+
+func (controller WebController) PostPagemanageCategory(c echo.Context) error {
+	// retrive user id from get params
+	userRecord, _ := c.Get("authRecord").(*models.Record)
+	if userRecord == nil || !userRecord.GetBool("verified") {
+		c.String(http.StatusUnauthorized, "unauthorized, user not verified")
+		return nil
+	}
+
+	// read page and category id from body
+	var data rest.PostCategoryRequest
+	if err := c.Bind(&data); err != nil {
+		log.Printf("failed to parse json body, %v\n", err)
+		c.String(http.StatusBadRequest, "failed to parse json body")
+		return nil
+	}
+
+	log.Println("data", data)
+	err := controller.PageController.AddCategoryToPage(userRecord.Id, data.PageID, data.CategoryName)
+
+	if err != nil {
+		log.Printf("failed to add category, %v\n", err)
+		c.String(http.StatusBadRequest, u.WrapError("failed to add category ", err).Error())
+		return nil
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+func (controller WebController) GetPagemanage(c echo.Context) error {
+	// retrive user id from get params
+	record, _ := c.Get("authRecord").(*models.Record)
+	if record == nil || !record.GetBool("verified") {
+		c.String(http.StatusUnauthorized, "unauthorized, user not verified")
+		return nil
+	}
+	userID := record.Id
+
+	// read page id from params
+	pageID := c.QueryParam("id")
+
+	page, categories, ref, err := controller.PageController.PageID2FullPageData(userID, pageID)
+	if err != nil || ref == nil {
+		log.Printf("failed to get page, %v\n", err)
+		c.String(http.StatusBadRequest, u.WrapError("failed to get page ", err).Error())
+		return nil
+	}
+
+	// check same categories in meili and db
+	// if not (send notification) ... update meili
+	sameCats := true
+	for _, dbCat := range categories {
+		if ref.Category == nil || len(ref.Category) == 0 {
+			sameCats = false
+			break
+		}
+		for _, meiliCat := range ref.Category {
+			if dbCat.Name == meiliCat {
+				continue
+			} else {
+				sameCats = false
+			}
+		}
+	}
+	if !sameCats {
+		/*log.Println("categories are not the same")
+		log.Println("db categories", categories, len(categories))
+		log.Println("meili categories", ref.Category, len(ref.Category))
+		c.String(http.StatusBadRequest, "categories are not the same")
+		return nil*/
+		controller.PageController.SetDBCategoriesOnFTSDoc(userID, page.FTSRef, categories)
+	}
+
+	result := rest.PageResponse{
+		Page:       *page,
+		Categories: categories,
+		FTSDoc:     *ref,
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
+func (controller WebController) DeletePagemanageCategory(c echo.Context) error {
+	// retrive user id from get params
+	record, _ := c.Get("authRecord").(*models.Record)
+	if record == nil || !record.GetBool("verified") {
+		c.String(http.StatusUnauthorized, "unauthorized, user not verified")
+		return nil
+	}
+	userID := record.Id
+
+	// read page and category id from body
+	var data rest.DeleteCategoryRequest
+	if err := c.Bind(&data); err != nil {
+		log.Printf("failed to parse json body, %v\n", err)
+		c.String(http.StatusBadRequest, "failed to parse json body")
+		return nil
+	}
+
+	err := controller.PageController.RemoveCategoryFromPageWithOwner(userID, data.PageID, data.CategoryName)
+	if err != nil {
+		log.Printf("failed to delete category, %v\n", err)
+		c.String(http.StatusBadRequest, u.WrapError("failed to delete category ", err).Error())
+		return nil
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+func (controller WebController) PostPagemanageLoad(c echo.Context) error {
+	// get url from json body
+	var postData rest.UrlWithHTML
+	if err := c.Bind(&postData); err != nil {
+		log.Printf("failed to parse json body, %v\n", err)
+		c.String(http.StatusBadRequest, "failed to parse json body")
+		return nil
+	}
+
+	userRecord, err := controller.UserController.AuthorizationController().FindUserFromJWT(postData.AuthCode)
+	if err != nil {
+		log.Printf("failed to get user from request, %v\n", err)
+		c.String(http.StatusUnauthorized, "unauthorized, user not verified")
+		return nil
+	}
+
+	// scrape url and get info
+	article, err := webscraping.GetArticleFromHtml(postData.HTML, postData.Url)
+	if err != nil {
+		log.Printf("failed to parse %s, %v\n", postData.Url, err)
+		c.String(http.StatusBadRequest, "failed to parse url or html")
+		return nil
+	}
+
+	meili_ref, err := controller.PageController.SaveNewPage(
+		userRecord.Id, postData.Url, postData.Title, []string{}, article.TextContent, page.AvailableOriginExtention, false,
+	)
+	if err != nil {
+		log.Printf("failed to save page, %v\n", err)
+		c.String(http.StatusBadRequest, u.WrapError("failed to save page ", err).Error())
+		return nil
+	}
+
+	return c.String(http.StatusOK, meili_ref)
+}
+
+func (controller WebController) DeletePagemanagePage(c echo.Context) error {
+	// retrive user id from get params
+	userRecord, _ := c.Get("authRecord").(*models.Record)
+	if userRecord == nil || !userRecord.GetBool("verified") {
+		c.String(http.StatusUnauthorized, "unauthorized, user not verified")
+		return nil
+	}
+
+	var data rest.DeletePageRequest
+	if err := c.Bind(&data); err != nil {
+		log.Printf("failed to parse json body, %v\n", err)
+		c.String(http.StatusBadRequest, "failed to parse json body")
+		return nil
+	}
+
+	err := controller.PageController.RemoveDocFTSIndex(data.PageID)
+	if err != nil {
+		log.Print("error deleting page from index ", err)
+		c.String(http.StatusBadRequest, "error deleting page from index")
+		return nil
+	}
+
+	page, categories, _, err := controller.PageController.PageID2FullPageData(userRecord.Id, data.PageID)
+	if err != nil {
+		log.Printf("failed to get page, %v\n", err)
+		c.String(http.StatusBadRequest, u.WrapError("failed to get page ", err).Error())
+		return nil
+	}
+	for _, cat := range categories {
+		err := controller.PageController.RemoveCategoryFromPageWithOwner(userRecord.Id, page.Id, cat.Name)
+		if err != nil {
+			log.Printf("failed to delete category, %v\n", err)
+			c.String(http.StatusBadRequest, u.WrapError("failed to delete category ", err).Error())
+			return nil
+		}
+	}
+
+	err = controller.PageController.AppDao().Delete(page)
+	if err != nil {
+		log.Printf("failed to delete page, %v\n", err)
+		c.String(http.StatusBadRequest, u.WrapError("failed to delete page ", err).Error())
+		return nil
+	}
+
+	return c.NoContent(http.StatusOK)
 }

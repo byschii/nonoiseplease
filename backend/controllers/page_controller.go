@@ -3,6 +3,7 @@ package controllers
 import (
 	page "be/model/page"
 	"be/model/rest"
+	users "be/model/users"
 	u "be/utils"
 	"crypto/sha256"
 	"encoding/hex"
@@ -23,8 +24,62 @@ import (
 type PageController struct {
 	PBDao              *daos.Dao
 	MeiliClient        *meilisearch.Client
-	CategoryController *CategoryController
-	FTSController      *FTSController
+	CategoryController CategoryControllerInterface
+	FTSController      FTSControllerInterface
+}
+
+type PageControllerInterface interface {
+	CommonController
+	SetPBDAO(dao *daos.Dao)
+	CountUserPagesByOriginThisMonth(userid string, originType page.AvailableOrigin) (int, error)
+	RemoveCategoryFromPage(pageId string, categoryName string) error
+	RemoveCategoryFromPageWithOwner(owner string, pageId string, categoryName string) error
+	PageSearch(query string, users []string, categories []string) (*[]rest.PageResponse, error)
+	PageID2FullPageData(owner string, pageId string) (*page.Page, []cats.Category, *tfs_page_doc.FTSPageDoc, error)
+	SaveNewPage(owner string,
+		url string,
+		pageTitle string,
+		categories []string,
+		content string,
+		originType page.AvailableOrigin,
+		withProxy bool) (string, error)
+	RemoveDocFTSIndex(pageId string) error
+	FindCategoriesFromUser(user *users.Users) ([]cats.Category, error)
+	AddCategoryToPage(owner string, pageId string, categoryName string) error
+	SetDBCategoriesOnFTSDoc(owner string, FTSRef string, categories []cats.Category) error
+}
+
+func NewPageController(dao *daos.Dao, meiliClient *meilisearch.Client, categoryController CategoryControllerInterface, fulltextsearchController FTSControllerInterface) PageControllerInterface {
+	return &PageController{
+		PBDao:              dao,
+		MeiliClient:        meiliClient,
+		CategoryController: categoryController,
+		FTSController:      fulltextsearchController,
+	}
+}
+
+func (controller *PageController) SetDBCategoriesOnFTSDoc(owner string, FTSRef string, categories []cats.Category) error {
+	return controller.FTSController.SetDBCategoriesOnFTSDoc(owner, FTSRef, categories)
+}
+
+func (controller *PageController) AddCategoryToPage(owner string, pageId string, categoryName string) error {
+	return controller.CategoryController.AddCategoryToPage(controller.FTSController, owner, pageId, categoryName)
+}
+
+func (controller *PageController) FindCategoriesFromUser(user *users.Users) ([]cats.Category, error) {
+	return controller.CategoryController.FindCategoriesFromUser(user)
+}
+
+func (controller *PageController) RemoveDocFTSIndex(pageId string) error {
+	return controller.FTSController.RemoveDocFTSIndex(pageId)
+}
+
+func (controller *PageController) AppDao() *daos.Dao {
+	return controller.PBDao
+}
+
+func (controller *PageController) SetPBDAO(dao *daos.Dao) {
+	controller.PBDao = dao
 }
 
 func (controller PageController) CountUserPagesByOriginThisMonth(userid string, originType page.AvailableOrigin) (int, error) {
@@ -91,7 +146,9 @@ func (controller PageController) RemoveCategoryFromPageWithOwner(owner string, p
 	}
 
 	// remove category from fts doc
-	go controller.FTSController.AlignCategoriesBetweenFTSAndDB(owner, page.FTSRef, page.Id)
+	go controller.FTSController.AlignCategoriesBetweenFTSAndDB(
+		owner, page.FTSRef, page.Id,
+	)
 
 	return nil
 }

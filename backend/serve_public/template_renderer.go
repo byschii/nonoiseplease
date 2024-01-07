@@ -12,8 +12,8 @@ import (
 type TemplateRenderer struct {
 	TemplateName          string
 	ParsedTemplate        template.Template
-	DataRetrieverWithUser func(controller.UserController, string) interface{}
-	DataRetriever         func(controller.UserController) interface{}
+	DataRetrieverWithUser func(controller.UserControllerInterface, string) interface{}
+	DataRetriever         func(controller.UserControllerInterface) interface{}
 }
 
 // returns a list of all templates that are used in the app
@@ -36,7 +36,7 @@ func RegisterTemplate(name string, subFs fs.FS) *TemplateRenderer {
 	return &TemplateRenderer{
 		TemplateName:   name,
 		ParsedTemplate: *templateToLoad,
-		DataRetriever: func(uc controller.UserController) interface{} {
+		DataRetriever: func(uc controller.UserControllerInterface) interface{} {
 
 			msg := ""
 			if conf.IsRequireMailVerification(uc.AppDao()) {
@@ -51,7 +51,7 @@ func RegisterTemplate(name string, subFs fs.FS) *TemplateRenderer {
 
 			return retrivedData
 		},
-		DataRetrieverWithUser: func(uc controller.UserController, userId string) interface{} {
+		DataRetrieverWithUser: func(uc controller.UserControllerInterface, userId string) interface{} {
 			msg := ""
 			if conf.IsRequireMailVerification(uc.AppDao()) {
 				msg = "Go check your email, than "
@@ -76,7 +76,7 @@ func MeAccountTemplate(name string, subFs fs.FS) *TemplateRenderer {
 	return &TemplateRenderer{
 		TemplateName:   name,
 		ParsedTemplate: *templateToLoad,
-		DataRetrieverWithUser: func(uc controller.UserController, userId string) interface{} {
+		DataRetrieverWithUser: func(uc controller.UserControllerInterface, userId string) interface{} {
 			log.Println("retrive data for user", userId)
 			if userId == "" {
 				return nil

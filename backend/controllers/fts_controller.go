@@ -21,14 +21,26 @@ type FTSController struct {
 
 type FTSControllerInterface interface {
 	CommonController
+	SetPBDAO(dao *daos.Dao)
 	RemoveDocFTSIndex(pageId string) error
 	SetDBCategoriesOnFTSDoc(owner string, FTSRef string, categories []cats.Category) error
 	AlignCategoriesBetweenFTSAndDB(owner string, FTSRef string, pageId string) error
 	CreateNewFTSIndex(indexName string, waitTimeRange float32) error
 }
 
-func (controller FTSController) GetDao() *daos.Dao {
+func NewFTSController(dao *daos.Dao, meiliClient *meilisearch.Client) FTSControllerInterface {
+	return &FTSController{
+		PBDao:       dao,
+		MeiliClient: meiliClient,
+	}
+}
+
+func (controller FTSController) AppDao() *daos.Dao {
 	return controller.PBDao
+}
+
+func (controller *FTSController) SetPBDAO(dao *daos.Dao) {
+	controller.PBDao = dao
 }
 
 func (controller FTSController) RemoveDocFTSIndex(pageId string) error {

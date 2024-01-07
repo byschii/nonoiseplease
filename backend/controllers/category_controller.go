@@ -14,7 +14,30 @@ import (
 )
 
 type CategoryController struct {
-	PBDao *daos.Dao
+	pbDao *daos.Dao
+}
+
+type CategoryControllerInterface interface {
+	DAO() *daos.Dao
+	SetPBDAO(dao *daos.Dao)
+	RemoveOrphanCategory(category *cats.Category) error
+	RemoveOrphanCategoryWithException(category *cats.Category, expeptPageId []string) error
+	AddCategoryToPage(fulltextsearchController FTSControllerInterface, owner string, pageId string, categoryName string) error
+	FindCategoriesFromUser(user *users.Users) ([]cats.Category, error)
+}
+
+func NewCategoryController(dao *daos.Dao) CategoryControllerInterface {
+	return &CategoryController{
+		pbDao: dao,
+	}
+}
+
+func (controller CategoryController) DAO() *daos.Dao {
+	return controller.pbDao
+}
+
+func (controller *CategoryController) SetPBDAO(dao *daos.Dao) {
+	controller.pbDao = dao
 }
 
 // checks if category is linked to page
@@ -29,9 +52,9 @@ func (controller CategoryController) RemoveOrphanCategory(category *cats.Categor
 //	- check if user own page
 //	- create category if not exists
 //	- modify fts doc
-func (controller CategoryController) AddCategoryToPage(fulltextsearchController FTSController, owner string, pageId string, categoryName string) error {
+func (controller CategoryController) AddCategoryToPage(fulltextsearchController FTSControllerInterface, owner string, pageId string, categoryName string) error {
 	var page page.Page
-	err := page.FillWithUserAndId(controller.PBDao, owner, pageId)
+	err := page.FillWithUserAndId(controller.DAO(), owner, pageId)
 	if err != nil { // if user not own page -> page not found -> err
 		return err
 	}
@@ -40,7 +63,7 @@ func (controller CategoryController) AddCategoryToPage(fulltextsearchController 
 	categoryName = u.SanitizeString(categoryName)
 
 	// check if category already exists
-	err = controller.PBDao.RunInTransaction(func(txDao *daos.Dao) error {
+	err = controller.DAO().RunInTransaction(func(txDao *daos.Dao) error {
 		dbCategory, err := cats.CategoryExistsByName(txDao, categoryName)
 		if err != nil {
 			return err
@@ -66,7 +89,7 @@ func (controller CategoryController) AddCategoryToPage(fulltextsearchController 
 		PageId:     pageId,
 		CategoryId: categoryId,
 	}
-	err = newCat.Save(controller.PBDao)
+	err = newCat.Save(controller.DAO())
 	if err != nil {
 		return err
 	}
@@ -82,7 +105,7 @@ func (controller CategoryController) RemoveOrphanCategoryWithException(category 
 		return errors.New("category not found")
 	}
 
-	err := controller.PBDao.RunInTransaction(func(txDao *daos.Dao) error {
+	err := controller.DAO().RunInTransaction(func(txDao *daos.Dao) error {
 		// if last one category (whit given name)
 		wasLast, err := category.NoMoreLinksWithException(txDao, expeptPageId)
 		if err != nil {
@@ -103,7 +126,7 @@ func (controller CategoryController) RemoveOrphanCategoryWithException(category 
 func (controller CategoryController) FindCategoriesFromUser(user *users.Users) ([]cats.Category, error) {
 	// get every page owned by user
 	var pages []page.Page
-	err := controller.PBDao.ModelQuery(&page.Page{}).
+	err := controller.DAO().ModelQuery(&page.Page{}).
 		AndWhere(dbx.HashExp{"owner": user.Id}).All(&pages)
 
 	if err != nil {
@@ -113,7 +136,7 @@ func (controller CategoryController) FindCategoriesFromUser(user *users.Users) (
 	// get all categories
 	var allCategories []cats.Category
 	for _, page := range pages {
-		categories, err := cats.GetCategoriesByPageId(controller.PBDao, page.Id)
+		categories, err := cats.GetCategoriesByPageId(controller.DAO(), page.Id)
 		if err != nil {
 			return nil, err
 		}
