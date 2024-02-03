@@ -85,21 +85,22 @@ With what i see as pros or cons.
 ##### Pros
 - free, open source, anonymous
 #### Cons
+- requires installation
 
 ### [Zotero](https://www.zotero.org/)
 ##### Pros
-
+- open source
 ##### Cons
+- too much focused on research (has features i m not interested in)
 
 ### [Pinboard](pinboard.in)
 ##### Pros
-
+- simple, fast, whit API (perferct)
 ##### Cons
+- only paid version
 
 ### [del.icio.us](https://del.icio.us)
-##### Pros
-
-##### Cons
+- maybe somethong to aspire to
 
 Future
 ------
@@ -120,3 +121,5 @@ nonoiseplease is still missing some features, I know, but I'm working on it.
     *   cause maybe you are the top expert on a very little niche and you found interesting resources (that other may find interesting)
     *   with a clear distinction of what you are sharing / where are your searches going
     *   maybe also add a way to "group" pages (like a tag, but with a description)
+*   got to add a local client
+    *   maybe gui (https://mattn.github.io/go-gtk/), maybe not
