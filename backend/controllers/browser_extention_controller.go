@@ -17,7 +17,6 @@ type BrowserExtentionController struct {
 
 type BrowserExtentionControllerInterface interface {
 	CommonController
-	// SyncFromExtention
 }
 
 func NewBrowserExtentionController(app *pocketbase.PocketBase) BrowserExtentionControllerInterface {

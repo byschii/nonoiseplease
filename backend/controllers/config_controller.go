@@ -4,8 +4,16 @@ type ConfigController struct {
 	maxScrapePerMonth int
 }
 
-func NewConfigController(maxScrapePerMonth int) ConfigController {
+type ConfigControllerInterface interface {
+	MaxScrapePerMonth() int
+}
+
+func NewConfigController(maxScrapePerMonth int) ConfigControllerInterface {
 	return ConfigController{
 		maxScrapePerMonth: maxScrapePerMonth,
 	}
+}
+
+func (c ConfigController) MaxScrapePerMonth() int {
+	return c.maxScrapePerMonth
 }

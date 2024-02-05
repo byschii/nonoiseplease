@@ -17,7 +17,7 @@ import (
 type WebController struct {
 	PageController   PageControllerInterface
 	UserController   UserControllerInterface
-	ConfigController ConfigController
+	ConfigController ConfigControllerInterface
 }
 
 type NoNoiseInterface interface {
@@ -32,7 +32,7 @@ type NoNoiseInterface interface {
 	DeletePagemanagePage(c echo.Context) error
 }
 
-func NewNoNoiseInterface(pageController PageControllerInterface, userController UserControllerInterface, configController ConfigController) NoNoiseInterface {
+func NewNoNoiseInterface(pageController PageControllerInterface, userController UserControllerInterface, configController ConfigControllerInterface) NoNoiseInterface {
 	return &WebController{
 		PageController:   pageController,
 		UserController:   userController,
@@ -115,7 +115,7 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 		return nil
 	}
 	// if user has reached the limit, return error
-	if pagesAlreadyScraped >= controller.ConfigController.maxScrapePerMonth {
+	if pagesAlreadyScraped >= controller.ConfigController.MaxScrapePerMonth() {
 		c.String(http.StatusForbidden, "you have reached the limit of pages you can scrape")
 		return nil
 	}

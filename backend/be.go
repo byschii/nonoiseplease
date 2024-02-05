@@ -100,7 +100,6 @@ func main() {
 	})
 
 	c := controllers.NewConfigController(MAX_SCRAPE_PER_MONTH)
-
 	authController := controllers.NewAuthController(app)
 	userController := controllers.NewUserController(app, meiliClient, authController)
 	categoryController := controllers.NewCategoryController(app.Dao())
@@ -131,18 +130,15 @@ func main() {
 			servepublic.ActivityLoggerWithPostAndAuthSupport(app),
 		}
 
-		middlewaresNoAuths := []echo.MiddlewareFunc{
-			servepublic.ActivityLoggerWithPostAndAuthSupport(app),
-		}
-
 		e.Router.AddRoute(echo.Route{
 			Method: http.MethodGet,
-			Path:   "/api/version",
+			Path:   "/version",
 			Handler: func(c echo.Context) error {
 				return c.String(http.StatusOK, VERSION)
 			},
-			Middlewares: middlewaresNoAuths,
 		})
+
+		// pageManage := e.Router.Group("/api/page-manage", middlewares...)
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodPost,
@@ -162,7 +158,7 @@ func main() {
 			Method:      http.MethodPost,
 			Path:        "/api/page-manage/load",
 			Handler:     appController.PostPagemanageLoad,
-			Middlewares: middlewaresNoAuths,
+			Middlewares: middlewares,
 		})
 
 		e.Router.AddRoute(echo.Route{
