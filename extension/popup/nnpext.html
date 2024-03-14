@@ -4,19 +4,17 @@
 <head>
     <title>No Noise Please</title>
     <meta charset="utf-8">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval';">
 </head>
 <body>
     <h2>No Noise Please</h2>
-    <!-- jwt input -->
-    <input type="text" id="jwt" name="jwt" value="" placeholder="jwt"><br><br>
-    <!-- button -->
-    <button id="nnpext" >Save Page</button>
-    <span id="succ-msg" style="border: 1px solid green; display: none;">
-        Page Saved
-    </span>
-    <span id="err-msg" style="border: 1px solid red; display: none;">
-        Error Saving Page
-    </span>
+
+    <input id="nnpext-jwt" type="text" placeholder="Enter JWT here..."><br>
+    <input id="nnpext-memory" type="checkbox" checked> <label for="nnpext-memory" > Temporary Memory</label><br>
+    <input id="nnpext-record" type="checkbox" unchecked> <label for="nnpext-record" > Record Navigation</label><br>
+    <button id="nnpext-save" >Save</button>
+    <button id="nnpext-search" >Search</button>
+
     <script src="nnpext.js"></script>
 </body>
 </html>
