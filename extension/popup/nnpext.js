@@ -1,52 +1,56 @@
 
+
+// constants and utilities
 const B = browser || chrome;
-// read from manifest.json
-let nnp_address = "";
-if (!B.management.getSelf(function(info) {
-    if (info.installType !== "development") {
-        nnp_address = "https://nonoiseplease.com";
-    } else {
-        nnp_address = B.runtime.manifest.devserver;
-    } 
-}));
-const succMsg = document.getElementById("succ-msg");
-const errMsg = document.getElementById("err-msg");
-const simpleCatch = (error) => {
-    console.error(error);
-    errMsg.style.display = "block";
-};
-const postRequest = (jwt, html, url, title) => {
-    return {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-            html: html,
-            url: url,
-            title: title,
-            auth_code: jwt
-        }),
+const extId = B.runtime.id;
+
+
+// get current state
+B.storage.local.get("lastState").then((res) => {
+    console.log("lastState: ", res.lastState);
+    if (res.lastState) {
+        const currentState = res.lastState;
+        document.getElementById("nnpext-jwt").value = currentState.jwt;
+        document.getElementById("nnpext-memory").checked = currentState.allowTemporaryMemory;
+        document.getElementById("nnpext-record").checked = currentState.recordNavigation;
     }
-};
-const tabQuery = {currentWindow: true, active: true};
-const getDocument = { code: "document.body.innerHTML"};
+}).catch(
+    () => false
+);
 
 
-
-document.getElementById("nnpext").addEventListener("click", () => {
-    const jwt = document.getElementById("jwt").value;
-    B.tabs.query(tabQuery).then((tabs) => {
-        const currentTab = tabs[0];
-        B.tabs.executeScript(currentTab.id, getDocument ).then((result) => {
-            const htmlContent = result[0];
-            fetch(
-                nnp_address + "/api/page-manage/load", postRequest(jwt, htmlContent, currentTab.url, currentTab.title)
-            ).then((response) => {
-                if (response.ok) succMsg.style.display = "block";
-            }).catch(simpleCatch); // fetch
-        }).catch(simpleCatch); // get content
-    }).catch(simpleCatch); // get tab
+// event listeners
+document.getElementById("nnpext-jwt").addEventListener("change", (event) => {
+    console.log("jwt changed");
+    B.runtime.sendMessage(extId, {
+        action: "status.jwt",
+        jwt: event.target.value
+    });
 });
-
+document.getElementById("nnpext-memory").addEventListener("change", (event) => {
+    console.log("memory changed");
+    B.runtime.sendMessage(extId, {
+        action: "status.memory",
+        memory: event.target.checked
+    });
+});
+document.getElementById("nnpext-record").addEventListener("change", (event) => {
+    console.log("record changed");
+    B.runtime.sendMessage(extId, {
+        action: "status.record",
+        record: event.target.checked
+    });
+});
+document.getElementById("nnpext-save").addEventListener("click", () => {
+    console.log("save button clicked");
+    B.runtime.sendMessage(extId, {
+        action: "page.save"
+    });
+});
+document.getElementById("nnpext-search").addEventListener("click", () => {
+    console.log("search button clicked");
+    B.runtime.sendMessage(extId, {
+        action: "page.search"
+    });
+});
 
