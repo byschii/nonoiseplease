@@ -155,10 +155,12 @@ func main() {
 		})
 
 		e.Router.AddRoute(echo.Route{
-			Method:      http.MethodPost,
-			Path:        "/api/page-manage/load",
-			Handler:     appController.PostPagemanageLoad,
-			Middlewares: middlewares,
+			Method:  http.MethodPost,
+			Path:    "/api/page-manage/load",
+			Handler: appController.PostPagemanageLoad,
+			Middlewares: []echo.MiddlewareFunc{
+				servepublic.ActivityLoggerWithPostAndAuthSupport(app),
+			},
 		})
 
 		e.Router.AddRoute(echo.Route{
