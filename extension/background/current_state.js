@@ -5,6 +5,7 @@ class State {
         this._jwt= "",
         this._allowTemporaryMemory= true,
         this._recordNavigation= false,
+        this._automaticSearch= true,
         this._memorySize= 10,
         this._memory= []
     }
@@ -30,6 +31,13 @@ class State {
         this._recordNavigation = record;
     }
 
+    get automaticSearch() {
+        return this._automaticSearch;
+    }
+    set automaticSearch(search) {
+        this._automaticSearch = search;
+    }
+
     get memory() {
         if (this._allowTemporaryMemory) {
             return this._memory;
@@ -50,6 +58,7 @@ class State {
             jwt: this._jwt,
             allowTemporaryMemory: this._allowTemporaryMemory,
             recordNavigation: this._recordNavigation,
+            automaticSearch: this._automaticSearch,
             memorySize: this._memorySize,
             memory: this._memory
         };
@@ -59,6 +68,7 @@ class State {
             obj.jwt,
             obj.allowTemporaryMemory,
             obj.recordNavigation,
+            obj.automaticSearch,
             obj.memorySize,
             obj.memory
         );

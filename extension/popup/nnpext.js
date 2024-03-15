@@ -50,7 +50,7 @@ document.getElementById("nnpext-save").addEventListener("click", () => {
 document.getElementById("nnpext-search").addEventListener("click", () => {
     console.log("search button clicked");
     B.runtime.sendMessage(extId, {
-        action: "search"
+        action: "page.search"
     });
 });
 

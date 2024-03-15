@@ -21,7 +21,8 @@ const postRequest = (jwt, html, url, title) => {
     return {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + jwt
         },
         body: JSON.stringify({
             html: html,
@@ -52,6 +53,16 @@ const sendPage = async (jwt, html, url, title) => {
     return res;
 };
 
+const spawnSearch = (tabId, query) => {
+    B.tabs.sendMessage(tab.id, {
+        action: "search",
+        pages: [
+            {url: "https://www.google.com", title: "Google"},
+            {url: "https://www.bing.com", title: "Bing"}
+        ]
+    });
+};
+
 // when state is resolved
 storedState.then((currentState) => {
     // Listen for a tab being updated to a complete status
@@ -71,8 +82,12 @@ storedState.then((currentState) => {
             if (currentState.memory.length > currentState.memorySize) {
                 currentState.memory.shift();
             }
+            if(currentState.automaticSearch){
+                spawnSearch(tab.id, "test")
+            }
         }
     });
+
 
     // and listen for messages from the popup
     B.runtime.onMessage.addListener((message, sender, sendResponse) => {
@@ -99,12 +114,12 @@ storedState.then((currentState) => {
             B.tabs.query({active: true, currentWindow: true}, function(tabs) {
                 var tabId = tabs[0].id;
                 console.log("tabId: ", tabId);
-                B.tabs.sendMessage(tabId, {action: "save"});
+                sendPage(currentState.jwt, document.documentElement.innerHTML, tabs[0].url, tabs[0].title);
             });
         }
-        if (message.action === "search") {
+        if (message.action === "page.search") {
             B.tabs.query({active: true, currentWindow: true}, function(tabs) {
-                B.tabs.sendMessage(tabs[0].id, {action: "search"});
+                spawnSearch(tabs[0].id, "test");
             });
         }
     });
