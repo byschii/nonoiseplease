@@ -9,37 +9,38 @@ if (!B.management.getSelf(function(info) {
     } 
 }));
 
-const postRequest = (jwt, html, url, title) => {
+const postRequest = (userId, extensionToken, html, url, title) => {
     // log body with shortened html
     console.debug("body: ", JSON.stringify({
         html: html.substring(0, 40),
         url: url,
         title: title,
-        auth_code: jwt
+        extention_token: extensionToken,
+        user_id: userId
     }));
 
     return {
         method: "POST",
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": "Bearer " + jwt
+            "Content-Type": "application/json"
         },
         body: JSON.stringify({
             html: html,
             url: url,
             title: title,
-            auth_code: jwt
+            extention_token: extensionToken,
+            user_id: userId
         }),
     }
 };
-const sendPage = async (jwt, html, url, title) => {
+const sendPage = async (userId, extensionToken, html, url, title) => {
     console.log("sending page");
-    if (!jwt) {
-        console.error("no jwt");
+    if (!userId || !extensionToken) {
+        console.error("no userId, extensionToken");
         return false;
     }
     let res = await fetch(
-        nnp_address + "/api/page-manage/load", postRequest(jwt, html, url, title)
+        nnp_address + "/api/page-manage/load", postRequest(userId, extensionToken, html, url, title)
     ).then((response) => {
         console.log(response.ok? "response ok" : "response not ok")
         if (response.ok) {
@@ -77,7 +78,7 @@ storedState.then((currentState) => {
                 });
             }
             if (currentState.recordNavigation) {
-                sendPage(currentState.jwt, htmlContent, tab.url, tab.title); // too keep memory and record independent
+                sendPage(currentState.userId, currentState.extensionToken, htmlContent, tab.url, tab.title); // too keep memory and record independent
             }
             if (currentState.memory.length > currentState.memorySize) {
                 currentState.memory.shift();
@@ -92,14 +93,17 @@ storedState.then((currentState) => {
     // and listen for messages from the popup
     B.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log("currentState before -> ", currentState);
-        if (message.action === "status.jwt") {
-            currentState.jwt = message.jwt;
+        if (message.action === "status.userid") {
+            currentState.userId = message.userid;
+        }
+        else if (message.action === "status.extensionToken") {
+            currentState.extensionToken = message.extensionToken;
         }
         else if (message.action === "status.record") {
             if(!currentState.recordNavigation && message.record && currentState.memory.length > 0){
                 // send all pages in memory
                 currentState.memory.forEach((page) => {
-                    sendPage(currentState.jwt, page.html, page.url, page.title);
+                    sendPage(currentState.userId, currentState.extensionToken, page.html, page.url, page.title);
                 });
             }
             currentState.recordNavigation = message.record;
@@ -114,7 +118,7 @@ storedState.then((currentState) => {
             B.tabs.query({active: true, currentWindow: true}, function(tabs) {
                 var tabId = tabs[0].id;
                 console.log("tabId: ", tabId);
-                sendPage(currentState.jwt, document.documentElement.innerHTML, tabs[0].url, tabs[0].title);
+                sendPage(currentState.userId, currentState.extensionToken, document.documentElement.innerHTML, tabs[0].url, tabs[0].title);
             });
         }
         if (message.action === "page.search") {

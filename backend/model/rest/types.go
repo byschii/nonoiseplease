@@ -11,10 +11,12 @@ type Url struct {
 }
 
 type UrlWithHTML struct {
-	Url      string `json:"url"`
-	HTML     string `json:"html"`
-	Title    string `json:"title"`
-	AuthCode string `json:"auth_code"`
+	Url            string `json:"url"`
+	HTML           string `json:"html"`
+	Title          string `json:"title"`
+	AuthCode       string `json:"auth_code"` // finira per essere eliminato, non ha senso richiedere questo campo tutte le volte, anche per che mi sa che cambia
+	ExtentionToken string `json:"extention_token"`
+	UserId         string `json:"user_id"`
 }
 
 type PageResponse struct {

@@ -55,6 +55,7 @@ func GetTextInBody(pageHtml string) (string, error) {
 	return h.Body.Content, nil
 }
 
+// actually just builds a struct that represents the html
 func GetArticleFromHtml(html string, pageUrl string) (*ParsedPage, error) {
 
 	// create url struct

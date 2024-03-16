@@ -26,10 +26,10 @@
                     <p x-text="lastMessage"></p>
                     <div>
                         <h3>Access</h3>
-                        <div><snap>Id: <code> {{ .UserId }} </code> </span></div>
-                        <div><snap>JWT: <code style="overflow-y: auto;" x-text="myJwt"></code></span></div>
-                        <div><snap>Email: <code> {{ .Email }} </code></span></div>
-                        <div><snap>New Email: <input id="newEmail" placeholder="New Email"></span></div>
+                        <div><span>Id: <code> {{ .UserId }} </code> </span></div>
+                        <div><span>JWT: <code style="overflow-y: auto;" x-text="myJwt"></code></span></div>
+                        <div><span>Email: <code> {{ .Email }} </code></span></div>
+                        <div><span>New Email: <input id="newEmail" placeholder="New Email"></span></div>
                         <button x-on:click="requestEmailChange"> Change Email </button>
                         <button x-on:click="requestPasswordReset"> Reset Password </button>
                         <button x-on:click="showCancellationConfirmation = true"> Delete Account </button>
@@ -41,11 +41,17 @@
                     </div>   
                     <div x-init="downloadDetails">
                         <h3>Details</h3>
-                        <div><snap>Nickname: <code> {{ .Nickname }} </code></span></div>
-                        <div><snap>New Nickname: <input id="newNickname" placeholder="New Nickname"></span></div>
-                        <button x-on:click="requestNicknameChange"> Change Nickname </button>
+                        <div>
+                            <span>Nickname: <code> {{ .Nickname }} </code></span>
+                            <span> New Nickname: <input id="newNickname" placeholder="New Nickname" class="user-details-input">
+                            <button x-on:click="requestNicknameChange"> Change Nickname </button></span>
+                        </div>      
+                        <div>
+                            <span>Extension Token: <code> {{ .ExtensionToken }} </code></span>
+                            <span> New Extension Token: <input id="newExtensionToken" placeholder="New Extension Token" class="user-details-input">
+                            <button x-on:click="requestExtensionTokenChange"> Change Extension Token </button></span>
+                        </div>         
                     </div>
-                    
                 </div>
             </template>
         </div>
@@ -136,6 +142,20 @@
                     body: JSON.stringify({
                         related_user: Cookies.get('uid'),
                         nickname: document.getElementById("newNickname").value
+                    })
+                }).then(response => response.json()
+                ).then(data => { this.lastMessage = JSON.stringify(data) })
+            },
+            requestExtensionTokenChange(){
+                fetch("/api/collections/user_details/records/"+this.details.id, {
+                    method: 'PATCH',
+                    headers: {
+                        Authorization: Cookies.get('jwt'),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        related_user: Cookies.get('uid'),
+                        nickname: document.getElementById("newExtensionToken").value
                     })
                 }).then(response => response.json()
                 ).then(data => { this.lastMessage = JSON.stringify(data) })

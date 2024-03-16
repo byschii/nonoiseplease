@@ -12,8 +12,9 @@ these data are ment to be low importance and editable by the user
 type UserDetails struct {
 	models.BaseModel
 
-	Nickname    string `db:"nickname" json:"nickname"`
-	RelatedUser string `db:"related_user" json:"related_user"`
+	Nickname       string `db:"nickname" json:"nickname"`
+	RelatedUser    string `db:"related_user" json:"related_user"`
+	ExtensionToken string `db:"extension_token" json:"extension_token"`
 }
 
 func (m *UserDetails) TableName() string {

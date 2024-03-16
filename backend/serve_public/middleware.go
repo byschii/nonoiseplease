@@ -200,7 +200,7 @@ func completeName(fileSystem fs.FS, name string) string {
 				name += ".html"
 			}
 		} else {
-			if err != nil && errors.Is(err, fs.ErrNotExist) {
+			if errors.Is(err, fs.ErrNotExist) {
 				// if file not found
 				// add '.html' to the end of name
 				name += ".html"
