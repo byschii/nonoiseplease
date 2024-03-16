@@ -10,7 +10,8 @@ B.storage.local.get("lastState").then((res) => {
     console.log("lastState: ", res.lastState);
     if (res.lastState) {
         const currentState = res.lastState;
-        document.getElementById("nnpext-jwt").value = currentState.jwt;
+        document.getElementById("nnpext-user-id").value = currentState.userId;
+        document.getElementById("nnpext-extension-token").value = currentState.extensionToken;
         document.getElementById("nnpext-memory").checked = currentState.allowTemporaryMemory;
         document.getElementById("nnpext-record").checked = currentState.recordNavigation;
     }
@@ -20,11 +21,18 @@ B.storage.local.get("lastState").then((res) => {
 
 
 // event listeners
-document.getElementById("nnpext-jwt").addEventListener("change", (event) => {
-    console.log("jwt changed");
+document.getElementById("nnpext-user-id").addEventListener("change", (event) => {
+    console.log("user id changed");
     B.runtime.sendMessage(extId, {
-        action: "status.jwt",
-        jwt: event.target.value
+        action: "status.userid",
+        userid: event.target.value
+    });
+});
+document.getElementById("nnpext-extension-token").addEventListener("change", (event) => {
+    console.log("extension token changed");
+    B.runtime.sendMessage(extId, {
+        action: "status.extensionToken",
+        extensionToken: event.target.value
     });
 });
 document.getElementById("nnpext-memory").addEventListener("change", (event) => {

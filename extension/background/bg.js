@@ -92,8 +92,11 @@ storedState.then((currentState) => {
     // and listen for messages from the popup
     B.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log("currentState before -> ", currentState);
-        if (message.action === "status.jwt") {
-            currentState.jwt = message.jwt;
+        if (message.action === "status.userid") {
+            currentState.userId = message.userid;
+        }
+        else if (message.action === "status.extensionToken") {
+            currentState.extensionToken = message.extensionToken;
         }
         else if (message.action === "status.record") {
             if(!currentState.recordNavigation && message.record && currentState.memory.length > 0){

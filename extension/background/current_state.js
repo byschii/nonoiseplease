@@ -2,7 +2,8 @@
 
 class State {
     constructor() {
-        this._jwt= "",
+        this._userid= "",
+        this._extensionToken = "",
         this._allowTemporaryMemory= true,
         this._recordNavigation= false,
         this._automaticSearch= true,
@@ -10,11 +11,18 @@ class State {
         this._memory= []
     }
 
-    get jwt() {
-        return this._jwt;
+    get userId() {
+        return this._userid;
     }
-    set jwt(jwt) {
-        this._jwt = jwt;
+    set userId(id) {
+        this._userid = id;
+    }
+
+    get extensionToken() {
+        return this._extensionToken;
+    }
+    set extensionToken(token) {
+        this._extensionToken = token;
     }
 
     get allowTemporaryMemory() {
@@ -55,7 +63,8 @@ class State {
 
     serialize() {
         return {
-            jwt: this._jwt,
+            userId: this._userid,
+            extensionToken: this._extensionToken,            
             allowTemporaryMemory: this._allowTemporaryMemory,
             recordNavigation: this._recordNavigation,
             automaticSearch: this._automaticSearch,
@@ -65,7 +74,8 @@ class State {
     }
     static deserialize(obj) {
         const state = new State(
-            obj.jwt,
+            obj.userId,
+            obj.extensionToken,
             obj.allowTemporaryMemory,
             obj.recordNavigation,
             obj.automaticSearch,
@@ -79,7 +89,7 @@ class State {
 const B = browser || chrome;
 // get state from memory
 var storedState = B.storage.local.get("lastState").then((res) => {
-    if (!res.lastState) {
+    if (!res.lastState|| true) {
         B.storage.local.set({"lastState": (new State()).serialize()});
         return new State();
     }else{
