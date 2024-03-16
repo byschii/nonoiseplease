@@ -45,7 +45,7 @@ func (controller *FTSController) SetPBDAO(dao *daos.Dao) {
 
 func (controller FTSController) RemoveDocFTSIndex(pageId string) error {
 
-	log.Print("deleting " + pageId)
+	log.Println("deleting " + pageId)
 	// convert docId to ftsRef
 	page, err := page.GetPageFromPageId(controller.PBDao, pageId)
 	if err != nil {

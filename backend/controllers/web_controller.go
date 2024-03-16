@@ -90,7 +90,7 @@ func (controller WebController) GetSearch(c echo.Context) error {
 
 	pageResp, err := controller.PageController.PageSearch(query, []string{userID}, categories)
 	if err != nil {
-		log.Print("failed to search ", err)
+		log.Println("failed to search ", err)
 		return c.String(http.StatusBadRequest, u.WrapError("failed to search ", err).Error())
 	}
 
@@ -307,7 +307,7 @@ func (controller WebController) DeletePagemanagePage(c echo.Context) error {
 
 	err := controller.PageController.RemoveDocFTSIndex(data.PageID)
 	if err != nil {
-		log.Print("error deleting page from index ", err)
+		log.Println("error deleting page from index ", err)
 		c.String(http.StatusBadRequest, "error deleting page from index")
 		return nil
 	}

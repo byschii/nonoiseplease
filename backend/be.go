@@ -249,7 +249,7 @@ func main() {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "users" {
 			if conf.IsGreatWallEnabled(app.Dao()) {
-				log.Print("great wall enabled, aborting user creation")
+				log.Println("great wall enabled, aborting user creation")
 				return fmt.Errorf("great wall enabled, aborting user creation")
 			}
 		}
@@ -259,21 +259,21 @@ func main() {
 	app.OnRecordAfterCreateRequest().Add(func(e *core.RecordCreateEvent) error {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "users" {
-			log.Print("creating user")
+			log.Println("creating user")
 			err := userController.StoreNewUserDetails(e.Record.Id, "")
 			if err != nil {
-				log.Print("error creating user details or important data ")
+				log.Println("error creating user details or important data ")
 				log.Println(err)
 				return err
 			}
-			log.Print("StoreNewUserDetails ok")
+			log.Println("StoreNewUserDetails ok")
 
 			err = fulltextsearchController.CreateNewFTSIndex(e.Record.Id, 2)
 			if err != nil {
 				log.Println("error creating user index ", err)
 				return err
 			}
-			log.Print("CreateNewFTSIndex ok")
+			log.Println("CreateNewFTSIndex ok")
 		}
 
 		return nil
@@ -282,7 +282,7 @@ func main() {
 	app.OnRecordAfterDeleteRequest().Add(func(e *core.RecordDeleteEvent) error {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "users" {
-			log.Print("deleting user, reflect on fts")
+			log.Println("deleting user, reflect on fts")
 			_, err := meiliClient.DeleteIndex(e.Record.Id)
 			if err != nil {
 				log.Println("error deleting user index ", err)
@@ -296,7 +296,7 @@ func main() {
 		if collectionName == "pages" {
 			err := fulltextsearchController.RemoveDocFTSIndex(e.Record.Id)
 			if err != nil {
-				log.Print("error deleting page ", err)
+				log.Println("error deleting page ", err)
 			}
 		}
 		return nil
@@ -326,7 +326,7 @@ func main() {
 	app.OnRecordBeforeUpdateRequest().Add(func(e *core.RecordUpdateEvent) error {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "user_important_data" {
-			log.Print("editing user_important_data")
+			log.Println("editing user_important_data")
 		}
 
 		return nil

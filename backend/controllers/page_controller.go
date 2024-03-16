@@ -139,7 +139,7 @@ func (controller PageController) RemoveCategoryFromPageWithOwner(owner string, p
 		return err
 	}
 
-	log.Print("check if last category", pageId, category.Name)
+	log.Println("check if last category", pageId, category.Name)
 	err = controller.CategoryController.RemoveOrphanCategory(category)
 	if err != nil {
 		return err

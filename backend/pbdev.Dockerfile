@@ -18,4 +18,4 @@ RUN go mod download
 EXPOSE 8090
 
 # -- debug
-CMD CompileDaemon -build="go build be.go" -command="./be serve" 
+CMD CompileDaemon -build="go build be.go" -command="./be serve --debug" 

@@ -166,10 +166,10 @@ func StaticDirectoryHandlerWHTMLAdder(fileSystem fs.FS, indexFallback bool, auto
 				data := interface{}(nil)
 				// if no user found, use simple DataRetriever
 				if err != nil {
-					log.Print("templating: no user found")
+					log.Println("templating: no user found")
 					data = templatedPage.DataRetriever(uc)
 				} else { // if user found, use DataRetrieverWithUser
-					log.Print("templating: user found")
+					log.Println("templating: user found")
 					data = templatedPage.DataRetrieverWithUser(uc, user.Id)
 				}
 				// build page with data and put it in response

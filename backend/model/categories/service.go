@@ -32,11 +32,11 @@ func NewCategory(dao *daos.Dao, name string) (string, error) {
 
 	err := dao.Save(&cat)
 	if err != nil {
-		log.Print("error creating category: ", err)
+		log.Println("error creating category: ", err)
 		return "", err
 	}
 
-	log.Print("created category: ", cat, cat.Id)
+	log.Println("created category: ", cat, cat.Id)
 	return cat.Id, nil
 }
 
