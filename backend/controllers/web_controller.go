@@ -265,14 +265,12 @@ func (controller WebController) PostPagemanageLoad(c echo.Context) error {
 	}
 
 	userRecord, err := controller.UserController.AuthorizationController().FindUserForExtention(postData.UserId, postData.ExtentionToken, postData.AuthCode)
-
 	if err != nil {
 		log.Printf("failed to get user from request, %v\n", err)
-		c.String(http.StatusUnauthorized, "unauthorized, user not verified")
+		c.String(http.StatusUnauthorized, "unauthorized, user not found")
 		return nil
 	}
 
-	// scrape url and get info
 	article, err := webscraping.GetArticleFromHtml(postData.HTML, postData.Url)
 	if err != nil {
 		log.Printf("failed to parse %s, %v\n", postData.Url, err)

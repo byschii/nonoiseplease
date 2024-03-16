@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 
 	"github.com/labstack/echo/v5"
@@ -49,6 +50,7 @@ func (controller *AuthController) TokenSecret() string {
 }
 
 func (authController AuthController) FindUserForExtention(userId string, extentionToken string, jwt string) (*models.Record, error) {
+	log.Println("FindUserForExtention", userId, extentionToken, jwt)
 	if jwt != "" {
 		userRecord, err := authController.FindUserFromJWT(jwt)
 		if err != nil {
@@ -64,7 +66,7 @@ func (authController AuthController) FindUserForExtention(userId string, extenti
 
 	if u != nil {
 		userRecord := &models.Record{}
-		userRecord.Id = u.Id
+		userRecord.Id = u.RelatedUser
 		return userRecord, nil
 	}
 
@@ -76,7 +78,7 @@ func (authController AuthController) FindUserFromExtentionToken(userId string, e
 	q := authController.AppDao().ModelQuery(&users.UserDetails{})
 
 	err := q.AndWhere(dbx.HashExp{"related_user": userId}).
-		AndWhere(dbx.HashExp{"extention_token": extentionToken}).
+		AndWhere(dbx.HashExp{"extension_token": extentionToken}).
 		Limit(1).
 		One(u)
 	if err != nil {

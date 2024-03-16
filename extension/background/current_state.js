@@ -89,7 +89,7 @@ class State {
 const B = browser || chrome;
 // get state from memory
 var storedState = B.storage.local.get("lastState").then((res) => {
-    if (!res.lastState|| true) {
+    if (!res.lastState) {
         B.storage.local.set({"lastState": (new State()).serialize()});
         return new State();
     }else{
