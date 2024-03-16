@@ -91,6 +91,7 @@ func MeAccountTemplate(name string, subFs fs.FS) *TemplateRenderer {
 			if err != nil {
 				log.Println("error getting user part from id, ", err.Error())
 			}
+			log.Println(details.Nickname, details.ExtensionToken)
 
 			retrivedData := struct {
 				UserId         string
@@ -98,9 +99,10 @@ func MeAccountTemplate(name string, subFs fs.FS) *TemplateRenderer {
 				Nickname       string
 				ExtensionToken string
 			}{
-				UserId:   userId,
-				Email:    email,
-				Nickname: details.Nickname,
+				UserId:         userId,
+				Email:          email,
+				Nickname:       details.Nickname,
+				ExtensionToken: details.ExtensionToken,
 			}
 
 			return retrivedData

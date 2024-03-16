@@ -264,7 +264,8 @@ func (controller WebController) PostPagemanageLoad(c echo.Context) error {
 		return nil
 	}
 
-	userRecord, err := controller.UserController.AuthorizationController().FindUserFromJWT(postData.AuthCode)
+	userRecord, err := controller.UserController.AuthorizationController().FindUserForExtention(postData.UserId, postData.ExtentionToken, postData.AuthCode)
+
 	if err != nil {
 		log.Printf("failed to get user from request, %v\n", err)
 		c.String(http.StatusUnauthorized, "unauthorized, user not verified")

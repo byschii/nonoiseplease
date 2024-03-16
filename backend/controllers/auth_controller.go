@@ -22,6 +22,8 @@ type AuthControllerInterface interface {
 	CommonController
 	TokenSecret() string
 	SetApp(app *pocketbase.PocketBase)
+	FindUserForExtention(userId string, extentionToken string, jwt string) (*models.Record, error)
+	FindUserFromExtentionToken(userId string, extentionToken string) (*users.UserDetails, error)
 	FindUserFromJWT(jwt string) (*models.Record, error)
 	FindUserFromJWTInContext(c echo.Context) (*models.Record, error)
 	FindUserById(id string) (*users.Users, error)
@@ -46,9 +48,46 @@ func (controller *AuthController) TokenSecret() string {
 	return controller.App.Settings().RecordAuthToken.Secret
 }
 
+func (authController AuthController) FindUserForExtention(userId string, extentionToken string, jwt string) (*models.Record, error) {
+	if jwt != "" {
+		userRecord, err := authController.FindUserFromJWT(jwt)
+		if err != nil {
+			return nil, err
+		}
+		return userRecord, nil
+	}
+
+	u, err := authController.FindUserFromExtentionToken(userId, extentionToken)
+	if err != nil {
+		return nil, err
+	}
+
+	if u != nil {
+		userRecord := &models.Record{}
+		userRecord.Id = u.Id
+		return userRecord, nil
+	}
+
+	return nil, errors.New("user not found")
+}
+
+func (authController AuthController) FindUserFromExtentionToken(userId string, extentionToken string) (*users.UserDetails, error) {
+	u := &users.UserDetails{}
+	q := authController.AppDao().ModelQuery(&users.UserDetails{})
+
+	err := q.AndWhere(dbx.HashExp{"related_user": userId}).
+		AndWhere(dbx.HashExp{"extention_token": extentionToken}).
+		Limit(1).
+		One(u)
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
 // get user from token
 func (authController AuthController) FindUserFromJWT(jwt string) (*models.Record, error) {
-
 	userRecord, err := authController.AppDao().FindAuthRecordByToken(
 		jwt,
 		authController.TokenSecret())
