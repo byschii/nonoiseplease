@@ -5,8 +5,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"log"
 	"net/http"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
@@ -50,7 +51,7 @@ func (controller *AuthController) TokenSecret() string {
 }
 
 func (authController AuthController) FindUserForExtention(userId string, extentionToken string, jwt string) (*models.Record, error) {
-	log.Println("FindUserForExtention", userId, extentionToken, jwt)
+	log.Debug().Msgf("FindUserForExtention %s %s %s", userId, extentionToken, jwt)
 	if jwt != "" {
 		userRecord, err := authController.FindUserFromJWT(jwt)
 		if err != nil {

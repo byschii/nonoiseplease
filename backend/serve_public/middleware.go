@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"io/fs"
 	"io/ioutil"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/apis"
@@ -42,12 +43,12 @@ func ActivityLoggerWithPostAndAuthSupport(app core.App) echo.MiddlewareFunc {
 				// read request body
 				var body map[string]interface{}
 				if err := c.Bind(&body); err != nil {
-					log.Printf("failed to read request body, %v for req %s %s", err, httpRequest.Method, httpRequest.URL.RequestURI())
+					log.Debug().Msgf("failed to read request body, %v for req %s %s", err, httpRequest.Method, httpRequest.URL.RequestURI())
 				}
 				// convert body back to byte
 				bodyBytes, err := json.Marshal(body)
 				if err != nil {
-					log.Printf("failed to marshal request body, %v for req %s %s", err, httpRequest.Method, httpRequest.URL.RequestURI())
+					log.Debug().Msgf("failed to marshal request body, %v for req %s %s", err, httpRequest.Method, httpRequest.URL.RequestURI())
 				}
 				httpRequest.Body = ioutil.NopCloser(bytes.NewReader(bodyBytes))
 
@@ -104,7 +105,7 @@ func ActivityLoggerWithPostAndAuthSupport(app core.App) echo.MiddlewareFunc {
 
 			routine.FireAndForget(func() {
 				if err := app.LogsDao().SaveRequest(model); err != nil && app.IsDebug() {
-					log.Println("Log save failed:", err)
+					log.Error().Msgf("Log save failed: %v", err)
 				}
 
 				// Delete old request logs
@@ -118,7 +119,7 @@ func ActivityLoggerWithPostAndAuthSupport(app core.App) echo.MiddlewareFunc {
 					if deleteErr == nil {
 						app.Cache().Set("lastLogsDeletedAt", now)
 					} else if app.IsDebug() {
-						log.Println("Logs delete failed:", deleteErr)
+						log.Debug().Msgf("Logs delete failed: %v", deleteErr)
 					}
 				}
 			})
@@ -166,10 +167,10 @@ func StaticDirectoryHandlerWHTMLAdder(fileSystem fs.FS, indexFallback bool, auto
 				data := interface{}(nil)
 				// if no user found, use simple DataRetriever
 				if err != nil {
-					log.Print("templating: no user found")
+					log.Error().Msgf("templating: no user found")
 					data = templatedPage.DataRetriever(uc)
 				} else { // if user found, use DataRetrieverWithUser
-					log.Print("templating: user found")
+					log.Error().Msgf("templating: user found")
 					data = templatedPage.DataRetrieverWithUser(uc, user.Id)
 				}
 				// build page with data and put it in response

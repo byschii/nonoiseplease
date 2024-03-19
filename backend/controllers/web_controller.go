@@ -3,9 +3,10 @@ package controllers
 import (
 	u "be/utils"
 	"be/webscraping"
-	"log"
 	"net/http"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 
 	"be/model/page"
 	rest "be/model/rest"
@@ -52,7 +53,7 @@ func (controller WebController) GetSearchInfo(c echo.Context) error {
 
 	user, err := controller.UserController.UserFromRequest(c, false)
 	if err != nil {
-		log.Printf("failed to get user from request, %v\n", err)
+		log.Debug().Msgf("failed to get user from request, %v\n", err)
 		c.String(http.StatusBadRequest, u.WrapError("failed to get user from request ", err).Error())
 		return nil
 	}
@@ -60,7 +61,7 @@ func (controller WebController) GetSearchInfo(c echo.Context) error {
 	// get all categories from user pages
 	categories, err := controller.PageController.FindCategoriesFromUser(user)
 	if err != nil {
-		log.Printf("failed to get categories, %v\n", err)
+		log.Debug().Msgf("failed to get categories, %v\n", err)
 		c.String(http.StatusBadRequest, u.WrapError("failed to get categories ", err).Error())
 		return nil
 	}
@@ -74,6 +75,9 @@ func (controller WebController) GetSearchInfo(c echo.Context) error {
 }
 
 func (controller WebController) GetSearch(c echo.Context) error {
+	// print request
+	print(c)
+	log.Debug().Msgf(c.Request().URL.String())
 	record, _ := c.Get("authRecord").(*models.Record)
 	if record == nil || !record.GetBool("verified") {
 		c.String(http.StatusUnauthorized, "unauthorized, user not verified")
@@ -90,7 +94,7 @@ func (controller WebController) GetSearch(c echo.Context) error {
 
 	pageResp, err := controller.PageController.PageSearch(query, []string{userID}, categories)
 	if err != nil {
-		log.Print("failed to search ", err)
+		log.Error().Err(err).Msg("failed to search ")
 		return c.String(http.StatusBadRequest, u.WrapError("failed to search ", err).Error())
 	}
 
@@ -110,7 +114,7 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 
 	pagesAlreadyScraped, err := controller.PageController.CountUserPagesByOriginThisMonth(userRecord.Id, page.AvailableOriginScrape)
 	if err != nil {
-		log.Printf("failed to count user pages, %v\n", err)
+		log.Debug().Msgf("failed to count user pages, %v\n", err)
 		c.String(http.StatusInternalServerError, "failed to count user pages")
 		return nil
 	}
@@ -123,14 +127,14 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 	// get url from json body
 	var urlData rest.Url
 	if err := c.Bind(&urlData); err != nil {
-		log.Printf("failed to parse json body, %v\n", err)
+		log.Debug().Msgf("failed to parse json body, %v\n", err)
 		c.String(http.StatusBadRequest, "failed to parse json body")
 		return nil
 	}
 	// scrape url and get info
 	article, withProxy, err := webscraping.GetArticle(urlData.Url, false, controller.PageController.AppDao())
 	if err != nil {
-		log.Printf("failed to parse %s, %v\n", urlData.Url, err)
+		log.Debug().Msgf("failed to parse %s, %v\n", urlData.Url, err)
 		c.String(http.StatusBadRequest, "failed to parse url")
 		return nil
 	}
@@ -139,7 +143,7 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 		userRecord.Id, urlData.Url, article.Title, []string{}, article.TextContent, page.AvailableOriginScrape, withProxy,
 	)
 	if err != nil {
-		log.Printf("failed to save page, %v\n", err)
+		log.Debug().Msgf("failed to save page, %v\n", err)
 		c.String(http.StatusBadRequest, u.WrapError("failed to save page ", err).Error())
 		return nil
 	}
@@ -158,16 +162,16 @@ func (controller WebController) PostPagemanageCategory(c echo.Context) error {
 	// read page and category id from body
 	var data rest.PostCategoryRequest
 	if err := c.Bind(&data); err != nil {
-		log.Printf("failed to parse json body, %v\n", err)
+		log.Debug().Msgf("failed to parse json body, %v\n", err)
 		c.String(http.StatusBadRequest, "failed to parse json body")
 		return nil
 	}
 
-	log.Println("data", data)
+	log.Debug().Msgf("data %+v", data)
 	err := controller.PageController.AddCategoryToPage(userRecord.Id, data.PageID, data.CategoryName)
 
 	if err != nil {
-		log.Printf("failed to add category, %v\n", err)
+		log.Debug().Msgf("failed to add category, %v\n", err)
 		c.String(http.StatusBadRequest, u.WrapError("failed to add category ", err).Error())
 		return nil
 	}
@@ -189,7 +193,7 @@ func (controller WebController) GetPagemanage(c echo.Context) error {
 
 	page, categories, ref, err := controller.PageController.PageID2FullPageData(userID, pageID)
 	if err != nil || ref == nil {
-		log.Printf("failed to get page, %v\n", err)
+		log.Debug().Msgf("failed to get page, %v\n", err)
 		c.String(http.StatusBadRequest, u.WrapError("failed to get page ", err).Error())
 		return nil
 	}
@@ -211,11 +215,6 @@ func (controller WebController) GetPagemanage(c echo.Context) error {
 		}
 	}
 	if !sameCats {
-		/*log.Println("categories are not the same")
-		log.Println("db categories", categories, len(categories))
-		log.Println("meili categories", ref.Category, len(ref.Category))
-		c.String(http.StatusBadRequest, "categories are not the same")
-		return nil*/
 		controller.PageController.SetDBCategoriesOnFTSDoc(userID, page.FTSRef, categories)
 	}
 
@@ -240,14 +239,14 @@ func (controller WebController) DeletePagemanageCategory(c echo.Context) error {
 	// read page and category id from body
 	var data rest.DeleteCategoryRequest
 	if err := c.Bind(&data); err != nil {
-		log.Printf("failed to parse json body, %v\n", err)
+		log.Debug().Msgf("failed to parse json body, %v\n", err)
 		c.String(http.StatusBadRequest, "failed to parse json body")
 		return nil
 	}
 
 	err := controller.PageController.RemoveCategoryFromPageWithOwner(userID, data.PageID, data.CategoryName)
 	if err != nil {
-		log.Printf("failed to delete category, %v\n", err)
+		log.Debug().Msgf("failed to delete category, %v\n", err)
 		c.String(http.StatusBadRequest, u.WrapError("failed to delete category ", err).Error())
 		return nil
 	}
@@ -259,21 +258,21 @@ func (controller WebController) PostPagemanageLoad(c echo.Context) error {
 	// get url from json body
 	var postData rest.UrlWithHTML
 	if err := c.Bind(&postData); err != nil {
-		log.Printf("failed to parse json body, %v\n", err)
+		log.Debug().Msgf("failed to parse json body, %v\n", err)
 		c.String(http.StatusBadRequest, "failed to parse json body")
 		return nil
 	}
 
 	userRecord, err := controller.UserController.AuthorizationController().FindUserForExtention(postData.UserId, postData.ExtentionToken, postData.AuthCode)
 	if err != nil {
-		log.Printf("failed to get user from request, %v\n", err)
+		log.Debug().Msgf("failed to get user from request, %v\n", err)
 		c.String(http.StatusUnauthorized, "unauthorized, user not found")
 		return nil
 	}
 
 	article, err := webscraping.GetArticleFromHtml(postData.HTML, postData.Url)
 	if err != nil {
-		log.Printf("failed to parse %s, %v\n", postData.Url, err)
+		log.Debug().Msgf("failed to parse %s, %v\n", postData.Url, err)
 		c.String(http.StatusBadRequest, "failed to parse url or html")
 		return nil
 	}
@@ -282,7 +281,7 @@ func (controller WebController) PostPagemanageLoad(c echo.Context) error {
 		userRecord.Id, postData.Url, postData.Title, []string{}, article.TextContent, page.AvailableOriginExtention, false,
 	)
 	if err != nil {
-		log.Printf("failed to save page, %v\n", err)
+		log.Debug().Msgf("failed to save page, %v\n", err)
 		c.String(http.StatusBadRequest, u.WrapError("failed to save page ", err).Error())
 		return nil
 	}
@@ -300,28 +299,28 @@ func (controller WebController) DeletePagemanagePage(c echo.Context) error {
 
 	var data rest.DeletePageRequest
 	if err := c.Bind(&data); err != nil {
-		log.Printf("failed to parse json body, %v\n", err)
+		log.Debug().Msgf("failed to parse json body, %v\n", err)
 		c.String(http.StatusBadRequest, "failed to parse json body")
 		return nil
 	}
 
 	err := controller.PageController.RemoveDocFTSIndex(data.PageID)
 	if err != nil {
-		log.Print("error deleting page from index ", err)
+		log.Error().Err(err).Msg("error deleting page from index ")
 		c.String(http.StatusBadRequest, "error deleting page from index")
 		return nil
 	}
 
 	page, categories, _, err := controller.PageController.PageID2FullPageData(userRecord.Id, data.PageID)
 	if err != nil {
-		log.Printf("failed to get page, %v\n", err)
+		log.Debug().Msgf("failed to get page, %v\n", err)
 		c.String(http.StatusBadRequest, u.WrapError("failed to get page ", err).Error())
 		return nil
 	}
 	for _, cat := range categories {
 		err := controller.PageController.RemoveCategoryFromPageWithOwner(userRecord.Id, page.Id, cat.Name)
 		if err != nil {
-			log.Printf("failed to delete category, %v\n", err)
+			log.Debug().Msgf("failed to delete category, %v\n", err)
 			c.String(http.StatusBadRequest, u.WrapError("failed to delete category ", err).Error())
 			return nil
 		}
@@ -329,7 +328,7 @@ func (controller WebController) DeletePagemanagePage(c echo.Context) error {
 
 	err = controller.PageController.AppDao().Delete(page)
 	if err != nil {
-		log.Printf("failed to delete page, %v\n", err)
+		log.Debug().Msgf("failed to delete page, %v\n", err)
 		c.String(http.StatusBadRequest, u.WrapError("failed to delete page ", err).Error())
 		return nil
 	}

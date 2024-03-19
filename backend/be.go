@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"os"
+
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 
 	_ "be/migrations"
 
@@ -45,14 +47,15 @@ func main() {
 	if err != nil {             // Handle errors reading the config file
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
-
-	log.Printf("config: %+v", viper.AllSettings())
+	print("config: %+v", viper.AllSettings())
 
 	FRONTEND_FOLDER := viper.GetString("frontend_folder")
 	LOG_FOLDER := viper.GetString("log_folder")
 	LOG_FILENAME := viper.GetString("log_filename")
 	APP_URL := viper.GetString("app_url")
 	MEILI_MASTER_KEY := viper.GetString("meili_master_key")
+	MAIL_HOST := viper.GetString("mail_host")
+	MAIL_PORT := viper.GetInt("mail_port")
 	MAIL_USERNAME := viper.GetString("mail_username")
 	MAIL_PASSWORD := viper.GetString("mail_password")
 	MEILI_HOST_ADDRESS := viper.GetString("meili_host_address")
@@ -61,24 +64,27 @@ func main() {
 	if os.Getenv("VERSION") != "" {
 		VERSION = os.Getenv("VERSION")
 	}
+
+	logDestination := os.Stdout
 	if os.Getenv("RUNNING") == "PUBLIC" {
 		APP_URL = "https://nonoiseplease.com"
 		MEILI_HOST_ADDRESS = "http://0.0.0.0:7700"
 
-		// set up logging
-		log.SetFlags(log.LstdFlags | log.Lshortfile)
-
 		// create log folder if not exists
 		if _, err := os.Stat(LOG_FOLDER); os.IsNotExist(err) {
+			print("creating log folder")
 			os.Mkdir(LOG_FOLDER, 0755)
+		} else {
+			print("log folder exists")
 		}
 		// open a file
-		f, err := os.OpenFile(LOG_FOLDER+"/"+LOG_FILENAME, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		logDestination, err = os.OpenFile(LOG_FOLDER+"/"+LOG_FILENAME, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
-			log.Fatalf("error opening file: %v", err)
+			// format error and panic
+			panic(fmt.Sprintf("error opening file: %v", err))
 		}
-		log.SetOutput(f)
 	}
+	log.Logger = zerolog.New(logDestination).With().Timestamp().Caller().Logger()
 
 	app := pocketbase.New()
 	meiliClient := meilisearch.NewClient(meilisearch.ClientConfig{
@@ -91,11 +97,11 @@ func main() {
 	})
 
 	app.OnMailerBeforeRecordChangeEmailSend().Add(func(e *core.MailerRecordEvent) error {
-		log.Println("sending mail for registration to", e.Record.Email())
+		log.Debug().Msgf("sending mail for registration to %s", e.Record.Email())
 		return nil
 	})
 	app.OnMailerAfterRecordChangeEmailSend().Add(func(e *core.MailerRecordEvent) error {
-		log.Println("mail for registration sent to", e.Record.Email())
+		log.Debug().Msgf("mail for registration sent to %s", e.Record.Email())
 		return nil
 	})
 
@@ -108,7 +114,7 @@ func main() {
 	appController := controllers.NewNoNoiseInterface(pageController, userController, c)
 
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
-		log.Println("lessgoozz!!")
+		log.Debug().Msgf("lessgoozz!!")
 		userController.SetApp(app)
 		authController.SetApp(app)
 		categoryController.SetPBDAO(app.Dao())
@@ -210,8 +216,8 @@ func main() {
 		// set application smtp
 		app.Settings().Smtp = settings.SmtpConfig{
 			Enabled:  true,
-			Host:     "mail.smtp2go.com",
-			Port:     587,
+			Host:     MAIL_HOST,
+			Port:     MAIL_PORT,
 			Username: MAIL_USERNAME,
 			Password: MAIL_PASSWORD,
 		}
@@ -229,16 +235,16 @@ func main() {
 	})
 
 	app.OnRecordAuthRequest().Add(func(e *core.RecordAuthEvent) error {
-		log.Println("authenticating user")
+		log.Debug().Msgf("authenticating user")
 		removeToken := !e.Record.Verified() && conf.IsRequireMailVerification(app.Dao())
 		if removeToken {
-			log.Println(" user not verified, removing token")
+			log.Debug().Msgf(" user not verified, removing token")
 			e.Token = ""
 		} else {
 			e.Record.SetVerified(true)
 			err := app.Dao().SaveRecord(e.Record)
 			if err != nil {
-				log.Println("error saving record - " + err.Error())
+				log.Debug().Msgf("error saving record - " + err.Error())
 				return err
 			}
 		}
@@ -249,7 +255,7 @@ func main() {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "users" {
 			if conf.IsGreatWallEnabled(app.Dao()) {
-				log.Print("great wall enabled, aborting user creation")
+				log.Debug().Msgf("great wall enabled, aborting user creation")
 				return fmt.Errorf("great wall enabled, aborting user creation")
 			}
 		}
@@ -259,21 +265,22 @@ func main() {
 	app.OnRecordAfterCreateRequest().Add(func(e *core.RecordCreateEvent) error {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "users" {
-			log.Print("creating user")
+			log.Debug().Msgf("creating user")
 			err := userController.StoreNewUserDetails(e.Record.Id, "")
 			if err != nil {
-				log.Print("error creating user details or important data ")
-				log.Println(err)
+				log.Debug().Msg("error creating user details or important data ")
+				log.Error().Err(err)
 				return err
 			}
-			log.Print("StoreNewUserDetails ok")
+			log.Debug().Msgf("StoreNewUserDetails ok")
 
 			err = fulltextsearchController.CreateNewFTSIndex(e.Record.Id, 2)
 			if err != nil {
-				log.Println("error creating user index ", err)
+				log.Debug().Msg("error creating user index ")
+				log.Error().Err(err)
 				return err
 			}
-			log.Print("CreateNewFTSIndex ok")
+			log.Debug().Msgf("CreateNewFTSIndex ok")
 		}
 
 		return nil
@@ -282,10 +289,11 @@ func main() {
 	app.OnRecordAfterDeleteRequest().Add(func(e *core.RecordDeleteEvent) error {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "users" {
-			log.Print("deleting user, reflect on fts")
+			log.Debug().Msgf("deleting user, reflect on fts")
 			_, err := meiliClient.DeleteIndex(e.Record.Id)
 			if err != nil {
-				log.Println("error deleting user index ", err)
+				log.Debug().Msg("error deleting user index ")
+				log.Error().Err(err)
 			}
 		}
 		return nil
@@ -296,7 +304,8 @@ func main() {
 		if collectionName == "pages" {
 			err := fulltextsearchController.RemoveDocFTSIndex(e.Record.Id)
 			if err != nil {
-				log.Print("error deleting page ", err)
+				log.Debug().Msg("error deleting page ")
+				log.Error().Err(err)
 			}
 		}
 		return nil
@@ -307,7 +316,7 @@ func main() {
 			// get all categories
 			categories, err := categories.GetAllCategories(categoryController.DAO())
 			if err != nil {
-				log.Printf("failed to get all categories, %v\n", err)
+				log.Error().Msgf("failed to get all categories, %v\n", err)
 				return err
 			}
 
@@ -315,7 +324,7 @@ func main() {
 			for _, category := range categories {
 				err = categoryController.RemoveOrphanCategory(&category)
 				if err != nil {
-					log.Printf("failed to delete orphan category, %v\n", err)
+					log.Error().Msgf("failed to delete orphan category, %v\n", err)
 					return err
 				}
 			}
@@ -326,7 +335,7 @@ func main() {
 	app.OnRecordBeforeUpdateRequest().Add(func(e *core.RecordUpdateEvent) error {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "user_important_data" {
-			log.Print("editing user_important_data")
+			log.Debug().Msgf("editing user_important_data")
 		}
 
 		return nil

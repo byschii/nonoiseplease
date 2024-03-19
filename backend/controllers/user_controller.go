@@ -3,7 +3,8 @@ package controllers
 import (
 	users "be/model/users"
 	"fmt"
-	"log"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/labstack/echo/v5"
 	"github.com/meilisearch/meilisearch-go"
@@ -79,7 +80,7 @@ func (controller SimpleUserController) UserRecordFromRequest(c echo.Context, mus
 
 func (controller SimpleUserController) GetUserDetails(relatedUserId string) (*users.UserDetails, error) {
 	details := &users.UserDetails{}
-	log.Println("controller.AppDao()", controller.AppDao() == nil)
+	log.Debug().Msgf("controller.AppDao() %v", controller.AppDao() == nil)
 	err := controller.AppDao().DB().Select("*").From(details.TableName()).Where(dbx.In("related_user", relatedUserId)).One(details)
 	if err != nil {
 		return nil, err
