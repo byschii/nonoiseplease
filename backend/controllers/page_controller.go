@@ -9,10 +9,11 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"log"
 	"math/rand"
 	"strings"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/pocketbase/pocketbase/daos"
@@ -88,7 +89,7 @@ func (controller PageController) CountUserPagesByOriginThisMonth(userid string, 
 		return 0, err
 	}
 
-	log.Println("pages", pages)
+	log.Debug().Msgf("pages %v", pages)
 	counter := 0
 	for _, page := range pages {
 		if page.Created.Time().Month() == time.Now().Month() && page.Created.Time().Year() == time.Now().Year() {
@@ -96,7 +97,7 @@ func (controller PageController) CountUserPagesByOriginThisMonth(userid string, 
 		}
 	}
 
-	log.Println("counter", counter)
+	log.Debug().Msgf("counter %d", counter)
 
 	return counter, nil
 }
@@ -139,7 +140,7 @@ func (controller PageController) RemoveCategoryFromPageWithOwner(owner string, p
 		return err
 	}
 
-	log.Println("check if last category", pageId, category.Name)
+	log.Debug().Msgf("check if last category %s %s", pageId, category.Name)
 	err = controller.CategoryController.RemoveOrphanCategory(category)
 	if err != nil {
 		return err
@@ -165,7 +166,7 @@ func (controller PageController) PageSearch(query string, users []string, catego
 		}
 		categoryFilterQuery = strings.Join(categories, " AND ")
 	}
-	log.Println(categoryFilterQuery)
+	log.Debug().Msgf(categoryFilterQuery)
 
 	// build meili search request
 	var meiliSearchRequest meilisearch.SearchRequest

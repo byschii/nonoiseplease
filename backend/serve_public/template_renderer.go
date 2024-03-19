@@ -3,7 +3,8 @@ package servestatic
 import (
 	"html/template"
 	"io/fs"
-	"log"
+
+	"github.com/rs/zerolog/log"
 
 	controller "be/controllers"
 	conf "be/model/config"
@@ -77,7 +78,7 @@ func MeAccountTemplate(name string, subFs fs.FS) *TemplateRenderer {
 		TemplateName:   name,
 		ParsedTemplate: *templateToLoad,
 		DataRetrieverWithUser: func(uc controller.UserControllerInterface, userId string) interface{} {
-			log.Println("retrive data for user", userId)
+			log.Debug().Msgf("retrive data for user %s", userId)
 			if userId == "" {
 				return nil
 			}
@@ -85,13 +86,13 @@ func MeAccountTemplate(name string, subFs fs.FS) *TemplateRenderer {
 			// get user email
 			email, err := uc.GetUserEmailFromId(userId)
 			if err != nil {
-				log.Printf("error getting user email from id %s", userId)
+				log.Error().Msgf("error getting user email from id %s", userId)
 			}
 			details, err := uc.GetUserDetails(userId)
 			if err != nil {
-				log.Println("error getting user part from id, ", err.Error())
+				log.Error().Msgf("error getting user part from id %v ", err.Error())
 			}
-			log.Println(details.Nickname, details.ExtensionToken)
+			log.Debug().Msgf(details.Nickname, details.ExtensionToken)
 
 			retrivedData := struct {
 				UserId         string

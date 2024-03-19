@@ -47,8 +47,6 @@ func main() {
 	if err != nil {             // Handle errors reading the config file
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
-	//log.Logger = log.With().Caller().Logger()
-	//logger := zerolog.New(os.Stderr).With().Timestamp().Caller().Logger()
 	log.Logger = zerolog.New(os.Stdout).With().Timestamp().Caller().Logger()
 	log.Warn().Msgf("config: %+v", viper.AllSettings())
 
@@ -311,7 +309,7 @@ func main() {
 			// get all categories
 			categories, err := categories.GetAllCategories(categoryController.DAO())
 			if err != nil {
-				log.Printf("failed to get all categories, %v\n", err)
+				log.Error().Msgf("failed to get all categories, %v\n", err)
 				return err
 			}
 
@@ -319,7 +317,7 @@ func main() {
 			for _, category := range categories {
 				err = categoryController.RemoveOrphanCategory(&category)
 				if err != nil {
-					log.Printf("failed to delete orphan category, %v\n", err)
+					log.Error().Msgf("failed to delete orphan category, %v\n", err)
 					return err
 				}
 			}

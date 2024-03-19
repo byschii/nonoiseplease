@@ -215,11 +215,6 @@ func (controller WebController) GetPagemanage(c echo.Context) error {
 		}
 	}
 	if !sameCats {
-		/*log.Println("categories are not the same")
-		log.Println("db categories", categories, len(categories))
-		log.Println("meili categories", ref.Category, len(ref.Category))
-		c.String(http.StatusBadRequest, "categories are not the same")
-		return nil*/
 		controller.PageController.SetDBCategoriesOnFTSDoc(userID, page.FTSRef, categories)
 	}
 

@@ -5,11 +5,12 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 
 	config "be/model/config"
 	proxy "be/model/proxy"
@@ -84,7 +85,7 @@ func getHtml(pageUrl string, dao *daos.Dao) (string, bool, error) {
 	userProxyProb := config.GetConfigUseProxyProbability(dao)
 
 	useProxy := rand.Float32() < userProxyProb
-	log.Printf("useProxy: %v,  userProxyProb: %v", useProxy, userProxyProb)
+	log.Debug().Msgf("useProxy: %v,  userProxyProb: %v", useProxy, userProxyProb)
 
 	if useProxy {
 		// set proxy

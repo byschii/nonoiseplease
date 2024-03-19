@@ -3,7 +3,8 @@ package categories
 import (
 	"encoding/json"
 	"errors"
-	"log"
+
+	"github.com/rs/zerolog/log"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"
@@ -32,11 +33,11 @@ func NewCategory(dao *daos.Dao, name string) (string, error) {
 
 	err := dao.Save(&cat)
 	if err != nil {
-		log.Println("error creating category: ", err)
+		log.Error().Msgf("error creating category: %v ", err)
 		return "", err
 	}
 
-	log.Println("created category: ", cat, cat.Id)
+	log.Debug().Msgf("created category: %v %s", cat, cat.Id)
 	return cat.Id, nil
 }
 
@@ -122,7 +123,7 @@ func CategoryExistsByName(dao *daos.Dao, categoryName string) (*Category, error)
 		return nil, nil
 	}
 	if len(category) > 1 {
-		log.Println("multiple categories with same name")
+		log.Error().Msgf("multiple categories with same name")
 		return nil, errors.New("multiple categories with same name")
 	}
 

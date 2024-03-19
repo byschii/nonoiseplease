@@ -2,9 +2,10 @@ package controllers
 
 import (
 	"fmt"
-	"log"
 	"math/rand"
 	"time"
+
+	"github.com/rs/zerolog/log"
 
 	cats "be/model/categories"
 	fts_page_doc "be/model/fts_page_doc"
@@ -45,7 +46,7 @@ func (controller *FTSController) SetPBDAO(dao *daos.Dao) {
 
 func (controller FTSController) RemoveDocFTSIndex(pageId string) error {
 
-	log.Println("deleting " + pageId)
+	log.Debug().Msgf("deleting " + pageId)
 	// convert docId to ftsRef
 	page, err := page.GetPageFromPageId(controller.PBDao, pageId)
 	if err != nil {
@@ -67,7 +68,7 @@ func (controller FTSController) SetDBCategoriesOnFTSDoc(owner string, FTSRef str
 	}
 	err := fts_page_doc.SetCategoriesForFTSDoc(controller.MeiliClient, owner, FTSRef, categoryNames)
 	if err != nil {
-		log.Printf("error while setting categories for doc %s: %s , cannot align db e fts", FTSRef, err.Error())
+		log.Debug().Msgf("error while setting categories for doc %s: %s , cannot align db e fts", FTSRef, err.Error())
 	}
 	return err
 }
@@ -75,7 +76,7 @@ func (controller FTSController) SetDBCategoriesOnFTSDoc(owner string, FTSRef str
 func (controller FTSController) AlignCategoriesBetweenFTSAndDB(owner string, FTSRef string, pageId string) error {
 	cateories, err := cats.GetCategoriesByPageId(controller.PBDao, pageId)
 	if err != nil {
-		log.Printf("error while getting categories for page %s: %s , cannot align db e fts", pageId, err.Error())
+		log.Debug().Msgf("error while getting categories for page %s: %s , cannot align db e fts", pageId, err.Error())
 		return err
 	}
 	return controller.SetDBCategoriesOnFTSDoc(owner, FTSRef, cateories)
