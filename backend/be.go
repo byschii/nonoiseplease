@@ -47,14 +47,15 @@ func main() {
 	if err != nil {             // Handle errors reading the config file
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
-	log.Logger = zerolog.New(os.Stdout).With().Timestamp().Caller().Logger()
-	log.Warn().Msgf("config: %+v", viper.AllSettings())
+	print("config: %+v", viper.AllSettings())
 
 	FRONTEND_FOLDER := viper.GetString("frontend_folder")
 	LOG_FOLDER := viper.GetString("log_folder")
 	LOG_FILENAME := viper.GetString("log_filename")
 	APP_URL := viper.GetString("app_url")
 	MEILI_MASTER_KEY := viper.GetString("meili_master_key")
+	MAIL_HOST := viper.GetString("mail_host")
+	MAIL_PORT := viper.GetInt("mail_port")
 	MAIL_USERNAME := viper.GetString("mail_username")
 	MAIL_PASSWORD := viper.GetString("mail_password")
 	MEILI_HOST_ADDRESS := viper.GetString("meili_host_address")
@@ -63,21 +64,27 @@ func main() {
 	if os.Getenv("VERSION") != "" {
 		VERSION = os.Getenv("VERSION")
 	}
+
+	logDestination := os.Stdout
 	if os.Getenv("RUNNING") == "PUBLIC" {
 		APP_URL = "https://nonoiseplease.com"
 		MEILI_HOST_ADDRESS = "http://0.0.0.0:7700"
 
 		// create log folder if not exists
 		if _, err := os.Stat(LOG_FOLDER); os.IsNotExist(err) {
+			print("creating log folder")
 			os.Mkdir(LOG_FOLDER, 0755)
+		} else {
+			print("log folder exists")
 		}
 		// open a file
-		f, err := os.OpenFile(LOG_FOLDER+"/"+LOG_FILENAME, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		logDestination, err = os.OpenFile(LOG_FOLDER+"/"+LOG_FILENAME, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 		if err != nil {
-			log.Fatal().Msgf("error opening file: %v", err)
+			// format error and panic
+			panic(fmt.Sprintf("error opening file: %v", err))
 		}
-		log.Logger = zerolog.New(f).With().Logger()
 	}
+	log.Logger = zerolog.New(logDestination).With().Timestamp().Caller().Logger()
 
 	app := pocketbase.New()
 	meiliClient := meilisearch.NewClient(meilisearch.ClientConfig{
@@ -209,8 +216,8 @@ func main() {
 		// set application smtp
 		app.Settings().Smtp = settings.SmtpConfig{
 			Enabled:  true,
-			Host:     "mail.smtp2go.com",
-			Port:     587,
+			Host:     MAIL_HOST,
+			Port:     MAIL_PORT,
 			Username: MAIL_USERNAME,
 			Password: MAIL_PASSWORD,
 		}
