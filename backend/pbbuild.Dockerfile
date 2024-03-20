@@ -10,7 +10,7 @@
 #
 # per eseguire il container:
 # docker run -v ./:/home -t dockergobuild
-FROM golang:1.20
+FROM golang:1.22
 
 # creo una certella di lavoro
 WORKDIR /builddir

@@ -3,7 +3,7 @@
 # it has live reload
 # data are erased and taken from the docker-compose specification
 
-FROM golang:1.20
+FROM golang:1.22
 
 WORKDIR /home
 
