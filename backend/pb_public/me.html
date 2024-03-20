@@ -55,9 +55,13 @@
                     <input type="url" name="url" id="url" placeholder="URL">
                     <button x-on:click="addUrl">Scrape</button><span x-text="lastMsg"></span>
                     <br>
-                    <span>(or download <a href="/static_import/nonoisepleaseextention.xpi" download="nonoisepleaseextention.xpi">Firefox Add On</a>, 
-                        here <a href="https://extensionworkshop.com/documentation/publish/distribute-sideloading/#install-addon-from-file">instructions</a> to install.
-                        Actually, i ve managed to installa the extention on Chromium for Ubuntu by unpacking the extention and going to chrome://extensions )</span>
+                    <span>
+                        (or better, download <b>Firefox Add On</b>
+                        from <a href="https://addons.mozilla.org/firefox/downloads/file/4252909/64af83a438904bcfbb21-2.1.xpi">here</a> or <a href="/static_import/nonoisepleaseextention.xpi" download="nonoisepleaseextention.xpi">here</a> , 
+                        while <a href="https://extensionworkshop.com/documentation/publish/distribute-sideloading/#install-addon-from-file">here</a> instructions to install.
+                        <br />
+                        Actually, i ve managed to install the extention also on <b>Chromium for Ubuntu</b> by unpacking the extention and going to chrome://extensions )
+                    </span>
                     <p>Check Your alerady saved <a href="/me/pages"> <button>Pages</button> </a> </p>
                     <hr>
                     <span>Go To Your <a href="/me/account"> Account details </a> or <button x-on:click="logout"> Logout </button></span>                    
