@@ -34,9 +34,9 @@
         </h2>
         <p>
             This is a tool that allows you to create a personal index of web pages. You can then search for pages in your index using keywords. </br>
-            The tool is composed of a web app and a Firefox extension. The web app allows you to upload pages to your index, while the extension allows you to upload the current page to your index. </br>
-            The tool is currently in beta, so please be patient if you encounter any bugs. </br>
-            If you have any suggestions, please let me know on <a href="https://www.github.com/">Github</a>  </br>
+            The tool is composed of a web app and a Firefox extension. The web app allows you to upload a page to your index given a URL, while the extension allows you to upload the current page on the browser to your index. </br>
+            The tool is currently in beta and I m not the best programmer, so please be patient if you encounter any bugs. </br>
+            If you have any suggestions, please let me know on <a href="https://github.com/byschii/nonoiseplease">Github</a>  </br>
         <h2>
             How
         </h2>
@@ -46,11 +46,14 @@
         <ul>
             <li>Create an account: You can use a <b>temporary email service</b> like Temp-Mail or a tool like Firefox Relay. It's fine if you choose either of those options; I just needed a way to differentiate users and their indexes.</li>
             <li>Log in: Enter your credentials to access your account.</li>
-            <li>Add URLs to scrape: Provide the software with a URL to scrape. I understand that it might be considered unethical to take content from others, but I couldn't think of a better approach. The scraped content will be added to your index.</li>
-            <li>Repeat the process: You can repeat steps 3 multiple times to add more content to your index. However, please note that this functionality is currently limited due to the risk of IP banning or blacklisting.</li>
-            <li>Alternatively, use the Firefox extension: I have created a Firefox extension that allows you to upload your current page directly to your index. This extension is useful because it has no limits, and it can upload personal data displayed on dynamic pages. However, please be cautious as I am still a rando person on the internet.</li>
+            <li>Add URLs to scrape: Provide a URL to scrape. I understand that it might be considered unethical to take content from others, but I couldn't think of a better approach. The scraped content will be added to your index.</li>
+            <li>Repeat the process: You can repeat step-3 multiple times to add more content to your index. However, please note that this functionality is currently limited due to the risk of IP banning or blacklisting.
+                <ul><li>Alternatively, use the Firefox extension: I have created a Firefox extension that allows you to upload your current page directly to your index. This is a much more powerful tool: it has no limits on the number of pages but it can also upload personal data displayed on dynamic pages. Please be cautious as I am still a random person on the internet.</li></ul></li>
             <li>Manage your pages: You can add categories to your pages in the "/me/pages" section</li>
-            <li>Search for pages: Visit the provided website and use the search function with "keywords" (I mean... the query is sent directly to MeiliSearch). You will receive a list of pages from your index that match the query.</li>
+            <li>Search for pages: <ul>
+                <li>Visit the website and use the search function with "keywords" (I mean... the query is sent directly to MeiliSearch). You will receive a list of pages from your index that match the query.</li>
+                <li>If you have the extentiion installed, search results will be displayed also on top of google.</li>
+            </ul></li>
         </ul>
         <h2>
             Limitations
@@ -58,14 +61,14 @@
         <p>
             Right now, the main limitation is on the number of pages that can be scraped. I have set a limit of 5 pages per month. </br>
             This is because I don't want to get my ip blacklisted. As a makeshift, I am currently routing the requests through a proxy, but I am still working on a solution to this problem. Suggestion are welcome.</br>
-            Also, I call "scaping" a simple GET request to the page (and so the text), so if you need to login to see the content, you can't scrape it (but you can use the extension).</br>
+            Also, I call "scraping" a simple GET request to the page (to extract just the text), so if you need to login to see the content, you can't scrape it (but you can use the extension).</br>
         </p>
         <h2>
             Privacy
         </h2>
         <p>
             Well, of course, if I want to index every web page uploaded, I think there is no alternative but to obtain the clear/plain text (note that this is also valid if you want to index personal data through the extension). In case there is a way to protect the indexed text as well, please let me know.</br>
-            I ask only for an email and save only 2 cookies (that a know of): a JWT and an id.</br>
+            I ask only for an email and save only 2 cookies (that I know of): a JWT and an id.</br>
             There are no analitycs.</br>
             The extention is 1.6kB of js, you can look it up. (just rename the file from .xpi to .zip)</br>
         </p>
