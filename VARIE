@@ -9,4 +9,6 @@ FIX SEARCH IN WEB
 FIX BOOKMARK IMPORT
     - senza discriminzaione
 RIVEDERE UI
+RIVEDERE API
+    - non mi piace chiamare /page-manage/load per caricare una pagina (magari 'upload')
 UPGRADE PB
