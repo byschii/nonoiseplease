@@ -10,5 +10,5 @@ FIX BOOKMARK IMPORT
     - senza discriminzaione
 RIVEDERE UI
 RIVEDERE API
-    - non mi piace chiamare /page-manage/load per caricare una pagina (magari 'upload')
+    - non mi piace chiamare /page-manage/load per caricare una pagina (magari 'upload', oppure semplicemente 'page' tanto il metodo è post)
 UPGRADE PB
