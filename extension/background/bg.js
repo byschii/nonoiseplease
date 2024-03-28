@@ -64,6 +64,19 @@ const spawnSearch = (tabId, query) => {
     });
 };
 
+const grabJwt = async (currentTab) => {
+
+    if (!currentTab || currentTab.url.indexOf(nnp_address) === -1) {
+        console.warn("current tab is not nnp", currentTab);
+        return null;
+    }
+    let response = await B.tabs.sendMessage(currentTab.id, {
+        action: "jwt.read",
+    });
+    console.log("response from content script:", response);
+    return response.jwt;
+};
+
 // when state is resolved
 storedState.then((currentState) => {
     // Listen for a tab being updated to a complete status
@@ -93,11 +106,14 @@ storedState.then((currentState) => {
     // and listen for messages from the popup
     B.runtime.onMessage.addListener((message, sender, sendResponse) => {
         console.log("currentState before -> ", currentState);
-        if (message.action === "status.userid") {
-            currentState.userId = message.userid;
+        if (message.action === "jwt.read") {
+            B.tabs.query({active: true, currentWindow: true}, async function(tabs) {
+                currentState.jwt = await grabJwt(tabs[0]);
+                B.storage.local.set({"lastState":currentState.serialize()});
+            });
         }
-        else if (message.action === "status.extensionToken") {
-            currentState.extensionToken = message.extensionToken;
+        else if (message.action === "jwt.delete") {
+            currentState.jwt = null;
         }
         else if (message.action === "status.record") {
             if(!currentState.recordNavigation && message.record && currentState.memory.length > 0){

@@ -2,8 +2,7 @@
 
 class State {
     constructor() {
-        this._userid= "",
-        this._extensionToken = "",
+        this._jwt= "",
         this._allowTemporaryMemory= true,
         this._recordNavigation= false,
         this._automaticSearch= true,
@@ -11,18 +10,11 @@ class State {
         this._memory= []
     }
 
-    get userId() {
-        return this._userid;
+    get jwt() {
+        return this._jwt;
     }
-    set userId(id) {
-        this._userid = id;
-    }
-
-    get extensionToken() {
-        return this._extensionToken;
-    }
-    set extensionToken(token) {
-        this._extensionToken = token;
+    set jwt(jwt) {
+        this._jwt = jwt;
     }
 
     get allowTemporaryMemory() {
@@ -63,8 +55,7 @@ class State {
 
     serialize() {
         return {
-            userId: this._userid,
-            extensionToken: this._extensionToken,            
+            jwt: this._jwt,            
             allowTemporaryMemory: this._allowTemporaryMemory,
             recordNavigation: this._recordNavigation,
             automaticSearch: this._automaticSearch,
@@ -74,8 +65,7 @@ class State {
     }
     static deserialize(obj) {
         const state = new State(
-            obj.userId,
-            obj.extensionToken,
+            obj.jwt,
             obj.allowTemporaryMemory,
             obj.recordNavigation,
             obj.automaticSearch,

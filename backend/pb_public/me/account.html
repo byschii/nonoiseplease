@@ -27,7 +27,7 @@
                     <div>
                         <h3>Access</h3>
                         <div><span>Id: <code> {{ .UserId }} </code> </span></div>
-                        <div><span>JWT: <code style="overflow-y: auto;" x-text="myJwt"></code></span></div>
+                        <div><span>JWT: <code style="overflow-y: auto;" x-text="myJwt" id="pbjwt"></code></span></div>
                         <div><span>Email: <code> {{ .Email }} </code></span></div>
                         <div><span>New Email: <input id="newEmail" placeholder="New Email"></span></div>
                         <button x-on:click="requestEmailChange"> Change Email </button>

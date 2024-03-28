@@ -26,7 +26,7 @@
       "id": "extention@nonoiseplease.com"
     }
   },
-  "devserver": "http://127.0.0.1:8090",
+  "devserver": "http://localhost:8090",
   "permissions": [
     "tabs", "<all_urls>", "activeTab", "nativeMessaging", "storage"
   ],

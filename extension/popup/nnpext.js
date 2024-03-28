@@ -4,36 +4,39 @@
 const B = browser || chrome;
 const extId = B.runtime.id;
 
+// load current state on UI
+const loadStateOnUI = (delay) => {
+    setTimeout(() => {
+        B.storage.local.get("lastState").then((res) => {
+            console.log("loading lastState: ", res.lastState);
+            if (res.lastState) {
+                const currentState = res.lastState;
+                document.getElementById("nnpext-jwt").value = currentState.jwt;
+                document.getElementById("nnpext-memory").checked = currentState.allowTemporaryMemory;
+                document.getElementById("nnpext-record").checked = currentState.recordNavigation;
+            }
+        }).catch(
+            () => false
+        );
+    }, delay || 10);
+};
 
-// get current state
-B.storage.local.get("lastState").then((res) => {
-    console.log("lastState: ", res.lastState);
-    if (res.lastState) {
-        const currentState = res.lastState;
-        document.getElementById("nnpext-user-id").value = currentState.userId;
-        document.getElementById("nnpext-extension-token").value = currentState.extensionToken;
-        document.getElementById("nnpext-memory").checked = currentState.allowTemporaryMemory;
-        document.getElementById("nnpext-record").checked = currentState.recordNavigation;
-    }
-}).catch(
-    () => false
-);
-
+loadStateOnUI();
 
 // event listeners
-document.getElementById("nnpext-user-id").addEventListener("change", (event) => {
-    console.log("user id changed");
+document.getElementById("nnpext-login").addEventListener("click", (event) => {
+    console.log("want to login");
     B.runtime.sendMessage(extId, {
-        action: "status.userid",
-        userid: event.target.value
-    });
+        action: "jwt.read",
+    })
+    loadStateOnUI(30);
 });
-document.getElementById("nnpext-extension-token").addEventListener("change", (event) => {
-    console.log("extension token changed");
+document.getElementById("nnpext-logout").addEventListener("click", () => {
+    console.log("want to logout");
     B.runtime.sendMessage(extId, {
-        action: "status.extensionToken",
-        extensionToken: event.target.value
+        action: "jwt.delete",
     });
+    loadStateOnUI(10);
 });
 document.getElementById("nnpext-memory").addEventListener("change", (event) => {
     console.log("memory changed");
