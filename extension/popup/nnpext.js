@@ -38,6 +38,13 @@ document.getElementById("nnpext-logout").addEventListener("click", () => {
     });
     loadStateOnUI(10);
 });
+document.getElementById("nnpext-refresh-token").addEventListener("click", (event) => {
+    console.log("want to refresh token");
+    B.runtime.sendMessage(extId, {
+        action: "jwt.refresh",
+    })
+    loadStateOnUI(30);
+});
 document.getElementById("nnpext-memory").addEventListener("change", (event) => {
     console.log("memory changed");
     B.runtime.sendMessage(extId, {

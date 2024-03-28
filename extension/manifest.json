@@ -31,7 +31,7 @@
     "tabs", "<all_urls>", "activeTab", "nativeMessaging", "storage"
   ],
   "background": {
-    "scripts": ["background/current_state.js", "background/bg.js"]
+    "scripts": ["background/current_state.js", "background/api.js", "background/bg.js"]
   },
   "content_scripts": [
     {
