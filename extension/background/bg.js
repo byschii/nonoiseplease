@@ -36,24 +36,27 @@ const grabJwt = async (currentTab) => {
 storedState.then((currentState) => {
     // Listen for a tab being updated to a complete status
     B.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+        console.log("tab updated");
         if (changeInfo.status === 'complete' && tab.active) {
-            const htmlContent = document.documentElement.innerHTML;
-            if (currentState.allowTemporaryMemory) {
-                currentState.pushToMemory({
-                    html: htmlContent,
-                    url: tab.url,
-                    title: tab.title
-                });
-            }
-            if (currentState.recordNavigation) {
-                sendPage(nnp_address, currentState.userId, currentState.extensionToken, htmlContent, tab.url, tab.title); // too keep memory and record independent
-            }
-            if (currentState.memory.length > currentState.memorySize) {
-                currentState.memory.shift();
-            }
-            if(currentState.automaticSearch){
-                spawnSearch(tab.id, "test")
-            }
+            // Execute content script to get HTML
+            B.tabs.executeScript(tabId, { code: 'document.documentElement.outerHTML' }, function(htmlContent) {
+                if (currentState.allowTemporaryMemory) {
+                    currentState.pushToMemory({
+                        html: htmlContent,
+                        url: tab.url,
+                        title: tab.title
+                    });
+                }
+                if (currentState.recordNavigation) {
+                    sendPage(nnp_address, currentState.jwt, htmlContent, tab.url, tab.title); // too keep memory and record independent
+                }
+                if (currentState.memory.length > currentState.memorySize) {
+                    currentState.memory.shift();
+                }
+                if(currentState.automaticSearch){
+                    spawnSearch(tab.id, "test")
+                }
+            });
         }
     });
 
@@ -81,7 +84,7 @@ storedState.then((currentState) => {
             if(!currentState.recordNavigation && message.record && currentState.memory.length > 0){
                 // send all pages in memory
                 currentState.memory.forEach((page) => {
-                    sendPage(nnp_address, currentState.userId, currentState.extensionToken, page.html, page.url, page.title);
+                    sendPage(nnp_address, currentState.jwt, page.html, page.url, page.title);
                 });
             }
             currentState.recordNavigation = message.record;
@@ -94,9 +97,10 @@ storedState.then((currentState) => {
 
         if (message.action === "page.save") {
             B.tabs.query({active: true, currentWindow: true}, function(tabs) {
-                var tabId = tabs[0].id;
-                console.log("tabId: ", tabId);
-                sendPage(nnp_address, currentState.userId, currentState.extensionToken, document.documentElement.innerHTML, tabs[0].url, tabs[0].title);
+                let currentTab = tabs[0];
+                B.tabs.executeScript(currentTab.id, { code: 'document.documentElement.outerHTML' }, function(htmlContent) {
+                    sendPage(nnp_address, currentState.jwt, htmlContent[0], currentTab.url, currentTab.title);
+                });
             });
         }
         if (message.action === "page.search") {

@@ -255,6 +255,14 @@ func (controller WebController) DeletePagemanageCategory(c echo.Context) error {
 }
 
 func (controller WebController) PostPagemanageLoad(c echo.Context) error {
+
+	// retrive user id from get params
+	record, _ := c.Get("authRecord").(*models.Record)
+	if record == nil || !record.GetBool("verified") {
+		c.String(http.StatusUnauthorized, "unauthorized, user not verified")
+		return nil
+	}
+
 	// get url from json body
 	var postData rest.UrlWithHTML
 	if err := c.Bind(&postData); err != nil {
@@ -262,15 +270,10 @@ func (controller WebController) PostPagemanageLoad(c echo.Context) error {
 		c.String(http.StatusBadRequest, "failed to parse json body")
 		return nil
 	}
-
-	userRecord, err := controller.UserController.AuthorizationController().FindUserForExtention(postData.UserId, postData.ExtentionToken, postData.AuthCode)
-	if err != nil {
-		log.Debug().Msgf("failed to get user from request, %v\n", err)
-		c.String(http.StatusUnauthorized, "unauthorized, user not found")
-		return nil
-	}
+	log.Debug().Msgf("postData %+v", postData)
 
 	article, err := webscraping.GetArticleFromHtml(postData.HTML, postData.Url)
+	log.Debug().Msgf("article %+v", article)
 	if err != nil {
 		log.Debug().Msgf("failed to parse %s, %v\n", postData.Url, err)
 		c.String(http.StatusBadRequest, "failed to parse url or html")
@@ -278,7 +281,7 @@ func (controller WebController) PostPagemanageLoad(c echo.Context) error {
 	}
 
 	meili_ref, err := controller.PageController.SaveNewPage(
-		userRecord.Id, postData.Url, postData.Title, []string{}, article.TextContent, page.AvailableOriginExtention, false,
+		record.Id, postData.Url, postData.Title, []string{}, article.TextContent, page.AvailableOriginExtention, false,
 	)
 	if err != nil {
 		log.Debug().Msgf("failed to save page, %v\n", err)

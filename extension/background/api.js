@@ -1,35 +1,35 @@
-const postRequest = (userId, extensionToken, html, url, title) => {
+
+
+
+const postRequest = (jwt, html, url, title) => {
     // log body with shortened html
-    console.debug("body: ", JSON.stringify({
-        html: html.substring(0, 40),
+    console.debug("body: ", {
+        html: html,
         url: url,
         title: title,
-        extention_token: extensionToken,
-        user_id: userId
-    }));
+    });
 
     return {
         method: "POST",
         headers: {
-            "Content-Type": "application/json"
+            "Content-Type": "application/json",
+            Authorization: jwt
         },
         body: JSON.stringify({
             html: html,
             url: url,
-            title: title,
-            extention_token: extensionToken,
-            user_id: userId
+            title: title
         }),
     }
 };
-const sendPage = async (nnp_address, userId, extensionToken, html, url, title) => {
+const sendPage = async (nnp_address, jwt, html, url, title) => {
     console.log("sending page");
-    if (!userId || !extensionToken) {
-        console.error("no userId, extensionToken");
+    if (!jwt) {
+        console.error("no jwt");
         return false;
     }
     let res = await fetch(
-        nnp_address + "/api/page-manage/load", postRequest(userId, extensionToken, html, url, title)
+        nnp_address + "/api/page-manage/load", postRequest(jwt, html, url, title)
     ).then((response) => {
         console.log(response.ok? "response ok" : "response not ok")
         if (response.ok) {
