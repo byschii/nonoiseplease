@@ -5,6 +5,7 @@ FIX SEARCH IN WEB
     - commentare e spiegare significato di pre/post-search (sia in go nei tipi che in html)
     - controllare il filtro sulle categorie
         - anche con test
+        - controllare che si possa cercare senza fitri-categoria
 FIX BOOKMARK IMPORT
     - senza discriminzaione
 RIVEDERE UI
