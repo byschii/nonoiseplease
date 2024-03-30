@@ -9,10 +9,14 @@
 <body>
     <h2>No Noise Please</h2>
 
-    <span>User Id</span><input id="nnpext-user-id" type="text" placeholder="Enter User Id here..."><br>
-    <span>Extention Token</span><input id="nnpext-extension-token" type="text" placeholder="Enter Extension Token here..."><br>
+    <button id="nnpext-login" >Login</button>
+    <button id="nnpext-logout" >Logout</button> <br />
+    <input disabled id="nnpext-jwt" type="text" placeholder="JWT Token" style="width: 100%;"><br>
+    <button id="nnpext-refresh-token" >Refresh JWT</button><br />
+
     <input id="nnpext-memory" type="checkbox" checked> <label for="nnpext-memory" > Temporary Memory</label><br>
     <input id="nnpext-record" type="checkbox" unchecked> <label for="nnpext-record" > Record Navigation</label><br>
+    <input id="nnpext-autosearch" type="checkbox" unchecked> <label for="nnpext-autosearch" > Autosearch</label><br>
     <button id="nnpext-save" >Save</button>
     <button id="nnpext-search" >Search</button>
 

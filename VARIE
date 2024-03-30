@@ -6,8 +6,7 @@ FIX SEARCH IN WEB
     - controllare il filtro sulle categorie
         - anche con test
         - controllare che si possa cercare senza fitri-categoria
-RIVEDERE AUTENTICAZIONE IN EXT
-    - magari potrei fare un giro dove l'ext di volta in volta si autentica e ottiene un jwt con il quale comunicare, che sarebbe il top
+
 FIX BOOKMARK IMPORT
     - tutti, senza discriminzaione, senza annidamento
 RIVEDERE UI

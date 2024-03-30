@@ -26,12 +26,12 @@
       "id": "extention@nonoiseplease.com"
     }
   },
-  "devserver": "http://127.0.0.1:8090",
+  "devserver": "http://localhost:8090",
   "permissions": [
     "tabs", "<all_urls>", "activeTab", "nativeMessaging", "storage"
   ],
   "background": {
-    "scripts": ["background/current_state.js", "background/bg.js"]
+    "scripts": ["background/current_state.js", "background/api.js", "background/bg.js"]
   },
   "content_scripts": [
     {

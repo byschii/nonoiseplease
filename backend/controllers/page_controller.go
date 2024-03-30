@@ -68,7 +68,7 @@ func (controller *PageController) AddCategoryToPage(owner string, pageId string,
 }
 
 func (controller *PageController) FindCategoriesFromUser(user *users.Users) ([]cats.Category, error) {
-	return controller.CategoryController.FindCategoriesFromUser(user)
+	return controller.CategoryController.CategoryByUser(user)
 }
 
 func (controller *PageController) RemoveDocFTSIndex(pageId string) error {

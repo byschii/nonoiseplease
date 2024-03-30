@@ -32,6 +32,13 @@ B.runtime.onMessage.addListener((message, sender, sendResponse) => {
         document.body.insertAdjacentElement("afterbegin", createPageList(message.pages));
         searchAlreadyInserted = true;
     }
+
+    if(message.action === "jwt.read") {
+        let jwtText = document.getElementById("pbjwt").textContent;
+        console.log("jwt = "+jwtText)
+        sendResponse({jwt:jwtText})
+        return;
+    }
 });
 
 

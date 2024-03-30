@@ -1,28 +1,20 @@
 
 
 class State {
-    constructor() {
-        this._userid= "",
-        this._extensionToken = "",
-        this._allowTemporaryMemory= true,
-        this._recordNavigation= false,
-        this._automaticSearch= true,
-        this._memorySize= 10,
-        this._memory= []
+    constructor(jwt, allowTemporaryMemory, recordNavigation, automaticSearch, memorySize, memory) {
+        this._jwt= jwt,
+        this._allowTemporaryMemory= allowTemporaryMemory,
+        this._recordNavigation= recordNavigation,
+        this._automaticSearch= automaticSearch,
+        this._memorySize= memorySize,
+        this._memory= memory
     }
 
-    get userId() {
-        return this._userid;
+    get jwt() {
+        return this._jwt;
     }
-    set userId(id) {
-        this._userid = id;
-    }
-
-    get extensionToken() {
-        return this._extensionToken;
-    }
-    set extensionToken(token) {
-        this._extensionToken = token;
+    set jwt(jwt) {
+        this._jwt = jwt;
     }
 
     get allowTemporaryMemory() {
@@ -63,8 +55,7 @@ class State {
 
     serialize() {
         return {
-            userId: this._userid,
-            extensionToken: this._extensionToken,            
+            jwt: this._jwt,            
             allowTemporaryMemory: this._allowTemporaryMemory,
             recordNavigation: this._recordNavigation,
             automaticSearch: this._automaticSearch,
@@ -74,8 +65,7 @@ class State {
     }
     static deserialize(obj) {
         const state = new State(
-            obj.userId,
-            obj.extensionToken,
+            obj.jwt,
             obj.allowTemporaryMemory,
             obj.recordNavigation,
             obj.automaticSearch,
@@ -90,7 +80,7 @@ const B = browser || chrome;
 // get state from memory
 var storedState = B.storage.local.get("lastState").then((res) => {
     if (!res.lastState) {
-        B.storage.local.set({"lastState": (new State()).serialize()});
+        B.storage.local.set({"lastState": (new State("", true, false, false, 10, [])).serialize()});
         return new State();
     }else{
         return State.deserialize(res.lastState);

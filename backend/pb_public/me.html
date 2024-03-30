@@ -27,6 +27,7 @@
         <div x-data="me">
             <template x-if="!missingJwt()" >  
                 <div x-init="downloadSearchInfo">
+                    <code style="display: none;" x-text="myJwt" id="pbjwt"></code>
                     <h3>Search</h3>
                     <form  action="/search.html" method="get">
                         <input type="text" name="query" placeholder="Search by key word"> 
@@ -64,7 +65,7 @@
                     </span>
                     <p>Check Your alerady saved <a href="/me/pages"> <button>Pages</button> </a> </p>
                     <hr>
-                    <span>Go To Your <a href="/me/account"> Account details </a> or <button x-on:click="logout"> Logout </button></span>                    
+                    <span>Go To Your <a href="/me/account"> Account details </a> or <button x-on:click="logout"> Logout </button></span>               
                 </div>
             </template>
             <template x-if="missingJwt()">
@@ -91,6 +92,9 @@
                 categories: []
             },
             lastMsg: '',
+            myJwt() {
+                return Cookies.get('jwt')
+            },
             downloadSearchInfo(){
                 fetch('/api/search/info', {
                     method: 'GET',
