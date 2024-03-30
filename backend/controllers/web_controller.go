@@ -49,6 +49,12 @@ func (controller WebController) DeleteAccount(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+/*
+GetSearchInfo
+used to get all info needed for search page before actually searching
+
+right now it only returns all categories from user pages (cause a user can filter by category)
+*/
 func (controller WebController) GetSearchInfo(c echo.Context) error {
 
 	user, err := controller.UserController.UserFromRequest(c, false)
@@ -160,7 +166,7 @@ func (controller WebController) PostPagemanageCategory(c echo.Context) error {
 	}
 
 	// read page and category id from body
-	var data rest.PostCategoryRequest
+	var data rest.PostPagemanageCategoryRequest
 	if err := c.Bind(&data); err != nil {
 		log.Debug().Msgf("failed to parse json body, %v\n", err)
 		c.String(http.StatusBadRequest, "failed to parse json body")

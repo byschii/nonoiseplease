@@ -33,13 +33,14 @@ type DeletePageRequest struct {
 	PageID string `json:"page_id"`
 }
 
-type PostCategoryRequest struct {
+type PostPagemanageCategoryRequest struct {
 	CategoryName string `json:"category_name"`
 	PageID       string `json:"page_id"`
 }
 
+// set of infos usefull before search
 type PreSearchInfoResponse struct {
-	Categories []categories.Category `json:"categories"`
+	Categories []categories.Category `json:"categories"` // categories can be filtered
 }
 
 type SearchResponse struct {
