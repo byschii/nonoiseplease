@@ -1,13 +1,13 @@
 
 
 class State {
-    constructor() {
-        this._jwt= "",
-        this._allowTemporaryMemory= true,
-        this._recordNavigation= false,
-        this._automaticSearch= true,
-        this._memorySize= 10,
-        this._memory= []
+    constructor(jwt, allowTemporaryMemory, recordNavigation, automaticSearch, memorySize, memory) {
+        this._jwt= jwt,
+        this._allowTemporaryMemory= allowTemporaryMemory,
+        this._recordNavigation= recordNavigation,
+        this._automaticSearch= automaticSearch,
+        this._memorySize= memorySize,
+        this._memory= memory
     }
 
     get jwt() {
@@ -80,7 +80,7 @@ const B = browser || chrome;
 // get state from memory
 var storedState = B.storage.local.get("lastState").then((res) => {
     if (!res.lastState) {
-        B.storage.local.set({"lastState": (new State()).serialize()});
+        B.storage.local.set({"lastState": (new State("", true, false, false, 10, [])).serialize()});
         return new State();
     }else{
         return State.deserialize(res.lastState);

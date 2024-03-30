@@ -92,6 +92,9 @@ storedState.then((currentState) => {
         else if (message.action === "status.memory") {
             currentState.allowTemporaryMemory = message.memory;
         }
+        else if (message.action === "status.autosearch") {
+            currentState.automaticSearch = message.autosearch;
+        }
         console.log("currentState after -> ", currentState);
         B.storage.local.set({"lastState":currentState.serialize()});
 

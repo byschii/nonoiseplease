@@ -14,6 +14,7 @@ const loadStateOnUI = (delay) => {
                 document.getElementById("nnpext-jwt").value = currentState.jwt;
                 document.getElementById("nnpext-memory").checked = currentState.allowTemporaryMemory;
                 document.getElementById("nnpext-record").checked = currentState.recordNavigation;
+                document.getElementById("nnpext-autosearch").checked = currentState.automaticSearch;
             }
         }).catch(
             () => false
@@ -57,6 +58,13 @@ document.getElementById("nnpext-record").addEventListener("change", (event) => {
     B.runtime.sendMessage(extId, {
         action: "status.record",
         record: event.target.checked
+    });
+});
+document.getElementById("nnpext-autosearch").addEventListener("change", (event) => {
+    console.log("autosearch changed");
+    B.runtime.sendMessage(extId, {
+        action: "status.autosearch",
+        autosearch: event.target.checked
     });
 });
 document.getElementById("nnpext-save").addEventListener("click", () => {
