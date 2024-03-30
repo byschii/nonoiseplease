@@ -82,7 +82,6 @@ func (controller WebController) GetSearchInfo(c echo.Context) error {
 
 func (controller WebController) GetSearch(c echo.Context) error {
 	// print request
-	print(c)
 	log.Debug().Msgf(c.Request().URL.String())
 	record, _ := c.Get("authRecord").(*models.Record)
 	if record == nil || !record.GetBool("verified") {

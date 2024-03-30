@@ -9,18 +9,44 @@ if (!B.management.getSelf(function(info) {
     } 
 }));
 
-const spawnSearch = (tabId, query) => {
-    B.tabs.sendMessage(tabId, {
-        action: "search",
-        pages: [
-            {url: "https://www.google.com", title: "Google"},
-            {url: "https://www.bing.com", title: "Bing"}
-        ]
+const spawnSearch = (tab, jwt) => {
+    console.log("spawning search");
+
+    // 1 check tab is open on google
+    let parsedUrl = new URL(tab.url);
+    if(parsedUrl.hostname.includes(".google.com") === false) {
+        console.warn("not searching on google");
+        return;
+    }
+
+    // 2 grab the search query from the tab url
+    let query = parsedUrl.searchParams.get("q");
+    if(!query) {
+        console.warn("no query found");
+        return;
+    }
+
+    // 3 do a search on nnp
+    searchPage(nnp_address, jwt, query).then((pages) => {
+        console.log("search results: ", pages.pages);
+        // 3 bis pages -> {url,title}
+        let parsedPages = pages.pages.map((page) => {
+            return {
+                url: page.page.link,
+                title: page.page.page_title
+            }
+        });
+
+        // 4 send the results to the content script and let content script display them
+        B.tabs.sendMessage(tab.id, {
+            action: "search",
+            pages: parsedPages
+        });
+
     });
 };
 
 const grabJwt = async (currentTab) => {
-
     if (!currentTab || currentTab.url.indexOf(nnp_address) === -1) {
         console.warn("current tab is not nnp", currentTab);
         return null;
@@ -36,7 +62,6 @@ const grabJwt = async (currentTab) => {
 storedState.then((currentState) => {
     // Listen for a tab being updated to a complete status
     B.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-        console.log("tab updated");
         if (changeInfo.status === 'complete' && tab.active) {
             // Execute content script to get HTML
             B.tabs.executeScript(tabId, { code: 'document.documentElement.outerHTML' }, function(htmlContent) {
@@ -54,7 +79,7 @@ storedState.then((currentState) => {
                     currentState.memory.shift();
                 }
                 if(currentState.automaticSearch){
-                    spawnSearch(tab.id, "test")
+                    spawnSearch(tab, currentState.jwt);
                 }
             });
         }

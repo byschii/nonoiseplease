@@ -4,16 +4,22 @@
 const B = browser || chrome;
 
 const createPageList = (pages) => {
+    console.log("pages: ", pages);
     const pageList = document.createElement("ul");
     pageList.style.background = "white";
-    pageList.style.display = "flex";
+    pageList.style.display = "block";
     pageList.style.zIndex = "1000";
+    pageList.style.position = "absolute";
+    pageList.style.top = "0";
+    pageList.style.left = "0";
+    pageList.style.right = "0";
+    pageList.style.width = "100%";
     pageList.id = "nnpext-page-list";
     pages.forEach((page) => {
         const pageLink = document.createElement("a");
         const pageListItem = document.createElement("li");
         pageLink.href = page.url;
-        pageLink.textContent = page.title;
+        pageLink.textContent = page.title + " (" + page.url + ")";
         pageLink.style.color = "black";
         pageListItem.appendChild(pageLink);
         pageList.appendChild(pageListItem);
@@ -22,14 +28,15 @@ const createPageList = (pages) => {
 }
 
 var searchAlreadyInserted = false;
-var allowedDomains = ["google.com", "bing.com"];
-
 // receive message from backgroud script
 B.runtime.onMessage.addListener((message, sender, sendResponse) => {
     console.log("message received: ", message);
-    if(message.action === "search" && !searchAlreadyInserted && allowedDomains.includes(new URL(message.pages[0].url).hostname)) {
+    if(message.action === "search" && !searchAlreadyInserted) {
         // insert at top of page a list of page
-        document.body.insertAdjacentElement("afterbegin", createPageList(message.pages));
+        document.body.insertBefore(
+            createPageList(message.pages),
+            document.body.firstChild
+            );
         searchAlreadyInserted = true;
     }
 

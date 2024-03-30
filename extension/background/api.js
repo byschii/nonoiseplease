@@ -65,3 +65,30 @@ const refreshToken = async (nnp_address, jwt) => {
     return res;
 };
 
+/*
+    right cannot apply filter to the search
+
+    * @param {string} nnp_address
+    * @param {string} jwt
+    * @param {string} query - search query written on the search engine
+    * @returns {Promise<[]>}
+*/
+const searchPage = async (nnp_address, jwt, query) => {
+    console.log("searching page");
+
+    let searchParams = new URLSearchParams({
+        query: query,
+        // categories: categories.join(',')
+    })
+
+    let resp = await fetch(
+        nnp_address + "/api/search?"+ searchParams, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: jwt
+            }
+        }).then(response => response.json());
+
+    return resp;
+}
