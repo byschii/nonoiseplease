@@ -1,0 +1,14 @@
+
+<div>
+    <p>No Noise Please search results</p>
+    <ul>
+        {{ range $pageresult := .Pages }}
+            <li>
+                <a href="{{$pageresult.Page.Link}}"> {{ $pageresult.Page.PageTitle }} </a>
+            </li>
+        {{ end }}
+    </ul>
+</div>
+<style>
+
+</style>

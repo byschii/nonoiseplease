@@ -3,6 +3,8 @@ package controllers
 import (
 	u "be/utils"
 	"be/webscraping"
+	"errors"
+	"html/template"
 	"net/http"
 	"strings"
 
@@ -23,6 +25,7 @@ type WebController struct {
 
 type NoNoiseInterface interface {
 	GetSearch(c echo.Context) error
+	GetSearchExtentionHtml(c echo.Context) error
 	GetSearchInfo(c echo.Context) error
 	DeleteAccount(c echo.Context) error
 	PostUrlScrape(c echo.Context) error
@@ -80,13 +83,12 @@ func (controller WebController) GetSearchInfo(c echo.Context) error {
 	return nil
 }
 
-func (controller WebController) GetSearch(c echo.Context) error {
+func (controller WebController) SearchPages(c echo.Context) (rest.SearchResponse, error) {
 	// print request
 	log.Debug().Msgf(c.Request().URL.String())
 	record, _ := c.Get("authRecord").(*models.Record)
 	if record == nil || !record.GetBool("verified") {
-		c.String(http.StatusUnauthorized, "unauthorized, user not verified")
-		return nil
+		return rest.SearchResponse{}, errors.New("unauthorized, user not verified")
 	}
 	userID := record.Id
 
@@ -100,13 +102,47 @@ func (controller WebController) GetSearch(c echo.Context) error {
 	pageResp, err := controller.PageController.PageSearch(query, []string{userID}, categories)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to search ")
-		return c.String(http.StatusBadRequest, u.WrapError("failed to search ", err).Error())
+		return rest.SearchResponse{}, u.WrapError("failed to search ", err)
 	}
 
 	resp := rest.SearchResponse{
 		Pages: *pageResp,
 	}
-	return c.JSON(http.StatusOK, resp)
+	return resp, nil
+}
+
+// used by extention to get html for search page
+// this allows to have a search page in the extention
+// without having to create a new page in the extention and without having to update the extention to deliver updates
+func (controller WebController) GetSearchExtentionHtml(c echo.Context) error {
+	data, err := controller.SearchPages(c)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to search")
+		return c.String(http.StatusBadRequest, u.WrapError("failed to search ", err).Error())
+	}
+
+	// open fs file
+	templateName := "./extention_template/search.html"
+	parsedSearchTemplate := template.Must(template.ParseFiles(templateName))
+
+	// execute template
+	err = parsedSearchTemplate.Execute(c.Response().Writer, data)
+	if err != nil {
+		log.Error().Err(err).Msg("error executing template")
+		return c.String(http.StatusInternalServerError, u.WrapError("error executing template ", err).Error())
+	}
+
+	return nil
+}
+
+func (controller WebController) GetSearch(c echo.Context) error {
+	data, err := controller.SearchPages(c)
+	if err != nil {
+		log.Error().Err(err).Msg("failed to search")
+		return c.String(http.StatusBadRequest, u.WrapError("failed to search ", err).Error())
+	}
+
+	return c.JSON(http.StatusOK, data)
 }
 
 func (controller WebController) PostUrlScrape(c echo.Context) error {

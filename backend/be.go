@@ -209,6 +209,13 @@ func main() {
 			Middlewares: middlewares,
 		})
 
+		e.Router.AddRoute(echo.Route{
+			Method:      http.MethodGet,
+			Path:        "/api/search/html",
+			Handler:     appController.GetSearchExtentionHtml,
+			Middlewares: middlewares,
+		})
+
 		// SETUP CONFIG
 
 		// set application smtp

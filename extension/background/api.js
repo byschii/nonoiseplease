@@ -92,3 +92,24 @@ const searchPage = async (nnp_address, jwt, query) => {
 
     return resp;
 }
+
+const searchPageHTML = async (nnp_address, jwt, query) => {
+    console.log("searching page");
+
+    let searchParams = new URLSearchParams({
+        query: query,
+        // categories: categories.join(',')
+    })
+
+    let resp = await fetch(
+        nnp_address + "/api/search/html?"+ searchParams, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: jwt
+            }
+        });
+
+    let bodyContent = await resp.text();
+    return bodyContent;
+}

@@ -10,7 +10,7 @@ if (!B.management.getSelf(function(info) {
 }));
 
 const spawnSearch = (tab, jwt) => {
-    console.log("spawning search");
+    console.log("spawning search on tab: ", tab);
 
     // 1 check tab is open on google
     let parsedUrl = new URL(tab.url);
@@ -27,6 +27,7 @@ const spawnSearch = (tab, jwt) => {
     }
 
     // 3 do a search on nnp
+    /*
     searchPage(nnp_address, jwt, query).then((pages) => {
         console.log("search results: ", pages.pages);
         // 3 bis pages -> {url,title}
@@ -44,6 +45,14 @@ const spawnSearch = (tab, jwt) => {
         });
 
     });
+    */
+    searchPageHTML(nnp_address, jwt, query).then((pages) => {
+        B.tabs.sendMessage(tab.id, {
+            action: "search",
+            result: pages
+        });
+    });
+
 };
 
 const grabJwt = async (currentTab) => {
@@ -133,7 +142,7 @@ storedState.then((currentState) => {
         }
         if (message.action === "page.search") {
             B.tabs.query({active: true, currentWindow: true}, function(tabs) {
-                spawnSearch(tabs[0].id, "test");
+                spawnSearch(tabs[0], currentState.jwt);
             });
         }
     });
