@@ -1,6 +1,6 @@
 
 <style>
-    p#nnp-search-result-title{
+    span#nnp-search-result-title{
         margin: 2px;
         font-weight: bold;
     }
@@ -17,18 +17,20 @@
     ul#nnp-search-result-list {
         display: none;
     }
-    div#nnp-search-result:hover, div#nnp-search-result:hover > *{ 
+    div#nnp-search-result:hover, div#nnp-search-result:hover > ul{ 
         /* when mouse hover the title, then show the list of results */
         display: block;
     }
-    
+    li{
+        margin: 5px;
+    }
 </style>
 <div id="nnp-search-result">
-    <p id="nnp-search-result-title">No Noise Please search results</p>
+    <span id="nnp-search-result-title">No Noise Please search results</span><span> (hover to expand)</span>
     <ul id="nnp-search-result-list">
         {{ range $pageresult := .Pages }}
             <li>
-                <a href="{{ $pageresult.Page.Link }}">{{ $pageresult.Page.PageTitle }}</a>
+                <span>{{ $pageresult.Page.PageTitle }} </span> <a href="{{ $pageresult.Page.Link }}"> {{ $pageresult.Page.Link }}</a>
             </li>
         {{ end }}
     </ul>

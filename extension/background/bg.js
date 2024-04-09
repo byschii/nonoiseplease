@@ -56,7 +56,7 @@ storedState.then((currentState) => {
             B.tabs.executeScript(tabId, { code: 'document.documentElement.outerHTML' }, function(htmlContent) {
                 if (currentState.allowTemporaryMemory) {
                     currentState.pushToMemory({
-                        html: htmlContent,
+                        html: htmlContent[0],
                         url: tab.url,
                         title: tab.title
                     });
