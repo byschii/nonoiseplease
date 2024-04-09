@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Nonoiseplease",
-  "version": "2.1",
+  "version": "$1",
   "description": "Scrape your own web",
   "icons": {
     "48": "icons/icon-48.png"
@@ -28,17 +28,27 @@
   },
   "devserver": "http://127.0.0.1:8090",
   "permissions": [
-    "tabs", "<all_urls>", "activeTab", "nativeMessaging", "storage"
+    "tabs",
+    "<all_urls>",
+    "activeTab",
+    "nativeMessaging",
+    "storage"
   ],
   "background": {
-    "scripts": ["background/current_state.js", "background/api.js", "background/bg.js"]
+    "scripts": [
+      "background/current_state.js",
+      "background/api.js",
+      "background/bg.js"
+    ]
   },
   "content_scripts": [
     {
-      "matches": ["<all_urls>"],
-      "js": ["content/contentscript.js"]
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content/contentscript.js"
+      ]
     }
   ]
-
 }
-  

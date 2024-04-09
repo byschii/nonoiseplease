@@ -2,6 +2,7 @@ to_send.tar.gz
 
 tests/
 scripts/
+automations/
 nnp
 
 backend/be
