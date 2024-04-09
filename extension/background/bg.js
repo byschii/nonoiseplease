@@ -55,6 +55,9 @@ storedState.then((currentState) => {
             // Execute content script to get HTML
             B.tabs.executeScript(tabId, { code: 'document.documentElement.outerHTML' }, function(htmlContent) {
                 if (currentState.allowTemporaryMemory) {
+                    if (currentState.memory.length > currentState.memorySize) {
+                        currentState.memory.shift();
+                    }
                     currentState.pushToMemory({
                         html: htmlContent[0],
                         url: tab.url,
@@ -62,10 +65,10 @@ storedState.then((currentState) => {
                     });
                 }
                 if (currentState.recordNavigation) {
-                    sendPage(nnp_address, currentState.jwt, htmlContent, tab.url, tab.title); // too keep memory and record independent
-                }
-                if (currentState.memory.length > currentState.memorySize) {
-                    currentState.memory.shift();
+                    // just send current situation
+                    sendPage(nnp_address, currentState.jwt, htmlContent, tab.url, tab.title); 
+                    // keep memory and autosave independent
+                    // someone can record without sending or send without recording locally
                 }
                 if(currentState.automaticSearch){
                     spawnSearch(tab, currentState.jwt);

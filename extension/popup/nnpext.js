@@ -3,6 +3,7 @@
 // constants and utilities
 const B = browser || chrome;
 const extId = B.runtime.id;
+const version = B.runtime.getManifest().version;
 
 // load current state on UI
 const loadStateOnUI = (delay) => {
@@ -15,6 +16,7 @@ const loadStateOnUI = (delay) => {
                 document.getElementById("nnpext-memory").checked = currentState.allowTemporaryMemory;
                 document.getElementById("nnpext-record").checked = currentState.recordNavigation;
                 document.getElementById("nnpext-autosearch").checked = currentState.automaticSearch;
+                document.getElementById("nnpext-version").value = version;
             }
         }).catch(
             () => false

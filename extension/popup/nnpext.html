@@ -9,16 +9,48 @@
 <body>
     <h2>No Noise Please</h2>
 
-    <button id="nnpext-login" >Login</button>
-    <button id="nnpext-logout" >Logout</button> <br />
-    <input disabled id="nnpext-jwt" type="text" placeholder="JWT Token" style="width: 100%;"><br>
-    <button id="nnpext-refresh-token" >Refresh JWT</button><br />
+    <fieldset>
+        <legend>Auth</legend>
+        <span>Open you nonoiseplease page and <i>grab</i> your jwt </span> <br />
+        <button id="nnpext-login" >Grab JWT</button>
+        <button id="nnpext-logout" >Clean JWT</button> 
+        <button id="nnpext-refresh-token">Refresh JWT</button><br />
+        <input disabled id="nnpext-jwt" type="text" placeholder="JWT Token" style="width: 100%;"><br>
+    </fieldset>
 
-    <input id="nnpext-memory" type="checkbox" checked> <label for="nnpext-memory" > Temporary Memory</label><br>
-    <input id="nnpext-record" type="checkbox" unchecked> <label for="nnpext-record" > Record Navigation</label><br>
-    <input id="nnpext-autosearch" type="checkbox" unchecked> <label for="nnpext-autosearch" > Autosearch</label><br>
-    <button id="nnpext-save" >Save</button>
-    <button id="nnpext-search" >Search</button>
+    <fieldset>
+        <legend>Log</legend>
+        <div>
+            <span>V.</span> <input disabled id="nnpext-version">
+        </div>
+    </fieldset>
+
+    <fieldset>
+        <legend>Actions</legend>
+        <div>
+            <button id="nnpext-save" >Save</button>
+            <span>or</span>
+            <input id="nnpext-record" type="checkbox" unchecked> 
+            <label for="nnpext-record" >Autosave </label>
+            <span> visited pages</span>
+        </div>
+        <div>
+            <button id="nnpext-search" >Search</button>
+            <span>or</span>
+            <input id="nnpext-autosearch" type="checkbox" unchecked> 
+            <label for="nnpext-autosearch" >Autosearch </label> 
+            <span> on Google</span>
+        </div>
+    </fieldset>
+    
+    <fieldset>
+        <legend>Advanced</legend>
+        <div>
+            <input id="nnpext-memory" type="checkbox" checked> 
+            <label for="nnpext-memory" >Temporary Memory </label>
+            <span> to upload when Autosave-ON</span>
+        </div>
+    </fieldset>
 
     <script src="nnpext.js"></script>
 </body>
