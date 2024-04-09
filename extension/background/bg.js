@@ -26,26 +26,6 @@ const spawnSearch = (tab, jwt) => {
         return;
     }
 
-    // 3 do a search on nnp
-    /*
-    searchPage(nnp_address, jwt, query).then((pages) => {
-        console.log("search results: ", pages.pages);
-        // 3 bis pages -> {url,title}
-        let parsedPages = pages.pages.map((page) => {
-            return {
-                url: page.page.link,
-                title: page.page.page_title
-            }
-        });
-
-        // 4 send the results to the content script and let content script display them
-        B.tabs.sendMessage(tab.id, {
-            action: "search",
-            pages: parsedPages
-        });
-
-    });
-    */
     searchPageHTML(nnp_address, jwt, query).then((pages) => {
         B.tabs.sendMessage(tab.id, {
             action: "search",

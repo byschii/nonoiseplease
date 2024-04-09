@@ -71,28 +71,8 @@ const refreshToken = async (nnp_address, jwt) => {
     * @param {string} nnp_address
     * @param {string} jwt
     * @param {string} query - search query written on the search engine
-    * @returns {Promise<[]>}
+    * @returns {Promise<[]>} with the content of the page
 */
-const searchPage = async (nnp_address, jwt, query) => {
-    console.log("searching page");
-
-    let searchParams = new URLSearchParams({
-        query: query,
-        // categories: categories.join(',')
-    })
-
-    let resp = await fetch(
-        nnp_address + "/api/search?"+ searchParams, {
-            method: "GET",
-            headers: {
-                "Content-Type": "application/json",
-                Authorization: jwt
-            }
-        }).then(response => response.json());
-
-    return resp;
-}
-
 const searchPageHTML = async (nnp_address, jwt, query) => {
     console.log("searching page");
 

@@ -1,14 +1,36 @@
 
-<div>
-    <p>No Noise Please search results</p>
-    <ul>
+<style>
+    p#nnp-search-result-title{
+        margin: 2px;
+        font-weight: bold;
+    }
+    div#nnp-search-result {
+        background: white;
+        color: black;
+        z-index: 1000;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+    }
+    ul#nnp-search-result-list {
+        display: none;
+    }
+    div#nnp-search-result:hover, div#nnp-search-result:hover > *{ 
+        /* when mouse hover the title, then show the list of results */
+        display: block;
+    }
+    
+</style>
+<div id="nnp-search-result">
+    <p id="nnp-search-result-title">No Noise Please search results</p>
+    <ul id="nnp-search-result-list">
         {{ range $pageresult := .Pages }}
             <li>
-                <a href="{{$pageresult.Page.Link}}"> {{ $pageresult.Page.PageTitle }} </a>
+                <a href="{{ $pageresult.Page.Link }}">{{ $pageresult.Page.PageTitle }}</a>
             </li>
         {{ end }}
     </ul>
 </div>
-<style>
 
-</style>

@@ -115,6 +115,7 @@ func main() {
 
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		log.Debug().Msgf("lessgoozz!!")
+		print("about:debugging#/runtime/this-firefox")
 		userController.SetApp(app)
 		authController.SetApp(app)
 		categoryController.SetPBDAO(app.Dao())
