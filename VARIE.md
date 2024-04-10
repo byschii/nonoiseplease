@@ -2,6 +2,7 @@
 
 ## PRE-RELEASE
 - fix ui on extention with msgs
+- fix ui on web page (maybe with a menu on top)
 - test search with categories from web page
 - explore test of extention
 - import bookmarks
