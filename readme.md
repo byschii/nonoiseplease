@@ -46,9 +46,10 @@ Also, I call "scaping" a simple GET request to the page (and so the text), so if
 Privacy
 -------
 
-Well, of course, if I want to index every web page uploaded, I think there is no alternative but to obtain the clear/plain text (note that this is also valid if you want to index personal data through the extension). In case there is a way to protect the indexed text as well, please let me know.  
+Well, of course, if I want to index every web page uploaded, I think there is no alternative but to obtain the clear/plain text (note that this is also valid if you want to index personal data through the extension). In case there is a way to protect the indexed text as well, please let me know. Maybe, indexing can be optional.. dunno.
 I ask only for an email and save only 2 cookies (that a know of): a JWT and an id.  
 There are no analitycs.  
+If you delete your account, it is actually deleted.  
 The extention is 1.6kB of js, you can look it up. (just rename the file from .xpi to .zip)  
 
 
