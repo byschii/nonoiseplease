@@ -1,14 +1,11 @@
 # TODO
 
 ## PRE-RELEASE
-- fix ui on extention
+- fix ui on extention with msgs
 - test search with categories from web page
 - explore test of extention
 - import bookmarks
 - test proxies
-
-## BUG
-- remove useless comments schema
 
 ## NICE TO HAVE
 - in extention, when showing results, put link to internal page management

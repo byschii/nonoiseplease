@@ -123,3 +123,73 @@ nonoiseplease is still missing some features, I know, but I'm working on it.
     *   maybe also add a way to "group" pages (like a tag, but with a description)
 *   got to add a local client
     *   maybe gui (https://mattn.github.io/go-gtk/), maybe not
+
+
+
+
+
+
+
+
+
+
+---
+
+<h2>
+            Alternatives
+        </h2>
+        <div>
+            <h3><a href="https://github.com/goniszewski/grimoire">Grimoire</a></h3>
+        <h4>Pros</h4>
+        - add your personal notes to bookmarks
+        <h4>Cons</h4>
+        - has to be self-hosted
+        </div>
+        <div>
+            <h3><a href="linkwarden.app">Linkwarden</a></h3>
+        <h4>Pros</h4>
+        - stores the page
+        <h4>Cons</h4>
+        - free only if self-hosted
+        - a little "cumbersome" when adding new links
+        </div>
+        <div>
+            <h3><a href="https://readclip.site">Readclip</a></h3>
+        <h4>Pros</h4>
+        - stores the page
+        - easy bookmark add
+        <h4>Cons</h4>
+        - no source
+        </div>
+        <div>
+            <h3><a href="https://raindrop.io">Raindrop</a></h3>
+        <h4>Pros</h4>
+        - full optional
+        <h4>Cons</h4>
+        - requires apps
+        </div>
+        <div>
+            <h3><a href="https://github.com/xbrowsersync">xbrowsersync</a></h3>
+        <h4>Pros</h4>
+        - free, open source, anonymous
+        <h4>Cons</h4>
+        - requires installation
+        </div>
+        <div>
+            <h3><a href="https://www.zotero.org">Zotero</a></h3>
+        <h4>Pros</h4>
+        - open source
+        <h4>Cons</h4>
+        - too much focused on research (has features i m not interested in)
+        </div>
+        <div>
+            <h3><a href="pinboard.in">Pinboard</a></h3>
+        <h4>Pros</h4>
+        - simple, fast, whit API (perferct)
+        <h4>Cons</h4>
+        - only paid version
+        </div>
+        <div>
+            <h3><a href="https://del.icio.us">del.icio.us</a></h3>
+            <span>✨maybe somethong to aspire to✨</span>
+        </div>

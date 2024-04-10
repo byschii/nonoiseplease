@@ -17,6 +17,8 @@ const loadStateOnUI = (delay) => {
                 document.getElementById("nnpext-record").checked = currentState.recordNavigation;
                 document.getElementById("nnpext-autosearch").checked = currentState.automaticSearch;
                 document.getElementById("nnpext-version").value = version;
+                document.getElementById("nnpext-msg").value = currentState.msg;
+                document.getElementById("nnpext-msg").style.color = currentState.msgtype === "ok" ? "green" : "red";
             }
         }).catch(
             () => false

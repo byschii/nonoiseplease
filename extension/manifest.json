@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "Nonoiseplease",
-  "version": "$1",
+  "version": "2.4",
   "description": "Scrape your own web",
   "icons": {
     "48": "icons/icon-48.png"
