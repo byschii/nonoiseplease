@@ -51,56 +51,8 @@ I ask only for an email and save only 2 cookies (that a know of): a JWT and an i
 There are no analitycs.  
 The extention is 1.6kB of js, you can look it up. (just rename the file from .xpi to .zip)  
 
-Alternatives
----
-With what i see as pros or cons.
 
-### [Grimoire](https://github.com/goniszewski/grimoire)
-##### Pros
-- add your personal notes to bookmarks
-##### Cons
-- has to be self-hosted
 
-### [Linkwarden](linkwarden.app)
-##### Pros
-- stores the page
-##### Cons
-- free only if self-hosted
-- a little "cumbersome" when adding new links
-
-### [Readclip](https://readclip.site/)
-##### Pros
-- stores the page
-- easy bookmark add
-##### Cons
-- no source
-
-### [Raindrop](https://raindrop.io)
-##### Pros
-- full optional
-##### Cons
-- requires apps
-
-### [xbrowsersync](https://github.com/xbrowsersync)
-##### Pros
-- free, open source, anonymous
-#### Cons
-- requires installation
-
-### [Zotero](https://www.zotero.org/)
-##### Pros
-- open source
-##### Cons
-- too much focused on research (has features i m not interested in)
-
-### [Pinboard](pinboard.in)
-##### Pros
-- simple, fast, whit API (perferct)
-##### Cons
-- only paid version
-
-### [del.icio.us](https://del.icio.us)
-- maybe somethong to aspire to
 
 Future
 ------
@@ -123,14 +75,6 @@ nonoiseplease is still missing some features, I know, but I'm working on it.
     *   maybe also add a way to "group" pages (like a tag, but with a description)
 *   got to add a local client
     *   maybe gui (https://mattn.github.io/go-gtk/), maybe not
-
-
-
-
-
-
-
-
 
 
 ---
