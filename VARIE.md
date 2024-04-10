@@ -6,6 +6,7 @@
 - explore test of extention
 - import bookmarks
 - test proxies
+- remove 'extension token' from ui and schema
 
 ## NICE TO HAVE
 - in extention, when showing results, put link to internal page management
