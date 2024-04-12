@@ -47,7 +47,7 @@ func main() {
 	if err != nil {             // Handle errors reading the config file
 		panic(fmt.Errorf("fatal error config file: %w", err))
 	}
-	print("config: %+v", viper.AllSettings())
+	print(fmt.Sprintf("config: %+v \n", viper.AllSettings()))
 
 	FRONTEND_FOLDER := viper.GetString("frontend_folder")
 	LOG_FOLDER := viper.GetString("log_folder")
@@ -60,7 +60,13 @@ func main() {
 	MAIL_PASSWORD := viper.GetString("mail_password")
 	MEILI_HOST_ADDRESS := viper.GetString("meili_host_address")
 	MAX_SCRAPE_PER_MONTH := viper.GetInt("max_scrape_per_month")
+	// get interface slice from config as 'default_config'
+	// [ {}, {}... ]
+	INITIAL_DB_CONFIGS := viper.Get("default_config").([]interface{})
+	print(fmt.Sprintf("INITIAL_DB_CONFIGS: %+v \n", INITIAL_DB_CONFIGS))
+
 	VERSION := "0.0.1"
+
 	if os.Getenv("VERSION") != "" {
 		VERSION = os.Getenv("VERSION")
 	}
@@ -87,6 +93,9 @@ func main() {
 	log.Logger = zerolog.New(logDestination).With().Timestamp().Caller().Logger()
 
 	app := pocketbase.New()
+
+	//
+
 	meiliClient := meilisearch.NewClient(meilisearch.ClientConfig{
 		Host:   MEILI_HOST_ADDRESS,
 		APIKey: MEILI_MASTER_KEY,
@@ -123,7 +132,8 @@ func main() {
 		pageController.SetPBDAO(app.Dao())
 
 		// SETUP SERVER
-		conf.InitConfig(app.Dao())
+		// conf.InitConfig(app.Dao())
+		conf.InitConfigFromYaml(app.Dao(), INITIAL_DB_CONFIGS)
 
 		e.Router.GET("/*", servepublic.StaticDirectoryHandlerWOptionalHTML(
 			echo.MustSubFS(e.Router.Filesystem, FRONTEND_FOLDER),

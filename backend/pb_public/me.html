@@ -38,13 +38,13 @@
                                     <tr>
                                         <th>Category</th>
                                         <template x-for="category in preSearchInfo.categories">
-                                            <td x-text="category.name"></td>
+                                            <td> <label x-bind:for="category.name" x-text="category.name"></label></td>
                                         </template>
                                     </tr>
                                     <tr>
-                                        <th>Include</th>
+                                        <th>Included</th>
                                         <template x-for="category in preSearchInfo.categories">
-                                            <td><input name="categories" type="checkbox" x-model="postSearchInfo.categories" x-bind:value="category.name"></td>
+                                            <td><input name="categories" type="checkbox" x-model="postSearchInfo.categories" x-bind:value="category.name" x-bind:id="category.name" ></td>
                                         </template>
                                     </tr>
     

@@ -1,7 +1,13 @@
 "use strict";
 
 // constants and utilities
-const B = browser || chrome;
+try {
+    var B = Maria;
+} catch (e) {
+    if (e instanceof ReferenceError) {
+        var B = chrome;
+    }
+}
 
 // receive message from backgroud script
 B.runtime.onMessage.addListener((message, sender, sendResponse) => {

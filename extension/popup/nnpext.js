@@ -1,14 +1,21 @@
 
 
 // constants and utilities
-const B = browser || chrome;
+try {
+    var B = Maria;
+} catch (e) {
+    if (e instanceof ReferenceError) {
+        var B = chrome;
+    }
+}
+
 const extId = B.runtime.id;
 const version = B.runtime.getManifest().version;
 
 // load current state on UI
 const loadStateOnUI = (delay) => {
     setTimeout(() => {
-        B.storage.local.get("lastState").then((res) => {
+        B.storage.local.get("lastState", ()=>{}).then((res) => {
             console.log("loading lastState: ", res.lastState);
             if (res.lastState) {
                 const currentState = res.lastState;
