@@ -12,6 +12,7 @@ backend/config.yml
 nnpextension.zip
 
 *.sh
+*.pem
 docker-compose*
 
 _readme.md
