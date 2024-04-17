@@ -1,0 +1,54 @@
+{
+  "manifest_version": 2,
+  "name": "Nonoiseplease",
+  "version": "2.4",
+  "description": "Scrape your own web",
+  "icons": {
+    "48": "icons/icon-48.png"
+  },
+  "browser_action": {
+    "default_icon": "icons/icon-48.png",
+    "default_title": "Nonoiseplease",
+    "default_popup": "popup/nnpext.html"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "extention@nonoiseplease.com"
+    },
+    "safari": {
+      "id": "extention@nonoiseplease.com"
+    },
+    "edge": {
+      "browser_action_next_to_addressbar": true,
+      "id": "extention@nonoiseplease.com"
+    },
+    "opera": {
+      "id": "extention@nonoiseplease.com"
+    }
+  },
+  "devserver": "http://127.0.0.1:8090",
+  "permissions": [
+    "tabs",
+    "<all_urls>",
+    "activeTab",
+    "nativeMessaging",
+    "storage"
+  ],
+  "background": {
+    "scripts": [
+      "background/current_state.js",
+      "background/api.js",
+      "background/bg.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content/contentscript.js"
+      ]
+    }
+  ]
+}
