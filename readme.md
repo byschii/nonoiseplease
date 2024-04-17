@@ -63,7 +63,6 @@ nonoiseplease is still missing some features, I know, but I'm working on it.
 *   browser extention
     *   fix the terrible UX and auth
     *   add in batch all of your bookmark (i really want it cause i m lazy but i dont know how to do without massive scraping)
-    *   show search result (maybe along side google)
 *   improve the "scraper"
     *   to get the transcript of a Youtube video
     *   find a way to reliably read PDF
