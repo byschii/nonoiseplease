@@ -17,10 +17,7 @@ So, I decided to create a tool that could scrape and index my own web findings. 
 Also, Google sometimes is shit and SEO is a bit annoying, that makes retrieving some niche page I find while surfing very difficult.  
 Also, AI will generate a ton of noise on the internet and i want to try to increase "signal" / "shit" ratio on my searches.  
 
-How
----
-
-#### To use
+## How To use
 
 *   Create an account: You can use a **temporary email service** like Temp-Mail or a tool like Firefox Relay. It's fine if you choose either of those options; I just needed a way to differentiate users and their indexes.
 *   Log in: Enter your credentials to access your account.
@@ -30,11 +27,55 @@ How
 *   Manage your pages: You can add categories to your pages in the "/me/pages" section
 *   Search for pages: Visit the provided website and use the search function with "keywords" (I mean... the query is sent directly to MeiliSearch). You will receive a list of pages from your index that match the query.
 
-#### It's done
 
-On the backend: Golang (PocketBase), along with MeiliSearch for the index (every user has his own personal index)  
-On the frontend: MVP.css (a little adapted), Alpine.js, js-cookie and some Golang templating.  
-Tests are done with Python  
+## how it works
+
+3 main components
+- backend
+- meilisearc
+- extension
+
+## backend
+let s split in actual backend (pocketbase) and frontend
+#### PocketBase
+god bless pocketbase, the right spot between simple, complex, extendible... also, coming from i bit of python, i really needed types
+- it is still a giant mess
+	- i have a set of controller with their interfaces
+	- every api call is handled by WebController (NoNoiseInterface) and i listed in be.go
+		-  WebController handle everything that is not handled by PocketBase exposed api
+			- mainly scrape, search, categorize pages, communication with extension
+	- pb_public and extension_template has ui
+	- serve_public handles templating
+- luckly pocketbase has a giant set of hooks that i use, for example, to delete every page a user scraped when his record is deleted
+#### Frontend
+i have no idea on who to do frontend, it s terrible
+- there are a bunch of pages just for "info" (/why, /index, /alternatives)
+- pages with more user interaction are a mix of go-templating and alpine-framework
+	- templated pages are me/account.html and register.html, are listed on backend/serve_public/template_renderer.go
+		- i like templating cause it can always be usefull, also the HTML sent to extension is templated (backend/extention_template/search.html)
+	- most is done with alpine cause the backend expose some api
+		- authenticated with jwt  
+- pages enables all function all the backend
+	- CRUD user
+	- scrape a webpage
+	- search/catogory scraped web pages
+
+## meilisearch
+is the engine that provide full text search
+- it comunicates only with the backend
+	- when a user registes, it gets its own index
+	- the index is kept synched at every operation
+- every index stores the docs as full text, list of categories and id (to have a link ok the backend)
+	- it s the only element that stores the full text scraped
+
+## extension
+actually it s optional, it s just to avoid scraping from backend ip and serving results inside google, not much to explain
+- inject HTML (dangerous) on google search, with results from a search on backend
+	- when you search on google, the extensione recognize that and does the same search on backend, which respondes with html
+- allows you to upload you current page to backend
+	- simply by reading the source
+- eventually: records the pages you visit locally (in background script) and send them to backend if you notice you found something interesting
+- saves cookies to remember your options
 
 Limitations
 -----------
