@@ -94,14 +94,12 @@ func main() {
 
 	app := pocketbase.New()
 
-	//
-
 	meiliClient := meilisearch.NewClient(meilisearch.ClientConfig{
 		Host:   MEILI_HOST_ADDRESS,
 		APIKey: MEILI_MASTER_KEY,
 	})
 
-	migratecmd.MustRegister(app, app.RootCmd, &migratecmd.Options{
+	migratecmd.MustRegister(app, app.RootCmd, migratecmd.Config{
 		Automigrate: true, // auto creates migration files when making collection changes
 	})
 
@@ -144,7 +142,6 @@ func main() {
 
 		middlewares := []echo.MiddlewareFunc{
 			apis.RequireRecordAuth("users"),
-			servepublic.ActivityLoggerWithPostAndAuthSupport(app),
 		}
 
 		e.Router.AddRoute(echo.Route{

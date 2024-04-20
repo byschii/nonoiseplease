@@ -11,12 +11,11 @@ COPY . .
 RUN rm -rf /home/pb_data/*
 
 # live reload
-RUN go get github.com/githubnemo/CompileDaemon
-RUN go install github.com/githubnemo/CompileDaemon
+RUN go install github.com/cosmtrek/air@latest
 
 RUN go mod download
 EXPOSE 8090
 
 # -- debug
-CMD CompileDaemon -build="go build be.go" -command="./be serve --debug"  -graceful-kill=true
+CMD CompileDaemon -build="go build be.go" -command="./be serve --dev"  -graceful-kill=true
 
