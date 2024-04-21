@@ -13,7 +13,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	config "be/model/config"
-	proxy "be/model/proxy"
 	u "be/utils"
 
 	readability "github.com/go-shiori/go-readability"
@@ -89,7 +88,7 @@ func getHtml(pageUrl string, dao *daos.Dao) (string, bool, error) {
 
 	if useProxy {
 		// set proxy
-		proxy, err := proxy.GetRandomProxy(dao)
+		proxy, err := config.GetRandomProxy(dao)
 		if err != nil {
 			return "", useProxy, err
 		}

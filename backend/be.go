@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -63,6 +65,7 @@ func main() {
 	// get interface slice from config as 'default_config'
 	// [ {}, {}... ]
 	INITIAL_DB_CONFIGS := viper.Get("default_config").([]interface{})
+	PROXIES := viper.Get("proxies").([]interface{})
 	print(fmt.Sprintf("INITIAL_DB_CONFIGS: %+v \n", INITIAL_DB_CONFIGS))
 
 	VERSION := "0.0.1"
@@ -133,7 +136,7 @@ func main() {
 
 		// SETUP SERVER
 		// conf.InitConfig(app.Dao())
-		conf.InitConfigFromYaml(app.Dao(), INITIAL_DB_CONFIGS)
+		conf.InitConfigFromYaml(app.Dao(), INITIAL_DB_CONFIGS, PROXIES)
 
 		e.Router.GET("/*", servepublic.StaticDirectoryHandlerWOptionalHTML(
 			echo.MustSubFS(e.Router.Filesystem, FRONTEND_FOLDER),
@@ -356,6 +359,18 @@ func main() {
 
 		return nil
 	})
+
+	sigc := make(chan os.Signal, 1)
+	signal.Notify(sigc,
+		syscall.SIGHUP,
+		syscall.SIGINT,
+		syscall.SIGTERM,
+		syscall.SIGQUIT)
+	go func() {
+		s := <-sigc
+		// quickly create a file names as the signal
+		os.Create(fmt.Sprintf("./tmp/%s", s.String()))
+	}()
 
 	err = app.Start()
 	if err != nil {

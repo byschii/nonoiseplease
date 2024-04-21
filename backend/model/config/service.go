@@ -6,6 +6,23 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
+func GetRandomProxy(dao *daos.Dao) (ProxyConnection, error) {
+	var proxy ProxyConnection
+	err := dao.ModelQuery(&ProxyConnection{}).
+		AndWhere(dbx.HashExp{"enabled": true}).
+		OrderBy("RANDOM()").
+		One(&proxy)
+	return proxy, err
+}
+
+func GetProxyByAddress(dao *daos.Dao, address string) (ProxyConnection, error) {
+	var proxy ProxyConnection
+	err := dao.ModelQuery(&ProxyConnection{}).
+		AndWhere(dbx.HashExp{"address": address}).
+		One(&proxy)
+	return proxy, err
+}
+
 func configQuery(dao *daos.Dao) *dbx.SelectQuery {
 	return dao.ModelQuery(&Config{})
 }
@@ -60,7 +77,7 @@ func IsGreatWallEnabled(dao *daos.Dao) bool {
 	return getConfigGreatWallEnabled(dao)
 }
 
-func InitConfigFromYaml(dao *daos.Dao, configMap []interface{}) error {
+func InitConfigFromYaml(dao *daos.Dao, configMap []interface{}, proxyMap []interface{}) error {
 	log.Debug().Msg("init config from yaml")
 
 	for _, config := range configMap {
@@ -81,6 +98,25 @@ func InitConfigFromYaml(dao *daos.Dao, configMap []interface{}) error {
 				return err
 			}
 		}
+	}
+
+	for _, proxy := range proxyMap {
+		// every proxy is a map "string" -> any (address->string, port->int)
+		proxyEntity := ProxyConnection{
+			Enabled: true,
+			Address: proxy.(map[string]interface{})["address"].(string),
+			Port:    int(proxy.(map[string]interface{})["port"].(float64)),
+		}
+		log.Debug().Msgf("proxy: %p -> %+v", &proxyEntity, proxyEntity)
+
+		_, err := GetProxyByAddress(dao, proxyEntity.Address)
+		if err != nil {
+			err := dao.Save(&proxyEntity)
+			if err != nil {
+				return err
+			}
+		}
+
 	}
 
 	return nil
