@@ -5,6 +5,7 @@
 - also msg on home/me
 - fix ui on web page (maybe with a menu on top)
 - mettere miglio msg d errore se una pag non viene salvata
+- devo capire se con AUTH necessaria, uno può fare login + fallimento (ma registrazione token) + accesso alle altre pag consentito
 - fare test automatici proxy
     - basta una requests che passa dal proxy nella config
 
