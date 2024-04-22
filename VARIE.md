@@ -2,11 +2,9 @@
 
 ## PRE-RELEASE
 - fix ui on extention with msgs
-- fixare msg in home/me quando si fa page scrape
 - fix ui on web page (maybe with a menu on top)
 - devo capire se con AUTH necessaria, uno può fare login + fallimento (ma registrazione token) + accesso alle altre pag consentito
-- fare test automatici proxy
-    - basta una requests che passa dal proxy nella config
+
 
 ## NICE TO HAVE
 - bookmarks integration

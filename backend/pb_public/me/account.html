@@ -88,6 +88,10 @@
                 }).catch(error => {
                     this.lastMessage = 'Error: ' + error
                 }).then(data => {
+                    if(!data.ok){
+                        this.lastMessage = 'Error: ' + data
+                        return
+                    }
                     this.kindaLogoutAfterCredentialsChange()
                 })
             },
@@ -106,7 +110,11 @@
                 }).catch(error => {
                     this.lastMessage = 'Error: ' + error
                 }).then(data => {
-                    this.kindaLogoutAfterCredentialsChange()
+                    if(!error.ok){
+                        this.lastMessage = 'Error: ' + data
+                    }else{
+                        this.kindaLogoutAfterCredentialsChange()
+                    }
                 })
 
             },

@@ -89,9 +89,14 @@
                         Authorization: this.myJwt()
                     }
                 }).then(data => {
-                    console.log('Success:', data);
-                    this.downloadPages()
-                    this.selected = false; // reset the selection
+                    if(!data.ok){
+                        console.error('Error:', error);
+                        this.errorMsg = error
+                    }else{
+                        console.log('Success:', data);
+                        this.downloadPages()
+                        this.selected = false; // reset the selection
+                    }
                 }).catch(error => {
                     console.error('Error:', error);
                     this.errorMsg = error
@@ -109,7 +114,12 @@
                     }
                 }).then(response => response.json())
                 .then(data => {
-                    this.pageList = data
+                    if(!data.ok){
+                        console.error('Error:', error);
+                        this.errorMsg = error
+                    }else{
+                        this.pageList = data
+                    }
                 }).catch(error => {
                     console.error('Error:', error);
                     this.errorMsg = error

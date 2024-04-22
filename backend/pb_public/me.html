@@ -123,9 +123,14 @@
                 })
                 .then(data => {
                     // clear input
-                    this.lastMsg = 'Url added'
-                    document.getElementById('url').value = ''
-                    console.log('Success:', data);
+                    if(!data.ok){
+                        this.lastMsg = 'Url NOT added'
+                        console.error('Error:', error);
+                    }else{
+                        this.lastMsg = 'Url added'
+                        document.getElementById('url').value = ''
+                        console.log('Success:', data);
+                    }
                 })
                 .catch((error) => {
                     console.error('Error:', error);

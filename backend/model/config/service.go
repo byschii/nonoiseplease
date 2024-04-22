@@ -105,7 +105,7 @@ func InitConfigFromYaml(dao *daos.Dao, configMap []interface{}, proxyMap []inter
 		proxyEntity := ProxyConnection{
 			Enabled: true,
 			Address: proxy.(map[string]interface{})["address"].(string),
-			Port:    int(proxy.(map[string]interface{})["port"].(float64)),
+			Port:    int(proxy.(map[string]interface{})["port"].(int)),
 		}
 		log.Debug().Msgf("proxy: %p -> %+v", &proxyEntity, proxyEntity)
 

@@ -63,7 +63,7 @@ func (controller WebController) GetSearchInfo(c echo.Context) error {
 	user, err := controller.UserController.UserFromRequest(c, false)
 	if err != nil {
 		log.Debug().Msgf("failed to get user from request, %v\n", err)
-		
+
 		return c.String(http.StatusBadRequest, u.WrapError("failed to get user from request ", err).Error())
 	}
 
@@ -71,7 +71,7 @@ func (controller WebController) GetSearchInfo(c echo.Context) error {
 	categories, err := controller.PageController.FindCategoriesFromUser(user)
 	if err != nil {
 		log.Debug().Msgf("failed to get categories, %v\n", err)
-		
+
 		return c.String(http.StatusBadRequest, u.WrapError("failed to get categories ", err).Error())
 	}
 
@@ -159,7 +159,7 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 	}
 	// if user has reached the limit, return error
 	if pagesAlreadyScraped >= controller.ConfigController.MaxScrapePerMonth() {
-		
+
 		return c.String(http.StatusForbidden, "you have reached the limit of pages you can scrape")
 	}
 
@@ -167,14 +167,13 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 	var urlData rest.Url
 	if err := c.Bind(&urlData); err != nil {
 		log.Debug().Msgf("failed to parse json body, %v\n", err)
-		
+
 		return c.String(http.StatusBadRequest, "failed to parse json body")
 	}
 	// scrape url and get info
 	article, withProxy, err := webscraping.GetArticle(urlData.Url, false, controller.PageController.AppDao())
 	if err != nil {
 		log.Debug().Msgf("failed to parse %s, %v\n", urlData.Url, err)
-		
 		return c.String(http.StatusBadRequest, "failed to parse url")
 	}
 
