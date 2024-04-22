@@ -31,6 +31,10 @@
 
 </footer>
 <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        Cookies.remove('jwt')
+        Cookies.remove('uid')
+    });    
     document.addEventListener('alpine:init', () => {
         Alpine.data('login', ()=>({
             lastMessage: "",

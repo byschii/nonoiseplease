@@ -17,12 +17,16 @@
     <main>
         <p>Bye bye!</p>
         <p>See you soon!</p>
-        <p>Thank you so much for trying out our app! <i class="mi-heart"></i> </p>
+        <p>Thank you so much for trying nnp! <i class="mi-heart"></i> </p>
     </main>
     <footer>
 
     </footer>
     <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            Cookies.remove('jwt')
+            Cookies.remove('uid')
+        });    
         // wait 10sec and redirect to home
         setTimeout(function(){ window.location.href = "/"; }, 10000);
     </script>

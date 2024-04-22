@@ -102,6 +102,8 @@
                 // send data
                 fetch('/api/collections/users/records', this.makeRegistrationRequestBody(email, password, passwordConfirm )
                 ).then((response) => {
+                    Cookies.remove('jwt')
+                    Cookies.remove('uid')
                     return response.json()
                 }).then((jsonResp) => {
                     if (jsonResp.code == 400){

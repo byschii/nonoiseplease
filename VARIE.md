@@ -4,7 +4,9 @@
 - fix ui on extention with msgs
 - fix ui on web page (maybe with a menu on top)
 - devo capire se con AUTH necessaria, uno può fare login + fallimento (ma registrazione token) + accesso alle altre pag consentito
-
+    - ovvero, se dopo aver TENTATO il login, l user riceve il jwt oppure no
+    - capire se la mail viene spedita cmq
+        - spostare invio mail di conferma da client a server
 
 ## NICE TO HAVE
 - bookmarks integration
