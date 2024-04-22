@@ -64,7 +64,7 @@
             myJwt() {
                 return Cookies.get('jwt')
             },
-            kindaLogout() {
+            kindaLogoutAfterCredentialsChange() {
                 // wait 10 secs
                 this.lastMessage = "Ok, now i m gonna send you to login. \n If you misclicked, don't worry, just input same credentials. \n If you didn't, check your email/spam."
 
@@ -75,6 +75,7 @@
                 }, 10000)
             },
             requestEmailChange(){
+                this.lastMessage = "Changing e-mail";
                 fetch("/api/collections/users/request-email-change", {
                     method: 'POST',
                     headers: {
@@ -87,11 +88,12 @@
                 }).catch(error => {
                     this.lastMessage = 'Error: ' + error
                 }).then(data => {
-                    this.kindaLogout()
+                    this.kindaLogoutAfterCredentialsChange()
                 })
             },
             requestPasswordReset(){
                 console.log(this.user)
+                this.lastMessage = "Changing password";
                 fetch("/api/collections/users/request-password-reset", {
                     method: 'POST',
                     headers: {
@@ -104,7 +106,7 @@
                 }).catch(error => {
                     this.lastMessage = 'Error: ' + error
                 }).then(data => {
-                    this.kindaLogout()
+                    this.kindaLogoutAfterCredentialsChange()
                 })
 
             },
@@ -176,7 +178,7 @@
                 fetch(this.makeDownloadRequest("users", true)).then(response => response.json()
                 ).then(data => { this.user = data}
                 ).catch(error => {
-                    this.lastMessage = 'Plaease log in againt to reset jwt. sorry :('
+                    this.lastMessage = 'Plaease log in again to reset jwt. sorry :('
                 })
             },
             downloadDetails(){
