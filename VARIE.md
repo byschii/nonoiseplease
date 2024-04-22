@@ -2,9 +2,8 @@
 
 ## PRE-RELEASE
 - fix ui on extention with msgs
-- also msg on home/me
+- fixare msg in home/me quando si fa page scrape
 - fix ui on web page (maybe with a menu on top)
-- mettere miglio msg d errore se una pag non viene salvata
 - devo capire se con AUTH necessaria, uno può fare login + fallimento (ma registrazione token) + accesso alle altre pag consentito
 - fare test automatici proxy
     - basta una requests che passa dal proxy nella config
@@ -21,4 +20,6 @@
 - optional do not save double urls
 - automatizzare test per estensioni
     - NON CI STANNO maniere, forse con python
+- magari quando si aggiunge una pagina e ho successo > link a edit pagina 
+
 
