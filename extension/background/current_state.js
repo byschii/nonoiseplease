@@ -79,7 +79,7 @@ class State {
 
 // constants and utilities
 try {
-    var B = Maria;
+    var B = browser;
 } catch (e) {
     if (e instanceof ReferenceError) {
         var B = chrome;
@@ -87,10 +87,10 @@ try {
 }
 
 // get state from memory
-var storedState = B.storage.local.get("lastState", ()=>{}).then((res) => {
+var storedState = B.storage.local.get("lastState").then((res) => {
     if (!res.lastState) {
         var newState = new State("", true, false, false, 10, []);
-        B.storage.local.set({"lastState": newState.serialize()}, ()=>{});
+        B.storage.local.set({"lastState": newState.serialize()});
         return newState;
     }else{
         return State.deserialize(res.lastState);
