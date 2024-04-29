@@ -47,6 +47,21 @@ const grabJwt = async (currentTab) => {
     return response.jwt;
 };
 
+const popupLog = (msg, msgtype="ok") => {
+    message = {
+        action: "log",
+        msg: msg,
+        msgtype: msgtype,
+    }
+    B.runtime.sendMessage(message);
+};
+
+
+
+const popupLogError = (msg) => {
+    popupLog(msg, "error");
+};
+
 // when state is resolved
 //storedState.then((currentState) => {
     // Listen for a tab being updated to a complete status

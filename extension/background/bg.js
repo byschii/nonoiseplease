@@ -9,6 +9,8 @@ if (!B.management.getSelf(function(info) {
     } 
 }));
 
+
+
 const spawnSearch = (tab, jwt) => {
     console.log("spawning search on tab: ", tab);
 
@@ -46,6 +48,11 @@ const grabJwt = async (currentTab) => {
     console.log("response from content script:", response);
     return response.jwt;
 };
+
+const popupLogError = (msg) => {
+    popupLog(msg, "error");
+};
+
 
 // when state is resolved
 storedState.then((currentState) => {
@@ -86,6 +93,7 @@ storedState.then((currentState) => {
                 currentState.jwt = await grabJwt(tabs[0]);
                 B.storage.local.set({"lastState":currentState.serialize()});
             });
+            popupLog("jwt read");
         }
         else if (message.action === "jwt.delete") {
             currentState.jwt = null;

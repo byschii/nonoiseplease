@@ -2,7 +2,7 @@
 
 // constants and utilities
 try {
-    var B = Maria;
+    var B = borwser;
 } catch (e) {
     if (e instanceof ReferenceError) {
         var B = chrome;
@@ -24,8 +24,6 @@ const loadStateOnUI = (delay) => {
                 document.getElementById("nnpext-record").checked = currentState.recordNavigation;
                 document.getElementById("nnpext-autosearch").checked = currentState.automaticSearch;
                 document.getElementById("nnpext-version").value = version;
-                document.getElementById("nnpext-msg").value = currentState.msg;
-                document.getElementById("nnpext-msg").style.color = currentState.msgtype === "ok" ? "green" : "red";
             }
         }).catch(
             () => false
@@ -91,3 +89,9 @@ document.getElementById("nnpext-search").addEventListener("click", () => {
     });
 });
 
+B.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if(request.action === "log") {
+        document.getElementById("nnpext-msg").value = request.msg;
+        document.getElementById("nnpext-msg").style.color = request.msgtype === "ok" ? "green" : "red";
+    }
+});
