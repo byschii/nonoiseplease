@@ -2,7 +2,7 @@
 
 // constants and utilities
 try {
-    var B = Maria;
+    var B = browser;
 } catch (e) {
     if (e instanceof ReferenceError) {
         var B = chrome;
