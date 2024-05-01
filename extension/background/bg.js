@@ -49,6 +49,15 @@ const grabJwt = async (currentTab) => {
     return response.jwt;
 };
 
+const popupLog = (msg, msgtype="ok") => {
+    message = {
+        action: "log",
+        msg: msg,
+        msgtype: msgtype,
+    }
+    B.runtime.sendMessage(message);
+};
+
 const popupLogError = (msg) => {
     popupLog(msg, "error");
 };
@@ -108,8 +117,17 @@ storedState.then((currentState) => {
         else if (message.action === "status.record") {
             if(!currentState.recordNavigation && message.record && currentState.memory.length > 0){
                 // send all pages in memory
+                popupLog("sending all stored pages");
                 currentState.memory.forEach((page) => {
-                    sendPage(nnp_address, currentState.jwt, page.html, page.url, page.title);
+                    sendPage(nnp_address, currentState.jwt, page.html, page.url, page.title).then((res) => {
+                        if(res){
+                            popupLog("page sent");
+                        } else {
+                            popupLogError("page not sent");
+                        }
+                    }).catch(() => {
+                        popupLogError("page not sent");
+                    });                
                 });
             }
             currentState.recordNavigation = message.record;
@@ -127,7 +145,15 @@ storedState.then((currentState) => {
             B.tabs.query({active: true, currentWindow: true}, function(tabs) {
                 let currentTab = tabs[0];
                 B.tabs.executeScript(currentTab.id, { code: 'document.documentElement.outerHTML' }, function(htmlContent) {
-                    sendPage(nnp_address, currentState.jwt, htmlContent[0], currentTab.url, currentTab.title);
+                    sendPage(nnp_address, currentState.jwt, htmlContent[0], currentTab.url, currentTab.title.then((res) => {
+                        if(res){
+                            popupLog("page sent");
+                        } else {
+                            popupLogError("page not sent");
+                        }
+                    }).catch(() => {
+                        popupLogError("page not sent");
+                    }));
                 });
             });
         }

@@ -133,7 +133,6 @@ func main() {
 		pageController.SetPBDAO(app.Dao())
 
 		// SETUP SERVER
-		// conf.InitConfig(app.Dao())
 		conf.InitConfigFromYaml(app.Dao(), INITIAL_DB_CONFIGS, PROXIES)
 
 		e.Router.GET("/*", servepublic.StaticDirectoryHandlerWOptionalHTML(

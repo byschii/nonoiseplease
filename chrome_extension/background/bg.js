@@ -56,8 +56,6 @@ const popupLog = (msg, msgtype="ok") => {
     B.runtime.sendMessage(message);
 };
 
-
-
 const popupLogError = (msg) => {
     popupLog(msg, "error");
 };
@@ -115,8 +113,17 @@ const popupLogError = (msg) => {
         else if (message.action === "status.record") {
             if(!currentState.recordNavigation && message.record && currentState.memory.length > 0){
                 // send all pages in memory
+                popupLog("sending all stored pages");
                 currentState.memory.forEach((page) => {
-                    sendPage(nnp_address, currentState.jwt, page.html, page.url, page.title);
+                    sendPage(nnp_address, currentState.jwt, page.html, page.url, page.title).then((res) => {
+                        if(res){
+                            popupLog("page sent");
+                        } else {
+                            popupLogError("page not sent");
+                        }
+                    }).catch(() => {
+                        popupLogError("page not sent");
+                    });
                 });
             }
             currentState.recordNavigation = message.record;

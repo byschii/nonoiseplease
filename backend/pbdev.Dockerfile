@@ -11,7 +11,9 @@ COPY . .
 RUN rm -rf /home/pb_data/*
 
 # live reload
-RUN go install github.com/cosmtrek/air@latest
+# RUN go install github.com/cosmtrek/air@latest
+RUN go get github.com/githubnemo/CompileDaemon
+RUN go install github.com/githubnemo/CompileDaemon
 
 RUN go mod download
 EXPOSE 8090
