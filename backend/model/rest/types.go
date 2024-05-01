@@ -10,6 +10,10 @@ type Url struct {
 	Url string `json:"url"`
 }
 
+type Urls struct {
+	Urls []string `json:"urls"`
+}
+
 type UrlWithHTML struct {
 	Url            string `json:"url"`
 	HTML           string `json:"html"`

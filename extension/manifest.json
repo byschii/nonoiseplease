@@ -32,7 +32,8 @@
     "<all_urls>",
     "activeTab",
     "nativeMessaging",
-    "storage"
+    "storage",
+    "bookmarks"
   ],
   "background": {
     "scripts": [

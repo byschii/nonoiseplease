@@ -48,6 +48,7 @@ type PageControllerInterface interface {
 	FindCategoriesFromUser(user *users.Users) ([]cats.Category, error)
 	AddCategoryToPage(owner string, pageId string, categoryName string) error
 	SetDBCategoriesOnFTSDoc(owner string, FTSRef string, categories []cats.Category) error
+	AddToBuffer(owner string, url string, priority int, origin page.AvailableOrigin) error
 }
 
 func NewPageController(dao *daos.Dao, meiliClient *meilisearch.Client, categoryController CategoryControllerInterface, fulltextsearchController FTSControllerInterface) PageControllerInterface {
@@ -299,4 +300,16 @@ func (controller PageController) SaveNewPage(owner string,
 
 	return reference, nil
 
+}
+
+func (controller PageController) AddToBuffer(owner string, url string, priority int, origin page.AvailableOrigin) error {
+	buffer := page.PageBuffer{
+		Owner:    owner,
+		PageUrl:  url,
+		Priority: priority,
+		Origin:   origin,
+	}
+	err := controller.PBDao.Save(&buffer)
+
+	return fmt.Errorf("couldnt save buffer url %s (%s)", url, err)
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
+	"be/jobs"
 	_ "be/migrations"
 
 	controllers "be/controllers"
@@ -24,6 +25,7 @@ import (
 	"github.com/pocketbase/pocketbase/core"
 	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
+	"github.com/pocketbase/pocketbase/tools/cron"
 	"github.com/spf13/viper"
 )
 
@@ -62,6 +64,7 @@ func main() {
 	MAIL_PASSWORD := viper.GetString("mail_password")
 	MEILI_HOST_ADDRESS := viper.GetString("meili_host_address")
 	MAX_SCRAPE_PER_MONTH := viper.GetInt("max_scrape_per_month")
+	LOG_MAX_DAYS := viper.GetInt("log_max_days")
 	// get interface slice from config as 'default_config'
 	// [ {}, {}... ]
 	INITIAL_DB_CONFIGS := viper.Get("default_config").([]interface{})
@@ -122,6 +125,16 @@ func main() {
 	fulltextsearchController := controllers.NewFTSController(app.Dao(), meiliClient)
 	pageController := controllers.NewPageController(app.Dao(), meiliClient, categoryController, fulltextsearchController)
 	appController := controllers.NewNoNoiseInterface(pageController, userController, c)
+
+	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
+		scheduler := cron.New()
+
+		scheduler.MustAdd("ScrapeBufferedPages", "*/2 * * * *", func() {
+			jobs.ScrapeBufferedPages(1, 2)
+		})
+		scheduler.Start()
+		return nil
+	})
 
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		log.Debug().Msgf("lessgoozz!!")
@@ -226,6 +239,13 @@ func main() {
 			Middlewares: middlewares,
 		})
 
+		e.Router.AddRoute(echo.Route{
+			Method:      http.MethodPost,
+			Path:        "/api/bookmark/upload",
+			Handler:     appController.PostBookmarkUpload,
+			Middlewares: middlewares,
+		})
+
 		// SETUP CONFIG
 
 		// set application smtp
@@ -244,7 +264,7 @@ func main() {
 		app.Settings().Meta.SenderAddress = "support@nonoiseplease.com"
 
 		// log retention
-		app.Settings().Logs.MaxDays = 14
+		app.Settings().Logs.MaxDays = LOG_MAX_DAYS
 
 		return nil
 	})

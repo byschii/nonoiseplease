@@ -8,6 +8,7 @@
         - spostare invio mail di conferma da client a server
 - fare marketing home
 - fare importazione bookmark
+- mettere un qualcosa di contatti per la sicurezza
 
 ## NICE TO HAVE
 - bookmarks integration

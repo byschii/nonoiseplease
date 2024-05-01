@@ -1,13 +1,7 @@
 
 
 // constants and utilities
-try {
-    var B = borwser;
-} catch (e) {
-    if (e instanceof ReferenceError) {
-        var B = chrome;
-    }
-}
+const B = browser;
 
 const extId = B.runtime.id;
 const version = B.runtime.getManifest().version;
@@ -15,7 +9,7 @@ const version = B.runtime.getManifest().version;
 // load current state on UI
 const loadStateOnUI = (delay) => {
     setTimeout(() => {
-        B.storage.local.get("lastState", ()=>{}).then((res) => {
+        B.storage.local.get("lastState").then((res) => {
             console.log("loading lastState: ", res.lastState);
             if (res.lastState) {
                 const currentState = res.lastState;
@@ -86,6 +80,12 @@ document.getElementById("nnpext-search").addEventListener("click", () => {
     console.log("search button clicked");
     B.runtime.sendMessage(extId, {
         action: "page.search"
+    });
+});
+document.getElementById("nnpext-importbm").addEventListener("click", () => {
+    console.log("import bookmark clicked");
+    B.runtime.sendMessage(extId, {
+        action: "bookmark.import"
     });
 });
 

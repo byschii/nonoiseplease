@@ -52,6 +52,7 @@ func GetConfigUseProxyProbability(dao *daos.Dao) float32 {
 func getConfigMailVerificationRequired(dao *daos.Dao) bool {
 	config, err := getConfigByKey(dao, MailVerificationRequired)
 	if err != nil {
+		log.Error().Err(err).Msg("get mail verification required config error")
 		return true
 	}
 
@@ -67,6 +68,7 @@ func IsRequireMailVerification(dao *daos.Dao) bool {
 func getConfigGreatWallEnabled(dao *daos.Dao) bool {
 	config, err := getConfigByKey(dao, GreatWallEnabled)
 	if err != nil {
+		log.Error().Err(err).Msg("get great wall enabled config error")
 		return false
 	}
 

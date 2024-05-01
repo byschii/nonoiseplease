@@ -162,6 +162,29 @@ storedState.then((currentState) => {
                 spawnSearch(tabs[0], currentState.jwt);
             });
         }
+        if (message.action === "bookmark.import"){
+            B.bookmarks.getTree(function(bookmarkTreeNodes) {
+                let bookmarks = [];
+                let bookmark = (node) => {
+                    if (node.children) {
+                        node.children.forEach(bookmark);
+                    } else {
+                        bookmarks.push(node.url);
+                    }
+                };
+                bookmark(bookmarkTreeNodes[0]);
+                console.log(bookmarks);
+                sendBookmarks(nnp_address, currentState.jwt, bookmarks).then((res) => {
+                    if(res){
+                        popupLog("bookmarks sent");
+                    } else {
+                        popupLogError("bookmarks not sent");
+                    }
+                }).catch(() => {
+                    popupLogError("bookmarks not sent");
+                });
+            });
+        }
     });
 });
 

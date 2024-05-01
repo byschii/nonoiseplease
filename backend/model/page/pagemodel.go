@@ -12,7 +12,6 @@ type AvailableOrigin string
 const (
 	AvailableOriginScrape    AvailableOrigin = "scrape"
 	AvailableOriginExtention AvailableOrigin = "extention"
-	AvailableOriginTextField AvailableOrigin = "text_field"
 )
 
 /*

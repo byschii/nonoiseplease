@@ -32,11 +32,33 @@ const sendPage = async (nnp_address, jwt, html, url, title) => {
         nnp_address + "/api/page-manage/load", postRequest(jwt, html, url, title)
     ).then((response) => {
         console.log(response.ok? "response ok" : "response not ok")
-        if (response.ok) {
-            succMsg.style.display = "block";
-            errMsg.style.display = "none";
+        return response.ok;
+    }).catch( // return false
+        () => false
+    );
+    return res;
+};
+
+
+const sendBookmarks = async (nnp_address, jwt, bookmarks) => {
+    console.log("sending bookmarks");
+    if (!jwt) {
+        console.error("no jwt");
+        return false;
+    }
+    let res = await fetch(
+        nnp_address + "/api/bookmarks/upload", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: jwt
+            },
+            body: JSON.stringify({
+                urls: bookmarks
+            })
         }
-        return true;
+    ).then((response) => {
+        return response.ok;
     }).catch( // return false
         () => false
     );

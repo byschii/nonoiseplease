@@ -7,9 +7,11 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"sync"
 
 	"github.com/rs/zerolog/log"
 
+	"be/model/config"
 	"be/model/page"
 	rest "be/model/rest"
 
@@ -21,27 +23,6 @@ type WebController struct {
 	PageController   PageControllerInterface
 	UserController   UserControllerInterface
 	ConfigController ConfigControllerInterface
-}
-
-type NoNoiseInterface interface {
-	GetSearch(c echo.Context) error
-	GetSearchExtentionHtml(c echo.Context) error
-	GetSearchInfo(c echo.Context) error
-	DeleteAccount(c echo.Context) error
-	PostUrlScrape(c echo.Context) error
-	PostPagemanageCategory(c echo.Context) error
-	GetPagemanage(c echo.Context) error
-	DeletePagemanageCategory(c echo.Context) error
-	PostPagemanageLoad(c echo.Context) error
-	DeletePagemanagePage(c echo.Context) error
-}
-
-func NewNoNoiseInterface(pageController PageControllerInterface, userController UserControllerInterface, configController ConfigControllerInterface) NoNoiseInterface {
-	return &WebController{
-		PageController:   pageController,
-		UserController:   userController,
-		ConfigController: configController,
-	}
 }
 
 func (controller WebController) DeleteAccount(c echo.Context) error {
@@ -145,6 +126,56 @@ func (controller WebController) GetSearch(c echo.Context) error {
 	return c.JSON(http.StatusOK, data)
 }
 
+// used by the extention when importing bookmarks
+func (controller WebController) PostBookmarkUpload(c echo.Context) error {
+	// retrive user id from req
+	userRecord, err := controller.UserController.UserRecordFromRequest(
+		c, config.IsRequireMailVerification(controller.UserController.AppDao()),
+	)
+	if err != nil {
+		log.Debug().Msgf("failed to get user from request, %v\n", err)
+		return c.String(http.StatusBadRequest, u.WrapError("failed to get user from request ", err).Error())
+	}
+
+	var urlData rest.Urls
+	if err := c.Bind(&urlData); err != nil {
+		log.Debug().Msgf("failed to parse json body, %v\n", err)
+		return c.String(http.StatusBadRequest, "failed to parse json body")
+	}
+
+	// launch a go routine for each url
+	// must also if just has failed
+	errors := make(chan error)
+	var wg sync.WaitGroup
+	for _, url := range urlData.Urls {
+		wg.Add(1)
+		go func(url string) {
+			defer wg.Done()
+			log.Debug().Msgf("adding %s to buffer for user %s\n", url, userRecord.Id)
+			err := controller.PageController.AddToBuffer(userRecord.Id, url, 0, page.AvailableOriginScrape)
+			if err != nil {
+				errors <- err
+			}
+		}(url)
+	}
+
+	// wait for all go routines to finish
+	go func() {
+		wg.Wait()
+		close(errors)
+	}()
+
+	// check for errors
+	for err := range errors {
+		log.Debug().Msgf("failed to add url to buffer, %v\n", err)
+		return c.String(http.StatusInternalServerError, "failed to add url to buffer")
+	}
+
+	return c.NoContent(http.StatusOK)
+}
+
+// used to scrape a page and save it
+// mainly from the nnp website
 func (controller WebController) PostUrlScrape(c echo.Context) error {
 	// retrive user id from get params
 	userRecord, _ := c.Get("authRecord").(*models.Record)
@@ -157,19 +188,24 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 		log.Debug().Msgf("failed to count user pages, %v\n", err)
 		return c.String(http.StatusInternalServerError, "failed to count user pages")
 	}
-	// if user has reached the limit, return error
-	if pagesAlreadyScraped >= controller.ConfigController.MaxScrapePerMonth() {
-
-		return c.String(http.StatusForbidden, "you have reached the limit of pages you can scrape")
-	}
 
 	// get url from json body
 	var urlData rest.Url
 	if err := c.Bind(&urlData); err != nil {
 		log.Debug().Msgf("failed to parse json body, %v\n", err)
-
 		return c.String(http.StatusBadRequest, "failed to parse json body")
 	}
+	// if user has reached the limit, return error
+	if pagesAlreadyScraped >= controller.ConfigController.MaxScrapePerMonth() {
+		// save page in the buffer
+		err = controller.PageController.AddToBuffer(userRecord.Id, urlData.Url, 1, page.AvailableOriginScrape)
+		if err != nil {
+			log.Debug().Msgf("failed to add page to buffer, %v\n", err)
+			return c.String(http.StatusInternalServerError, "you have reached the limit of pages you can scrape, but the page could not be buffered")
+		}
+		return c.String(http.StatusForbidden, "you have reached the limit of pages you can scrape, the page has been buffered")
+	}
+
 	// scrape url and get info
 	article, withProxy, err := webscraping.GetArticle(urlData.Url, false, controller.PageController.AppDao())
 	if err != nil {
@@ -283,6 +319,8 @@ func (controller WebController) DeletePagemanageCategory(c echo.Context) error {
 	return c.NoContent(http.StatusOK)
 }
 
+// to be used by the extention to load a page
+// cause it recieves the url AND the html
 func (controller WebController) PostPagemanageLoad(c echo.Context) error {
 
 	// retrive user id from get params
