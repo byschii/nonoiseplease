@@ -140,8 +140,8 @@
             },
             missingJwt() {
                 let jwt = Cookies.get('jwt')
-                let jwtUndef = jwt == undefined
-                let jwtNull = jwt == null
+                let jwtUndef = jwt === undefined
+                let jwtNull = jwt === null
                 return jwtUndef || jwtNull
             },
             logout() {
