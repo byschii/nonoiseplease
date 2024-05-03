@@ -20,7 +20,18 @@
     <main>
         <h2>Pages</h2>
         <div x-data="pages">
-            <template x-if="myJwt">  
+            <template x-if="missingJwt()">
+                <div>
+                    <p>Not logged in</p>
+                    <div>
+                        <a href="/login"> Login </a>
+                    </div>
+                    <div>
+                        <a href="/register"> Register </a>
+                    </div>
+                </div> 
+            </template>
+            <template x-if="!missingJwt()">  
                 <div x-init="downloadPages">
                     <table>
                         <thead>
@@ -105,6 +116,12 @@
             manageCategoriesSelected(){
                 console.log("manage categories selected: " + this.selected.id)
                 window.location.href = "/me/pages/manage.html?id=" + this.selected.id
+            },
+            missingJwt() {
+                let jwt = Cookies.get('jwt')
+                let jwtUndef = jwt == undefined
+                let jwtNull = jwt == null
+                return jwtUndef || jwtNull
             },
             downloadPages(){
                 fetch("/api/collections/pages/records", {
