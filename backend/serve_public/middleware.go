@@ -22,11 +22,20 @@ import (
 // if indexFallback is true, it will try to serve index.html if file not found
 // dao and tokenSecret are used for templating
 // also '.html' will be added to the end of name if it doesnt ends with '.html'
-func StaticDirectoryHandlerWOptionalHTML(fileSystem fs.FS, indexFallback bool, uc controllers.UserControllerInterface, ac controllers.AuthControllerInterface) echo.HandlerFunc {
-	return StaticDirectoryHandlerWHTMLAdder(fileSystem, indexFallback, true, uc, ac)
+func StaticDirectoryHandlerWOptionalHTML(
+	fileSystem fs.FS,
+	indexFallback bool,
+	uc controllers.UserControllerInterface,
+	ac controllers.AuthControllerInterface,
+	stateController controllers.AppStateControllerInterface) echo.HandlerFunc {
+	return StaticDirectoryHandlerWHTMLAdder(fileSystem, indexFallback, true, uc, ac, stateController)
 }
 
-func StaticDirectoryHandlerWHTMLAdder(fileSystem fs.FS, indexFallback bool, autoAddHtml bool, uc controllers.UserControllerInterface, ac controllers.AuthControllerInterface) echo.HandlerFunc {
+func StaticDirectoryHandlerWHTMLAdder(
+	fileSystem fs.FS,
+	indexFallback bool,
+	autoAddHtml bool,
+	uc controllers.UserControllerInterface, ac controllers.AuthControllerInterface, stateController controllers.AppStateControllerInterface) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		p := c.PathParam("*")
 
@@ -48,7 +57,7 @@ func StaticDirectoryHandlerWHTMLAdder(fileSystem fs.FS, indexFallback bool, auto
 
 		// parse and evaluate eventual template
 		// array of strings
-		for _, templatedPage := range getTemplatedPages(fileSystem) {
+		for _, templatedPage := range getTemplatedPages(fileSystem, stateController) {
 			// if static file is a "templated"
 			if name == templatedPage.TemplateName {
 				// get go template
@@ -67,6 +76,10 @@ func StaticDirectoryHandlerWHTMLAdder(fileSystem fs.FS, indexFallback bool, auto
 				// build page with data and put it in response
 				// pageTemplate.Execute(c.Response().Writer, data)
 				resultHtml, err := registry.LoadFiles(name).Render(data)
+				if err != nil {
+					log.Error().Msgf("templating: error rendering template: %s", err)
+					c.String(http.StatusInternalServerError, "error rendering template")
+				}
 				return c.HTML(http.StatusOK, resultHtml)
 			}
 		}

@@ -18,10 +18,10 @@ type NoNoiseInterface interface {
 	PostBookmarkUpload(c echo.Context) error
 }
 
-func NewNoNoiseInterface(pageController PageControllerInterface, userController UserControllerInterface, configController ConfigControllerInterface) NoNoiseInterface {
+func NewNoNoiseInterface(pageController PageControllerInterface, userController UserControllerInterface, state AppStateControllerInterface) NoNoiseInterface {
 	return &WebController{
 		PageController:   pageController,
 		UserController:   userController,
-		ConfigController: configController,
+		ConfigController: state,
 	}
 }

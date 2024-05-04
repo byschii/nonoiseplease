@@ -38,7 +38,7 @@ func getConfigByKey(dao *daos.Dao, key AvailableConfig) (Config, error) {
 
 // if any error
 // return 0 and please use default value, do not handle error
-func GetConfigUseProxyProbability(dao *daos.Dao) float32 {
+/*func GetConfigUseProxyProbability(dao *daos.Dao) float32 {
 	config, err := getConfigByKey(dao, UseProxyProb)
 	if err != nil || !config.BooleanValue {
 		return 0
@@ -46,38 +46,7 @@ func GetConfigUseProxyProbability(dao *daos.Dao) float32 {
 
 	value := config.FloatValue
 	return value
-}
-
-// if any error, return true
-func getConfigMailVerificationRequired(dao *daos.Dao) bool {
-	config, err := getConfigByKey(dao, MailVerificationRequired)
-	if err != nil {
-		log.Error().Err(err).Msg("get mail verification required config error")
-		return true
-	}
-
-	value := config.BooleanValue
-	return value
-}
-func IsRequireMailVerification(dao *daos.Dao) bool {
-	return getConfigMailVerificationRequired(dao)
-}
-
-// if any error, return false
-// great wall is used to block new user actions (like register, ecc)
-func getConfigGreatWallEnabled(dao *daos.Dao) bool {
-	config, err := getConfigByKey(dao, GreatWallEnabled)
-	if err != nil {
-		log.Error().Err(err).Msg("get great wall enabled config error")
-		return false
-	}
-
-	value := config.BooleanValue
-	return value
-}
-func IsGreatWallEnabled(dao *daos.Dao) bool {
-	return getConfigGreatWallEnabled(dao)
-}
+}*/
 
 func InitConfigFromYaml(dao *daos.Dao, configMap []interface{}, proxyMap []interface{}) error {
 	log.Debug().Msg("init config from yaml")

@@ -118,13 +118,13 @@ func main() {
 		return nil
 	})
 
-	c := controllers.NewConfigController(MAX_SCRAPE_PER_MONTH)
+	confController := controllers.NewConfigController(app.Dao(), MAX_SCRAPE_PER_MONTH)
 	authController := controllers.NewAuthController(app)
 	userController := controllers.NewUserController(app, meiliClient, authController)
 	categoryController := controllers.NewCategoryController(app.Dao())
 	fulltextsearchController := controllers.NewFTSController(app.Dao(), meiliClient)
 	pageController := controllers.NewPageController(app.Dao(), meiliClient, categoryController, fulltextsearchController)
-	appController := controllers.NewNoNoiseInterface(pageController, userController, c)
+	appController := controllers.NewNoNoiseInterface(pageController, userController, confController)
 
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		scheduler := cron.New()
@@ -152,7 +152,8 @@ func main() {
 			echo.MustSubFS(e.Router.Filesystem, FRONTEND_FOLDER),
 			false,
 			userController,
-			authController),
+			authController,
+			confController),
 		)
 
 		middlewares := []echo.MiddlewareFunc{
@@ -271,13 +272,13 @@ func main() {
 
 	app.OnRecordAuthRequest().Add(func(e *core.RecordAuthEvent) error {
 		log.Debug().Msgf("authenticating user")
-		removeToken := !e.Record.Verified() && conf.IsRequireMailVerification(app.Dao())
+		removeToken := !e.Record.Verified() && confController.IsRequireMailVerification()
 		if removeToken {
 			log.Debug().Msgf(" user not verified, removing token")
 			e.Token = ""
 		} else {
-			e.Record.SetVerified(true)
-			err := app.Dao().SaveRecord(e.Record)
+			e.Record.SetVerified(true)            // suppose we verified the user (cause RequireMailVerification false )
+			err := app.Dao().SaveRecord(e.Record) // then save it
 			if err != nil {
 				log.Debug().Msgf("error saving record - " + err.Error())
 				return err
@@ -289,7 +290,7 @@ func main() {
 	app.OnRecordBeforeCreateRequest().Add(func(e *core.RecordCreateEvent) error {
 		collectionName := e.Record.Collection().Name
 		if collectionName == "users" {
-			if conf.IsGreatWallEnabled(app.Dao()) {
+			if confController.IsGreatWallEnabled() {
 				log.Debug().Msgf("great wall enabled, aborting user creation")
 				return fmt.Errorf("great wall enabled, aborting user creation")
 			}

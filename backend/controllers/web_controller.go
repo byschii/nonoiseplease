@@ -2,7 +2,6 @@ package controllers
 
 import (
 	u "be/utils"
-	"be/webscraping"
 	"errors"
 	"html/template"
 	"net/http"
@@ -11,7 +10,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"be/model/config"
 	"be/model/page"
 	rest "be/model/rest"
 
@@ -22,7 +20,7 @@ import (
 type WebController struct {
 	PageController   PageControllerInterface
 	UserController   UserControllerInterface
-	ConfigController ConfigControllerInterface
+	ConfigController AppStateControllerInterface
 }
 
 func (controller WebController) DeleteAccount(c echo.Context) error {
@@ -130,7 +128,7 @@ func (controller WebController) GetSearch(c echo.Context) error {
 func (controller WebController) PostBookmarkUpload(c echo.Context) error {
 	// retrive user id from req
 	userRecord, err := controller.UserController.UserRecordFromRequest(
-		c, config.IsRequireMailVerification(controller.UserController.AppDao()),
+		c, controller.ConfigController.IsRequireMailVerification(),
 	)
 	if err != nil {
 		log.Debug().Msgf("failed to get user from request, %v\n", err)
@@ -207,7 +205,7 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 	}
 
 	// scrape url and get info
-	article, withProxy, err := webscraping.GetArticle(urlData.Url, false, controller.PageController.AppDao())
+	article, withProxy, err := GetArticle(urlData.Url, false, controller.ConfigController)
 	if err != nil {
 		log.Debug().Msgf("failed to parse %s, %v\n", urlData.Url, err)
 		return c.String(http.StatusBadRequest, "failed to parse url")
@@ -337,7 +335,7 @@ func (controller WebController) PostPagemanageLoad(c echo.Context) error {
 	}
 	log.Debug().Msgf("postData %+v", postData)
 
-	article, err := webscraping.GetArticleFromHtml(postData.HTML, postData.Url)
+	article, err := GetArticleFromHtml(postData.HTML, postData.Url)
 	log.Debug().Msgf("article %+v", article)
 	if err != nil {
 		log.Debug().Msgf("failed to parse %s, %v\n", postData.Url, err)

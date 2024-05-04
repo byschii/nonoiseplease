@@ -1,6 +1,8 @@
-package webscraping
+package controllers
 
 import (
+	"be/model/config"
+	u "be/utils"
 	"bytes"
 	"encoding/xml"
 	"fmt"
@@ -10,19 +12,26 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/go-shiori/go-readability"
 	"github.com/rs/zerolog/log"
-
-	config "be/model/config"
-	u "be/utils"
-
-	readability "github.com/go-shiori/go-readability"
-	"github.com/pocketbase/pocketbase/daos"
 )
 
-func GetArticle(pageUrl string, onlyArticle bool, dao *daos.Dao) (*ParsedPage, bool, error) {
+type html struct {
+	Body body `xml:"body"`
+}
+type body struct {
+	Content string `xml:",innerxml"`
+}
+
+type ParsedPage struct {
+	Title       string `json:"title"`
+	TextContent string `json:"text_content"`
+}
+
+func GetArticle(pageUrl string, onlyArticle bool, state AppStateControllerInterface) (*ParsedPage, bool, error) {
 
 	// get html
-	html, withProxy, err := getHtml(pageUrl, dao)
+	html, withProxy, err := getHtml(pageUrl, state)
 	if err != nil {
 		return nil, withProxy, err
 	}
@@ -34,7 +43,7 @@ func GetArticle(pageUrl string, onlyArticle bool, dao *daos.Dao) (*ParsedPage, b
 
 	if onlyArticle {
 		// get text in body
-		textInBody, err := GetTextInBody(html)
+		textInBody, err := getTextInBody(html)
 		if err != nil {
 			return nil, withProxy, err
 		}
@@ -42,17 +51,6 @@ func GetArticle(pageUrl string, onlyArticle bool, dao *daos.Dao) (*ParsedPage, b
 	}
 
 	return article, withProxy, nil
-}
-
-func GetTextInBody(pageHtml string) (string, error) {
-
-	h := html{}
-	err := xml.NewDecoder(bytes.NewBufferString(pageHtml)).Decode(&h)
-	if err != nil {
-		return "", u.WrapError("failed to decode html", err)
-	}
-
-	return h.Body.Content, nil
 }
 
 // actually just builds a struct that represents the html
@@ -77,18 +75,28 @@ func GetArticleFromHtml(html string, pageUrl string) (*ParsedPage, error) {
 	return &pp, nil
 }
 
+func getTextInBody(pageHtml string) (string, error) {
+
+	h := html{}
+	err := xml.NewDecoder(bytes.NewBufferString(pageHtml)).Decode(&h)
+	if err != nil {
+		return "", u.WrapError("failed to decode html", err)
+	}
+
+	return h.Body.Content, nil
+}
+
 // function that takes a url, makes an http request to it, and returns the html
 // if the request is done with proxy, it returns true as second return value
-func getHtml(pageUrl string, dao *daos.Dao) (string, bool, error) {
+func getHtml(pageUrl string, state AppStateControllerInterface) (string, bool, error) {
 
-	userProxyProb := config.GetConfigUseProxyProbability(dao)
-
+	userProxyProb := state.GetConfigUseProxyProbability()
 	useProxy := rand.Float32() < userProxyProb
 	log.Debug().Msgf("useProxy: %v,  userProxyProb: %v", useProxy, userProxyProb)
 
 	if useProxy {
 		// set proxy
-		proxy, err := config.GetRandomProxy(dao)
+		proxy, err := config.GetRandomProxy(state.AppDao())
 		if err != nil {
 			return "", useProxy, err
 		}

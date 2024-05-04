@@ -7,7 +7,6 @@ import (
 	"github.com/rs/zerolog/log"
 
 	controller "be/controllers"
-	conf "be/model/config"
 )
 
 type TemplateRenderer struct {
@@ -18,11 +17,11 @@ type TemplateRenderer struct {
 }
 
 // returns a list of all templates that are used in the app
-func getTemplatedPages(fileSystem fs.FS) []*TemplateRenderer {
+func getTemplatedPages(fileSystem fs.FS, confController controller.AppStateControllerInterface) []*TemplateRenderer {
 	var templatedNames = []*TemplateRenderer{}
 
 	meAccount := MeAccountTemplate("me/account.html", fileSystem)
-	register := RegisterTemplate("register.html", fileSystem)
+	register := RegisterTemplate("register.html", fileSystem, confController)
 	templatedNames = append(
 		templatedNames,
 		meAccount,
@@ -32,7 +31,7 @@ func getTemplatedPages(fileSystem fs.FS) []*TemplateRenderer {
 }
 
 // manage template for 'register.html'
-func RegisterTemplate(name string, subFs fs.FS) *TemplateRenderer {
+func RegisterTemplate(name string, subFs fs.FS, confController controller.AppStateControllerInterface) *TemplateRenderer {
 	templateToLoad := template.Must(template.ParseFS(subFs, name))
 	return &TemplateRenderer{
 		TemplateName:   name,
@@ -40,7 +39,7 @@ func RegisterTemplate(name string, subFs fs.FS) *TemplateRenderer {
 		DataRetriever: func(uc controller.UserControllerInterface) interface{} {
 
 			msg := ""
-			if conf.IsRequireMailVerification(uc.AppDao()) {
+			if confController.IsRequireMailVerification() {
 				msg = "Go check your email, than "
 			}
 
@@ -54,7 +53,7 @@ func RegisterTemplate(name string, subFs fs.FS) *TemplateRenderer {
 		},
 		DataRetrieverWithUser: func(uc controller.UserControllerInterface, userId string) interface{} {
 			msg := ""
-			if conf.IsRequireMailVerification(uc.AppDao()) {
+			if confController.IsRequireMailVerification() {
 				msg = "Go check your email, than "
 			}
 
