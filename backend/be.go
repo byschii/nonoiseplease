@@ -141,6 +141,7 @@ func main() {
 		print("about:debugging#/runtime/this-firefox")
 		userController.SetApp(app)
 		authController.SetApp(app)
+		confController.SetPBDAO(app.Dao())
 		categoryController.SetPBDAO(app.Dao())
 		fulltextsearchController.SetPBDAO(app.Dao())
 		pageController.SetPBDAO(app.Dao())

@@ -10,12 +10,13 @@ import (
 )
 
 type AppStateController struct {
-	dao               *daos.Dao
+	PBDao             *daos.Dao
 	maxScrapePerMonth int
 }
 
 type AppStateControllerInterface interface {
 	CommonController
+	SetPBDAO(dao *daos.Dao)
 	UserList() ([]users.Users, error)
 	MaxScrapePerMonth() int
 	IsGreatWallEnabled() bool
@@ -24,15 +25,20 @@ type AppStateControllerInterface interface {
 }
 
 func NewConfigController(dao *daos.Dao, maxScrapePerMonth int) AppStateControllerInterface {
-	return AppStateController{
-		dao:               dao,
+	return &AppStateController{
+		PBDao:             dao,
 		maxScrapePerMonth: maxScrapePerMonth,
 	}
 }
 
 // AppDao implements AppStateControllerInterface.
 func (c AppStateController) AppDao() *daos.Dao {
-	return c.dao
+	return c.PBDao
+}
+
+// SetPBDAO implements AppStateControllerInterface.
+func (c *AppStateController) SetPBDAO(dao *daos.Dao) {
+	c.PBDao = dao
 }
 
 // if any error
@@ -94,6 +100,7 @@ func (c AppStateController) getConfigGreatWallEnabled() bool {
 
 func (c AppStateController) getConfigByKey(key config.AvailableConfig) (config.Config, error) {
 	var conf config.Config
+	log.Debug().Msgf("get config by key %s %+v %b", key, c, c.AppDao() == nil)
 	err := c.AppDao().ModelQuery(&config.Config{}).
 		AndWhere(dbx.HashExp{"key": key}).
 		One(&conf)

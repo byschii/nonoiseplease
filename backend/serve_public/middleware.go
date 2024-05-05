@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"net/http"
 	"net/url"
 	"path/filepath"
 	"strings"
@@ -13,7 +12,6 @@ import (
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/apis"
-	"github.com/pocketbase/pocketbase/tools/template"
 
 	controllers "be/controllers"
 )
@@ -28,6 +26,7 @@ func StaticDirectoryHandlerWOptionalHTML(
 	uc controllers.UserControllerInterface,
 	ac controllers.AuthControllerInterface,
 	stateController controllers.AppStateControllerInterface) echo.HandlerFunc {
+	log.Debug().Msgf("StaticDirectoryHandlerWOptionalHTML %+v", fileSystem)
 	return StaticDirectoryHandlerWHTMLAdder(fileSystem, indexFallback, true, uc, ac, stateController)
 }
 
@@ -46,18 +45,16 @@ func StaticDirectoryHandlerWHTMLAdder(
 		}
 		p = tmpPath
 
-		// fs.FS.Open() already assumes that file names are relative to FS root path and considers name with prefix `/` as invalid
+		log.Debug().Msgf("StaticDirectoryHandlerWHTMLAdder %+v", p)
 		name := filepath.ToSlash(filepath.Clean(strings.TrimPrefix(p, "/")))
 		// if name doesnt ends with '.html' and autoAddHtml is true, add '.html' to the end of name
 		if name != "." && autoAddHtml {
 			name = completeName(fileSystem, name)
 		}
 
-		registry := template.NewRegistry()
-
 		// parse and evaluate eventual template
 		// array of strings
-		for _, templatedPage := range getTemplatedPages(fileSystem, stateController) {
+		for _, templatedPage := range getTemplatedPages(fileSystem) {
 			// if static file is a "templated"
 			if name == templatedPage.TemplateName {
 				// get go template
@@ -67,20 +64,17 @@ func StaticDirectoryHandlerWHTMLAdder(
 				data := interface{}(nil)
 				// if no user found, use simple DataRetriever
 				if err != nil {
-					log.Error().Msgf("templating: no user found")
-					data = templatedPage.DataRetriever(uc)
+					data = templatedPage.DataRetriever(uc, stateController)
+					log.Debug().Msgf("templating: no user found %+v", data)
 				} else { // if user found, use DataRetrieverWithUser
-					log.Error().Msgf("templating: user found")
-					data = templatedPage.DataRetrieverWithUser(uc, user.Id)
+					data = templatedPage.DataRetrieverWithUser(uc, user.Id, stateController)
+					log.Debug().Msgf("templating: user found %+v", data)
+
 				}
+
 				// build page with data and put it in response
-				// pageTemplate.Execute(c.Response().Writer, data)
-				resultHtml, err := registry.LoadFiles(name).Render(data)
-				if err != nil {
-					log.Error().Msgf("templating: error rendering template: %s", err)
-					c.String(http.StatusInternalServerError, "error rendering template")
-				}
-				return c.HTML(http.StatusOK, resultHtml)
+				templatedPage.ParsedTemplate.Execute(c.Response().Writer, data)
+				return nil
 			}
 		}
 

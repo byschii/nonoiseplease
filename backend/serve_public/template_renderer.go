@@ -12,16 +12,16 @@ import (
 type TemplateRenderer struct {
 	TemplateName          string
 	ParsedTemplate        template.Template
-	DataRetrieverWithUser func(controller.UserControllerInterface, string) interface{}
-	DataRetriever         func(controller.UserControllerInterface) interface{}
+	DataRetrieverWithUser func(controller.UserControllerInterface, string, controller.AppStateControllerInterface) interface{}
+	DataRetriever         func(controller.UserControllerInterface, controller.AppStateControllerInterface) interface{}
 }
 
 // returns a list of all templates that are used in the app
-func getTemplatedPages(fileSystem fs.FS, confController controller.AppStateControllerInterface) []*TemplateRenderer {
+func getTemplatedPages(fileSystem fs.FS) []*TemplateRenderer {
 	var templatedNames = []*TemplateRenderer{}
 
 	meAccount := MeAccountTemplate("me/account.html", fileSystem)
-	register := RegisterTemplate("register.html", fileSystem, confController)
+	register := RegisterTemplate("register.html", fileSystem)
 	templatedNames = append(
 		templatedNames,
 		meAccount,
@@ -31,12 +31,12 @@ func getTemplatedPages(fileSystem fs.FS, confController controller.AppStateContr
 }
 
 // manage template for 'register.html'
-func RegisterTemplate(name string, subFs fs.FS, confController controller.AppStateControllerInterface) *TemplateRenderer {
+func RegisterTemplate(name string, subFs fs.FS) *TemplateRenderer {
 	templateToLoad := template.Must(template.ParseFS(subFs, name))
 	return &TemplateRenderer{
 		TemplateName:   name,
 		ParsedTemplate: *templateToLoad,
-		DataRetriever: func(uc controller.UserControllerInterface) interface{} {
+		DataRetriever: func(uc controller.UserControllerInterface, confController controller.AppStateControllerInterface) interface{} {
 
 			msg := ""
 			if confController.IsRequireMailVerification() {
@@ -51,7 +51,7 @@ func RegisterTemplate(name string, subFs fs.FS, confController controller.AppSta
 
 			return retrivedData
 		},
-		DataRetrieverWithUser: func(uc controller.UserControllerInterface, userId string) interface{} {
+		DataRetrieverWithUser: func(uc controller.UserControllerInterface, userId string, confController controller.AppStateControllerInterface) interface{} {
 			msg := ""
 			if confController.IsRequireMailVerification() {
 				msg = "Go check your email, than "
@@ -76,7 +76,7 @@ func MeAccountTemplate(name string, subFs fs.FS) *TemplateRenderer {
 	return &TemplateRenderer{
 		TemplateName:   name,
 		ParsedTemplate: *templateToLoad,
-		DataRetrieverWithUser: func(uc controller.UserControllerInterface, userId string) interface{} {
+		DataRetrieverWithUser: func(uc controller.UserControllerInterface, userId string, confController controller.AppStateControllerInterface) interface{} {
 			log.Debug().Msgf("retrive data for user %s", userId)
 			if userId == "" {
 				return nil
