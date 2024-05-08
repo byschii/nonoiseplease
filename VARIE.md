@@ -5,6 +5,7 @@
 - fare marketing home
 - fare importazione bookmark
 - mettere un qualcosa di contatti per la sicurezza
+- https://github.com/securego/gosec
 
 ## NICE TO HAVE
 - in extention, when showing results, put link to internal page management
