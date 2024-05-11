@@ -4,7 +4,6 @@
 - fix ui on web page (maybe with a menu on top)
 - fare marketing home
 - fare importazione bookmark
-- mettere un qualcosa di contatti per la sicurezza
 - https://github.com/securego/gosec
 
 ## NICE TO HAVE

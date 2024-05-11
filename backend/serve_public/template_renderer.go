@@ -2,7 +2,6 @@ package servestatic
 
 import (
 	"html/template"
-	"io/fs"
 
 	"github.com/rs/zerolog/log"
 
@@ -17,11 +16,11 @@ type TemplateRenderer struct {
 }
 
 // returns a list of all templates that are used in the app
-func getTemplatedPages(fileSystem fs.FS) []*TemplateRenderer {
+func getTemplatedPages() []*TemplateRenderer {
 	var templatedNames = []*TemplateRenderer{}
 
-	meAccount := MeAccountTemplate("me/account.html", fileSystem)
-	register := RegisterTemplate("register.html", fileSystem)
+	meAccount := MeAccountTemplate("me/account.html")
+	register := RegisterTemplate("register.html")
 	templatedNames = append(
 		templatedNames,
 		meAccount,
@@ -31,8 +30,13 @@ func getTemplatedPages(fileSystem fs.FS) []*TemplateRenderer {
 }
 
 // manage template for 'register.html'
-func RegisterTemplate(name string, subFs fs.FS) *TemplateRenderer {
-	templateToLoad := template.Must(template.ParseFS(subFs, name))
+func RegisterTemplate(name string) *TemplateRenderer {
+	templateToLoad := template.Must(
+		template.ParseFiles(
+			"pb_public/register.html",
+			"views_template/prova_template.html",
+		))
+
 	return &TemplateRenderer{
 		TemplateName:   name,
 		ParsedTemplate: *templateToLoad,
@@ -69,9 +73,9 @@ func RegisterTemplate(name string, subFs fs.FS) *TemplateRenderer {
 }
 
 // manage template for 'me/account.html'
-func MeAccountTemplate(name string, subFs fs.FS) *TemplateRenderer {
+func MeAccountTemplate(name string) *TemplateRenderer {
 
-	templateToLoad := template.Must(template.ParseFS(subFs, name))
+	templateToLoad := template.Must(template.ParseFiles("pb_public/me/account.html"))
 
 	return &TemplateRenderer{
 		TemplateName:   name,

@@ -13,13 +13,12 @@
 
 </head>
 <body>
-
-
     <header>
         <h1>No Noise Please</h1>
     </header>
     <main>
-        <h2>Register</h2>
+        {{ template "prova" . }}
+        
         <div x-data="registration">
             <template x-if="!sent" >  
                 <form method="post">

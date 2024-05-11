@@ -100,7 +100,6 @@ func (c AppStateController) getConfigGreatWallEnabled() bool {
 
 func (c AppStateController) getConfigByKey(key config.AvailableConfig) (config.Config, error) {
 	var conf config.Config
-	log.Debug().Msgf("get config by key %s %+v %b", key, c, c.AppDao() == nil)
 	err := c.AppDao().ModelQuery(&config.Config{}).
 		AndWhere(dbx.HashExp{"key": key}).
 		One(&conf)

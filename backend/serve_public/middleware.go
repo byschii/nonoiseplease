@@ -54,7 +54,7 @@ func StaticDirectoryHandlerWHTMLAdder(
 
 		// parse and evaluate eventual template
 		// array of strings
-		for _, templatedPage := range getTemplatedPages(fileSystem) {
+		for _, templatedPage := range getTemplatedPages() {
 			// if static file is a "templated"
 			if name == templatedPage.TemplateName {
 				// get go template

@@ -6,7 +6,7 @@ import (
 	"bytes"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -31,7 +31,7 @@ type ParsedPage struct {
 func GetArticle(pageUrl string, onlyArticle bool, state AppStateControllerInterface) (*ParsedPage, bool, error) {
 
 	// get html
-	html, withProxy, err := getHtml(pageUrl, state)
+	html, withProxy, err := getHtml(pageUrl, state, true)
 	if err != nil {
 		return nil, withProxy, err
 	}
@@ -86,32 +86,47 @@ func getTextInBody(pageHtml string) (string, error) {
 	return h.Body.Content, nil
 }
 
-// function that takes a url, makes an http request to it, and returns the html
-// if the request is done with proxy, it returns true as second return value
-func getHtml(pageUrl string, state AppStateControllerInterface) (string, bool, error) {
-
+func useProxy(state AppStateControllerInterface) bool {
 	userProxyProb := state.GetConfigUseProxyProbability()
 	useProxy := rand.Float32() < userProxyProb
 	log.Debug().Msgf("useProxy: %v,  userProxyProb: %v", useProxy, userProxyProb)
+	return useProxy
+}
 
-	if useProxy {
-		// set proxy
-		proxy, err := config.GetRandomProxy(state.AppDao())
-		if err != nil {
-			return "", useProxy, err
+func getProxyUrl(state AppStateControllerInterface) (*url.URL, error) {
+	// set proxy
+	proxy, err := config.GetRandomProxy(state.AppDao())
+	if err != nil {
+		return nil, err
+	}
+	// prepend http:// to proxy address
+	// if not present
+	if !strings.HasPrefix(proxy.Address, "http://") {
+		proxy.Address = "http://" + proxy.Address
+	}
+	proxyUrl, err := url.Parse(string(proxy.Address) + ":" + fmt.Sprint(proxy.Port))
+	if err != nil {
+		return nil, err
+	}
+	return proxyUrl, nil
+}
+
+// function that takes a url, makes an http request to it, and returns the html
+// if the request is done with proxy, it returns true as second return value
+func getHtml(pageUrl string, state AppStateControllerInterface, tryProxy bool) (string, bool, error) {
+
+	proxyng := false
+	if tryProxy {
+		proxyng = useProxy(state)
+		if proxyng {
+			proxyUrl, err := getProxyUrl(state)
+			if err != nil {
+				return "", proxyng, err
+			}
+			http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
+		} else {
+			http.DefaultTransport = &http.Transport{Proxy: nil}
 		}
-		// prepend http:// to proxy address
-		// if not present
-		if !strings.HasPrefix(proxy.Address, "http://") {
-			proxy.Address = "http://" + proxy.Address
-		}
-		proxyUrl, err := url.Parse(string(proxy.Address) + ":" + fmt.Sprint(proxy.Port))
-		if err != nil {
-			return "", useProxy, err
-		}
-		http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
-	} else {
-		http.DefaultTransport = &http.Transport{Proxy: nil}
 	}
 
 	// make http request
@@ -121,18 +136,20 @@ func getHtml(pageUrl string, state AppStateControllerInterface) (string, bool, e
 	}
 	resp, err := http.Get(pageUrl)
 	if err != nil {
-		return "", useProxy, err
+		if proxyng {
+			return getHtml(pageUrl, state, tryProxy)
+		}
+		return "", proxyng, err
 	}
 	defer resp.Body.Close()
 
 	// read response body
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", useProxy, err
+		return "", proxyng, err
 	}
 
 	// convert []byte to string
 	html := string(body)
-
-	return html, useProxy, nil
+	return html, proxyng, nil
 }

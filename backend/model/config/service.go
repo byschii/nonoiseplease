@@ -36,18 +36,6 @@ func getConfigByKey(dao *daos.Dao, key AvailableConfig) (Config, error) {
 	return config, err
 }
 
-// if any error
-// return 0 and please use default value, do not handle error
-/*func GetConfigUseProxyProbability(dao *daos.Dao) float32 {
-	config, err := getConfigByKey(dao, UseProxyProb)
-	if err != nil || !config.BooleanValue {
-		return 0
-	}
-
-	value := config.FloatValue
-	return value
-}*/
-
 func InitConfigFromYaml(dao *daos.Dao, configMap []interface{}, proxyMap []interface{}) error {
 	log.Debug().Msg("init config from yaml")
 
@@ -88,59 +76,6 @@ func InitConfigFromYaml(dao *daos.Dao, configMap []interface{}, proxyMap []inter
 			}
 		}
 
-	}
-
-	return nil
-}
-
-// init config if not exists
-func InitConfig(dao *daos.Dao) error {
-	// use proxy prob
-	_, err := getConfigByKey(dao, UseProxyProb)
-	if err != nil {
-		config := Config{
-			Key:          string(UseProxyProb),
-			TextValue:    "",
-			FloatValue:   0.0,
-			BooleanValue: false,
-			Note:         "use proxy prob",
-		}
-		err = dao.Save(&config)
-		if err != nil {
-			return err
-		}
-	}
-
-	// mail verification required
-	_, err = getConfigByKey(dao, MailVerificationRequired)
-	if err != nil {
-		config := Config{
-			Key:          string(MailVerificationRequired),
-			TextValue:    "",
-			FloatValue:   0.0,
-			BooleanValue: true,
-			Note:         "mail verification required",
-		}
-		err = dao.Save(&config)
-		if err != nil {
-			return err
-		}
-	}
-
-	// great wall enabled
-	_, err = getConfigByKey(dao, GreatWallEnabled)
-	if err != nil {
-		config := Config{
-			Key:          string(GreatWallEnabled),
-			TextValue:    "",
-			FloatValue:   0.0,
-			BooleanValue: false,
-			Note:         "great wall enabled",
-		}
-		err = dao.Save(&config)
-		if err != nil {
-			return err
-		}
 	}
 
 	return nil
