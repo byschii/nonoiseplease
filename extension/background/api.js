@@ -47,7 +47,7 @@ const sendBookmarks = async (nnp_address, jwt, bookmarks) => {
         return false;
     }
     let res = await fetch(
-        nnp_address + "/api/bookmarks/upload", {
+        nnp_address + "/api/bookmark/scrape", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

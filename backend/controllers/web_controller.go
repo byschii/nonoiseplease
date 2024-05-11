@@ -3,6 +3,7 @@ package controllers
 import (
 	u "be/utils"
 	"errors"
+	"fmt"
 	"html/template"
 	"net/http"
 	"strings"
@@ -125,7 +126,7 @@ func (controller WebController) GetSearch(c echo.Context) error {
 }
 
 // used by the extention when importing bookmarks
-func (controller WebController) PostBookmarkUpload(c echo.Context) error {
+func (controller WebController) PostBookmarkScrape(c echo.Context) error {
 	// retrive user id from req
 	userRecord, err := controller.UserController.UserRecordFromRequest(
 		c, controller.ConfigController.IsRequireMailVerification(),
@@ -165,8 +166,9 @@ func (controller WebController) PostBookmarkUpload(c echo.Context) error {
 
 	// check for errors
 	for err := range errors {
-		log.Debug().Msgf("failed to add url to buffer, %v\n", err)
-		return c.String(http.StatusInternalServerError, "failed to add url to buffer")
+		erroMsg := fmt.Sprintf("%s %v", "failed to add url to buffer", err)
+		log.Error().Msg(erroMsg)
+		return c.String(http.StatusInternalServerError, erroMsg)
 	}
 
 	return c.NoContent(http.StatusOK)

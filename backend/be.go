@@ -129,8 +129,9 @@ func main() {
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		scheduler := cron.New()
 
-		scheduler.MustAdd("ScrapeBufferedPages", "*/2 * * * *", func() {
-			jobs.ScrapeBufferedPages(1, 2)
+		scheduler.MustAdd("ScrapeBufferedPages", "* * * * *", func() {
+			res := jobs.ScrapeBufferedPages(1, 2)
+			log.Debug().Msgf("ScrapeBufferedPages %v", res)
 		})
 		scheduler.Start()
 		return nil
@@ -243,8 +244,8 @@ func main() {
 
 		e.Router.AddRoute(echo.Route{
 			Method:      http.MethodPost,
-			Path:        "/api/bookmark/upload",
-			Handler:     appController.PostBookmarkUpload,
+			Path:        "/api/bookmark/scrape",
+			Handler:     appController.PostBookmarkScrape,
 			Middlewares: middlewares,
 		})
 

@@ -15,7 +15,7 @@ type NoNoiseInterface interface {
 	DeletePagemanageCategory(c echo.Context) error
 	PostPagemanageLoad(c echo.Context) error
 	DeletePagemanagePage(c echo.Context) error
-	PostBookmarkUpload(c echo.Context) error
+	PostBookmarkScrape(c echo.Context) error
 }
 
 func NewNoNoiseInterface(pageController PageControllerInterface, userController UserControllerInterface, state AppStateControllerInterface) NoNoiseInterface {

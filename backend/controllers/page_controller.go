@@ -311,5 +311,8 @@ func (controller PageController) AddToBuffer(owner string, url string, priority 
 	}
 	err := controller.PBDao.Save(&buffer)
 
+	if err == nil {
+		return nil
+	}
 	return fmt.Errorf("couldnt save buffer url %s (%s)", url, err)
 }
