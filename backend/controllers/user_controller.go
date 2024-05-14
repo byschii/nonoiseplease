@@ -31,7 +31,7 @@ type UserControllerInterface interface {
 	SaveActivity(activity users.UserActivity) error
 	StoreNewUserDetails(nickname string, relatedUserId string) error
 	GetUserEmailFromId(userId string) (string, error)
-	UserFromRequest(c echo.Context, mustBeVerified bool) (*users.Users, error)
+	UserFromRequest(c echo.Context, mustBeVerified bool) (*users.User, error)
 	UserRecordFromRequest(c echo.Context, mustBeVerified bool) (*models.Record, error)
 }
 
@@ -55,7 +55,7 @@ func (controller *SimpleUserController) SetApp(app *pocketbase.PocketBase) {
 	controller.App = app
 }
 
-func (controller SimpleUserController) UserFromRequest(c echo.Context, mustBeVerified bool) (*users.Users, error) {
+func (controller SimpleUserController) UserFromRequest(c echo.Context, mustBeVerified bool) (*users.User, error) {
 
 	// retrive user id from get params
 	record, _ := c.Get("authRecord").(*models.Record)
@@ -125,7 +125,7 @@ func (controller SimpleUserController) StoreNewUserDetails(relatedUserId string,
 }
 
 func (controller SimpleUserController) GetUserEmailFromId(userId string) (string, error) {
-	userToFill := &users.Users{}
+	userToFill := &users.User{}
 	err := controller.AppDao().FindById(userToFill, userId)
 	if err != nil {
 		return "", err

@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"be/model/config"
-	users "be/model/users"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"
@@ -17,7 +16,6 @@ type AppStateController struct {
 type AppStateControllerInterface interface {
 	CommonController
 	SetPBDAO(dao *daos.Dao)
-	UserList() ([]users.Users, error)
 	MaxScrapePerMonth() int
 	IsGreatWallEnabled() bool
 	IsRequireMailVerification() bool
@@ -51,14 +49,6 @@ func (c AppStateController) GetConfigUseProxyProbability() float32 {
 
 	value := config.FloatValue
 	return value
-}
-
-func (c AppStateController) UserList() ([]users.Users, error) {
-	var u []users.Users
-	err := c.AppDao().ModelQuery(&users.Users{}).
-		All(&u)
-
-	return u, err
 }
 
 func (c AppStateController) MaxScrapePerMonth() int {

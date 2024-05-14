@@ -130,8 +130,7 @@ func main() {
 		scheduler := cron.New()
 
 		scheduler.MustAdd("ScrapeBufferedPages", "* * * * *", func() {
-			res := jobs.ScrapeBufferedPages(1, 2)
-			log.Debug().Msgf("ScrapeBufferedPages %v", res)
+			_ = jobs.ScrapeBufferedPages(1, 2)
 		})
 		scheduler.Start()
 		return nil
@@ -139,7 +138,6 @@ func main() {
 
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		log.Debug().Msgf("lessgoozz!!")
-		print("about:debugging#/runtime/this-firefox")
 		userController.SetApp(app)
 		authController.SetApp(app)
 		confController.SetPBDAO(app.Dao())

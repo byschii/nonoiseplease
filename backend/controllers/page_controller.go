@@ -45,7 +45,7 @@ type PageControllerInterface interface {
 		originType page.AvailableOrigin,
 		withProxy bool) (string, error)
 	RemoveDocFTSIndex(pageId string) error
-	FindCategoriesFromUser(user *users.Users) ([]cats.Category, error)
+	FindCategoriesFromUser(user *users.User) ([]cats.Category, error)
 	AddCategoryToPage(owner string, pageId string, categoryName string) error
 	SetDBCategoriesOnFTSDoc(owner string, FTSRef string, categories []cats.Category) error
 	AddToBuffer(owner string, url string, priority int, origin page.AvailableOrigin) error
@@ -68,7 +68,7 @@ func (controller *PageController) AddCategoryToPage(owner string, pageId string,
 	return controller.CategoryController.AddCategoryToPage(controller.FTSController, owner, pageId, categoryName)
 }
 
-func (controller *PageController) FindCategoriesFromUser(user *users.Users) ([]cats.Category, error) {
+func (controller *PageController) FindCategoriesFromUser(user *users.User) ([]cats.Category, error) {
 	return controller.CategoryController.CategoryByUser(user)
 }
 

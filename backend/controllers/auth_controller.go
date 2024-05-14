@@ -28,7 +28,7 @@ type AuthControllerInterface interface {
 	FindUserFromExtentionToken(userId string, extentionToken string) (*users.UserDetails, error)
 	FindUserFromJWT(jwt string) (*models.Record, error)
 	FindUserFromJWTInContext(c echo.Context) (*models.Record, error)
-	FindUserById(id string) (*users.Users, error)
+	FindUserById(id string) (*users.User, error)
 	CheckAuthCredentials(email string, password string, endpoint string) error
 }
 
@@ -117,10 +117,10 @@ func (authController AuthController) FindUserFromJWTInContext(c echo.Context) (*
 	return user, nil
 }
 
-func (authController AuthController) FindUserById(id string) (*users.Users, error) {
-	u := &users.Users{}
+func (authController AuthController) FindUserById(id string) (*users.User, error) {
+	u := &users.User{}
 
-	q := authController.AppDao().ModelQuery(&users.Users{})
+	q := authController.AppDao().ModelQuery(&users.User{})
 
 	err := q.AndWhere(dbx.HashExp{"id": id}).
 		Limit(1).

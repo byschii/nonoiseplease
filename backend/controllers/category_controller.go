@@ -23,7 +23,7 @@ type CategoryControllerInterface interface {
 	RemoveOrphanCategory(category *cats.Category) error
 	RemoveOrphanCategoryWithException(category *cats.Category, expeptPageId []string) error
 	AddCategoryToPage(fulltextsearchController FTSControllerInterface, owner string, pageId string, categoryName string) error
-	CategoryByUser(user *users.Users) ([]cats.Category, error)
+	CategoryByUser(user *users.User) ([]cats.Category, error)
 }
 
 func NewCategoryController(dao *daos.Dao) CategoryControllerInterface {
@@ -124,7 +124,7 @@ func (controller CategoryController) RemoveOrphanCategoryWithException(category 
 }
 
 // gets all categories associated with a page scraped by a user
-func (controller CategoryController) CategoryByUser(user *users.Users) ([]cats.Category, error) {
+func (controller CategoryController) CategoryByUser(user *users.User) ([]cats.Category, error) {
 	// get every page owned by user
 	var pages []page.Page
 	err := controller.DAO().ModelQuery(&page.Page{}).

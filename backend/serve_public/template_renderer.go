@@ -6,6 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	controller "be/controllers"
+	"be/model/users"
 )
 
 type TemplateRenderer struct {
@@ -87,7 +88,7 @@ func MeAccountTemplate(name string) *TemplateRenderer {
 			}
 
 			// get user email
-			email, err := uc.GetUserEmailFromId(userId)
+			email, err := users.EmailFromId(uc.AppDao(), userId)
 			if err != nil {
 				log.Error().Msgf("error getting user email from id %s", userId)
 			}
