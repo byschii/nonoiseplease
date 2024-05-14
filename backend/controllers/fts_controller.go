@@ -7,9 +7,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	cats "be/model/categories"
-	fts_page_doc "be/model/fts_page_doc"
-	page "be/model/page"
+	cats "be/pkg/categories"
+	fts_page_doc "be/pkg/fts_page_doc"
+	page "be/pkg/page"
 
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/pocketbase/pocketbase/daos"
@@ -48,7 +48,7 @@ func (controller FTSController) RemoveDocFTSIndex(pageId string) error {
 
 	log.Debug().Msgf("deleting " + pageId)
 	// convert docId to ftsRef
-	page, err := page.GetPageFromPageId(controller.PBDao, pageId)
+	page, err := page.FromId(controller.PBDao, pageId)
 	if err != nil {
 		return err
 	}

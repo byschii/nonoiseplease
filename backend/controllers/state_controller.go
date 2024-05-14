@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"be/model/config"
+	"be/pkg/config"
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"

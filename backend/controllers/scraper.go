@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	"be/model/config"
+	"be/pkg/config"
 	u "be/utils"
 	"bytes"
 	"encoding/xml"

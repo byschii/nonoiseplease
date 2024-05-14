@@ -1,6 +1,32 @@
 package jobs
 
-func ScrapeBufferedPages(a int, b int) int {
+import (
+	"be/pkg/page"
+	"be/pkg/users"
+
+	"github.com/pocketbase/pocketbase/daos"
+	"github.com/rs/zerolog/log"
+)
+
+func ScrapeBufferedPages(dao *daos.Dao) error {
+
+	// get all users
+	userList, err := users.List(dao)
+	if err != nil {
+		log.Error().Msgf("authenticating user")
+		return err
+	}
+	for _, user := range userList {
+		pages, err := page.ByUserId(dao, user.Id)
+		if err != nil {
+			log.Error().Msgf("failed to get pages for user %s error: %v", user.Id, err)
+			continue
+		}
+
+		for _, page := range pages {
+
+		}
+	}
 
 	/*
 
@@ -21,5 +47,5 @@ func ScrapeBufferedPages(a int, b int) int {
 
 	*/
 
-	return a + b
+	return nil
 }

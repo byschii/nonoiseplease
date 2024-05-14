@@ -6,7 +6,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	controller "be/controllers"
-	"be/model/users"
+	"be/pkg/users"
 )
 
 type TemplateRenderer struct {

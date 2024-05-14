@@ -1,9 +1,9 @@
 package rest
 
 import (
-	categories "be/model/categories"
-	fts_page_doc "be/model/fts_page_doc"
-	page "be/model/page"
+	categories "be/pkg/categories"
+	fts_page_doc "be/pkg/fts_page_doc"
+	page "be/pkg/page"
 )
 
 type Url struct {

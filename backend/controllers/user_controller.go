@@ -1,7 +1,7 @@
 package controllers
 
 import (
-	users "be/model/users"
+	users "be/pkg/users"
 	"fmt"
 
 	"github.com/rs/zerolog/log"

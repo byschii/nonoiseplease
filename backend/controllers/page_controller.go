@@ -1,9 +1,9 @@
 package controllers
 
 import (
-	page "be/model/page"
-	"be/model/rest"
-	users "be/model/users"
+	page "be/pkg/page"
+	"be/pkg/rest"
+	users "be/pkg/users"
 	u "be/utils"
 	"crypto/sha256"
 	"encoding/hex"
@@ -18,8 +18,8 @@ import (
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/pocketbase/pocketbase/daos"
 
-	cats "be/model/categories"
-	tfs_page_doc "be/model/fts_page_doc"
+	cats "be/pkg/categories"
+	tfs_page_doc "be/pkg/fts_page_doc"
 )
 
 type PageController struct {
@@ -85,26 +85,19 @@ func (controller *PageController) SetPBDAO(dao *daos.Dao) {
 }
 
 func (controller PageController) CountUserPagesByOriginThisMonth(userid string, originType page.AvailableOrigin) (int, error) {
-	pages, err := page.GetPagesByUserIdAndOrigin(controller.PBDao, userid, originType)
+	pages, err := page.ByUserIdAndOrigin(controller.PBDao, userid, originType)
 	if err != nil {
 		return 0, err
 	}
 
-	log.Debug().Msgf("pages %v", pages)
-	counter := 0
-	for _, page := range pages {
-		if page.Created.Time().Month() == time.Now().Month() && page.Created.Time().Year() == time.Now().Year() {
-			counter++
-		}
-	}
+	counted := page.CountThisMonth(&pages)
+	log.Debug().Msgf("counter %d", counted)
 
-	log.Debug().Msgf("counter %d", counter)
-
-	return counter, nil
+	return counted, nil
 }
 
 func (controller PageController) RemoveCategoryFromPage(pageId string, categoryName string) error {
-	page, err := page.GetPageFromPageId(controller.PBDao, pageId)
+	page, err := page.FromId(controller.PBDao, pageId)
 	if err != nil {
 		return err
 	}

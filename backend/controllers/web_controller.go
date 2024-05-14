@@ -11,8 +11,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"be/model/page"
-	rest "be/model/rest"
+	"be/pkg/page"
+	rest "be/pkg/rest"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/models"

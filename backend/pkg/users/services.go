@@ -5,7 +5,8 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func GetUserList(dao *daos.Dao) ([]*User, error) {
+// get a list of all users in the database
+func List(dao *daos.Dao) ([]*User, error) {
 	u := []*User{}
 	err := dao.ModelQuery(&User{}).All(&u)
 	if err != nil {

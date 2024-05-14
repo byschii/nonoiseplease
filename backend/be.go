@@ -14,8 +14,8 @@ import (
 	_ "be/migrations"
 
 	controllers "be/controllers"
-	categories "be/model/categories"
-	conf "be/model/config"
+	categories "be/pkg/categories"
+	conf "be/pkg/config"
 	servepublic "be/serve_public"
 
 	"github.com/labstack/echo/v5"
@@ -130,7 +130,7 @@ func main() {
 		scheduler := cron.New()
 
 		scheduler.MustAdd("ScrapeBufferedPages", "* * * * *", func() {
-			_ = jobs.ScrapeBufferedPages(1, 2)
+			_ = jobs.ScrapeBufferedPages(app.Dao())
 		})
 		scheduler.Start()
 		return nil

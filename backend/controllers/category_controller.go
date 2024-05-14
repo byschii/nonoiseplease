@@ -3,9 +3,9 @@ package controllers
 import (
 	"errors"
 
-	cats "be/model/categories"
-	"be/model/page"
-	users "be/model/users"
+	cats "be/pkg/categories"
+	"be/pkg/page"
+	users "be/pkg/users"
 
 	u "be/utils"
 
