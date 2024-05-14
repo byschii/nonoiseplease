@@ -7,13 +7,11 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"math/rand"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/go-shiori/go-readability"
-	"github.com/rs/zerolog/log"
 )
 
 type html struct {
@@ -86,13 +84,6 @@ func getTextInBody(pageHtml string) (string, error) {
 	return h.Body.Content, nil
 }
 
-func useProxy(state AppStateControllerInterface) bool {
-	userProxyProb := state.GetConfigUseProxyProbability()
-	useProxy := rand.Float32() < userProxyProb
-	log.Debug().Msgf("useProxy: %v,  userProxyProb: %v", useProxy, userProxyProb)
-	return useProxy
-}
-
 func getProxyUrl(state AppStateControllerInterface) (*url.URL, error) {
 	// set proxy
 	proxy, err := config.GetRandomProxy(state.AppDao())
@@ -117,7 +108,7 @@ func getHtml(pageUrl string, state AppStateControllerInterface, tryProxy bool) (
 
 	proxyng := false
 	if tryProxy {
-		proxyng = useProxy(state)
+		proxyng = state.UseProxy()
 		if proxyng {
 			proxyUrl, err := getProxyUrl(state)
 			if err != nil {

@@ -63,7 +63,6 @@ func main() {
 	MAIL_USERNAME := viper.GetString("mail_username")
 	MAIL_PASSWORD := viper.GetString("mail_password")
 	MEILI_HOST_ADDRESS := viper.GetString("meili_host_address")
-	MAX_SCRAPE_PER_MONTH := viper.GetInt("max_scrape_per_month")
 	LOG_MAX_DAYS := viper.GetInt("log_max_days")
 	// get interface slice from config as 'default_config'
 	// [ {}, {}... ]
@@ -118,7 +117,7 @@ func main() {
 		return nil
 	})
 
-	confController := controllers.NewConfigController(app.Dao(), MAX_SCRAPE_PER_MONTH)
+	confController := controllers.NewConfigController(app.Dao())
 	authController := controllers.NewAuthController(app)
 	userController := controllers.NewUserController(app, meiliClient, authController)
 	categoryController := controllers.NewCategoryController(app.Dao())

@@ -11,8 +11,8 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	"be/pkg/page"
-	rest "be/pkg/rest"
+	page "be/pkg/page"
+	web "be/pkg/web"
 
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/pocketbase/models"
@@ -55,7 +55,7 @@ func (controller WebController) GetSearchInfo(c echo.Context) error {
 		return c.String(http.StatusBadRequest, u.WrapError("failed to get categories ", err).Error())
 	}
 
-	preSearchInfo := rest.PreSearchInfoResponse{
+	preSearchInfo := web.PreSearchInfoResponse{
 		Categories: categories,
 	}
 	c.JSON(http.StatusOK, preSearchInfo)
@@ -63,12 +63,12 @@ func (controller WebController) GetSearchInfo(c echo.Context) error {
 	return nil
 }
 
-func (controller WebController) SearchPages(c echo.Context) (rest.SearchResponse, error) {
+func (controller WebController) SearchPages(c echo.Context) (web.SearchResponse, error) {
 	// print request
 	log.Debug().Msgf(c.Request().URL.String())
 	record, _ := c.Get("authRecord").(*models.Record)
 	if record == nil || !record.GetBool("verified") {
-		return rest.SearchResponse{}, errors.New("unauthorized, user not verified")
+		return web.SearchResponse{}, errors.New("unauthorized, user not verified")
 	}
 	userID := record.Id
 
@@ -82,10 +82,10 @@ func (controller WebController) SearchPages(c echo.Context) (rest.SearchResponse
 	pageResp, err := controller.PageController.PageSearch(query, []string{userID}, categories)
 	if err != nil {
 		log.Error().Err(err).Msg("failed to search ")
-		return rest.SearchResponse{}, u.WrapError("failed to search ", err)
+		return web.SearchResponse{}, u.WrapError("failed to search ", err)
 	}
 
-	resp := rest.SearchResponse{
+	resp := web.SearchResponse{
 		Pages: *pageResp,
 	}
 	return resp, nil
@@ -136,7 +136,7 @@ func (controller WebController) PostBookmarkScrape(c echo.Context) error {
 		return c.String(http.StatusBadRequest, u.WrapError("failed to get user from request ", err).Error())
 	}
 
-	var urlData rest.Urls
+	var urlData web.Urls
 	if err := c.Bind(&urlData); err != nil {
 		log.Debug().Msgf("failed to parse json body, %v\n", err)
 		return c.String(http.StatusBadRequest, "failed to parse json body")
@@ -183,14 +183,14 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 		return c.String(http.StatusUnauthorized, "unauthorized, user not verified")
 	}
 
-	pagesAlreadyScraped, err := controller.PageController.CountUserPagesByOriginThisMonth(userRecord.Id, page.AvailableOriginScrape)
+	pagesAlreadyScraped, err := page.CountUserPagesScrapedThisMonth(controller.ConfigController.AppDao(), userRecord.Id)
 	if err != nil {
 		log.Debug().Msgf("failed to count user pages, %v\n", err)
 		return c.String(http.StatusInternalServerError, "failed to count user pages")
 	}
 
 	// get url from json body
-	var urlData rest.Url
+	var urlData web.Url
 	if err := c.Bind(&urlData); err != nil {
 		log.Debug().Msgf("failed to parse json body, %v\n", err)
 		return c.String(http.StatusBadRequest, "failed to parse json body")
@@ -232,7 +232,7 @@ func (controller WebController) PostPagemanageCategory(c echo.Context) error {
 	}
 
 	// read page and category id from body
-	var data rest.PostPagemanageCategoryRequest
+	var data web.PostPagemanageCategoryRequest
 	if err := c.Bind(&data); err != nil {
 		log.Debug().Msgf("failed to parse json body, %v\n", err)
 		return c.String(http.StatusBadRequest, "failed to parse json body")
@@ -286,7 +286,7 @@ func (controller WebController) GetPagemanage(c echo.Context) error {
 		controller.PageController.SetDBCategoriesOnFTSDoc(userID, page.FTSRef, categories)
 	}
 
-	result := rest.PageResponse{
+	result := web.PageResponse{
 		Page:       *page,
 		Categories: categories,
 		FTSDoc:     *ref,
@@ -304,7 +304,7 @@ func (controller WebController) DeletePagemanageCategory(c echo.Context) error {
 	userID := record.Id
 
 	// read page and category id from body
-	var data rest.DeleteCategoryRequest
+	var data web.DeleteCategoryRequest
 	if err := c.Bind(&data); err != nil {
 		log.Debug().Msgf("failed to parse json body, %v\n", err)
 		return c.String(http.StatusBadRequest, "failed to parse json body")
@@ -330,7 +330,7 @@ func (controller WebController) PostPagemanageLoad(c echo.Context) error {
 	}
 
 	// get url from json body
-	var postData rest.UrlWithHTML
+	var postData web.UrlWithHTML
 	if err := c.Bind(&postData); err != nil {
 		log.Debug().Msgf("failed to parse json body, %v\n", err)
 		return c.String(http.StatusBadRequest, "failed to parse json body")
@@ -362,7 +362,7 @@ func (controller WebController) DeletePagemanagePage(c echo.Context) error {
 		return c.String(http.StatusUnauthorized, "unauthorized, user not verified")
 	}
 
-	var data rest.DeletePageRequest
+	var data web.DeletePageRequest
 	if err := c.Bind(&data); err != nil {
 		log.Debug().Msgf("failed to parse json body, %v\n", err)
 		return c.String(http.StatusBadRequest, "failed to parse json body")

@@ -11,6 +11,7 @@ const (
 	UseProxyProb             AvailableConfig = "USE_PROXY_PROB"
 	MailVerificationRequired AvailableConfig = "MAIL_VERIFICATION_REQUIRED"
 	GreatWallEnabled         AvailableConfig = "GREAT_WALL_ENABLED"
+	MaxScrapePerMonth        AvailableConfig = "MAX_SCRAPE_PER_MONTH"
 )
 
 // https://scrapingant.com/free-proxies/

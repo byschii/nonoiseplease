@@ -1,6 +1,8 @@
 package config
 
 import (
+	"math/rand"
+
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/rs/zerolog/log"
@@ -23,60 +25,58 @@ func GetProxyByAddress(dao *daos.Dao, address string) (ProxyConnection, error) {
 	return proxy, err
 }
 
-func configQuery(dao *daos.Dao) *dbx.SelectQuery {
-	return dao.ModelQuery(&Config{})
-}
-
 func getConfigByKey(dao *daos.Dao, key AvailableConfig) (Config, error) {
 	var config Config
-	err := configQuery(dao).
+	err := dao.ModelQuery(&Config{}).
 		AndWhere(dbx.HashExp{"key": key}).
 		One(&config)
 
 	return config, err
 }
 
-func InitConfigFromYaml(dao *daos.Dao, configMap []interface{}, proxyMap []interface{}) error {
-	log.Debug().Msg("init config from yaml")
-
-	for _, config := range configMap {
-		// every config is a map "string" -> any
-		configEntity := Config{
-			Key:          config.(map[string]interface{})["key"].(string),
-			TextValue:    config.(map[string]interface{})["text_value"].(string),
-			FloatValue:   float32(config.(map[string]interface{})["float_value"].(float64)),
-			BooleanValue: config.(map[string]interface{})["boolean_value"].(bool),
-			Note:         config.(map[string]interface{})["note"].(string),
-		}
-		log.Debug().Msgf("config: %p -> %+v", &configEntity, configEntity)
-
-		_, err := getConfigByKey(dao, AvailableConfig(configEntity.Key))
-		if err != nil {
-			err := dao.Save(&configEntity)
-			if err != nil {
-				return err
-			}
-		}
+// if any error, return true
+func IsMailVerificationRequired(dao *daos.Dao) bool {
+	config, err := getConfigByKey(dao, MailVerificationRequired)
+	if err != nil {
+		log.Error().Err(err).Msg("get mail verification required config error")
+		return true
 	}
 
-	for _, proxy := range proxyMap {
-		// every proxy is a map "string" -> any (address->string, port->int)
-		proxyEntity := ProxyConnection{
-			Enabled: true,
-			Address: proxy.(map[string]interface{})["address"].(string),
-			Port:    int(proxy.(map[string]interface{})["port"].(int)),
-		}
-		log.Debug().Msgf("proxy: %p -> %+v", &proxyEntity, proxyEntity)
+	value := config.BooleanValue
+	return value
+}
 
-		_, err := GetProxyByAddress(dao, proxyEntity.Address)
-		if err != nil {
-			err := dao.Save(&proxyEntity)
-			if err != nil {
-				return err
-			}
-		}
-
+func CountMaxScrapePerMonth(dao *daos.Dao) int {
+	config, err := getConfigByKey(dao, MaxScrapePerMonth)
+	if err != nil {
+		log.Error().Err(err).Msg("get max scrape per month config error")
+		return 0
 	}
 
-	return nil
+	value := int(config.FloatValue)
+	return value
+}
+
+// if any error, return false
+// great wall is used to block new user actions (like register, ecc)
+func IsGreatWallEnabled(dao *daos.Dao) bool {
+	config, err := getConfigByKey(dao, GreatWallEnabled)
+	if err != nil {
+		log.Error().Err(err).Msg("get great wall enabled config error")
+		return false
+	}
+
+	value := config.BooleanValue
+	return value
+}
+
+// return 0 and please use default value, do not handle error
+func UseProxy(dao *daos.Dao) bool {
+	config, err := getConfigByKey(dao, UseProxyProb)
+	if err != nil || !config.BooleanValue {
+		return false
+	}
+
+	value := config.FloatValue
+	return rand.Float32() < value
 }

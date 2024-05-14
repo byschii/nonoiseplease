@@ -7,8 +7,6 @@ import (
 	"errors"
 	"net/http"
 
-	"github.com/rs/zerolog/log"
-
 	"github.com/labstack/echo/v5"
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase"
@@ -24,7 +22,6 @@ type AuthControllerInterface interface {
 	CommonController
 	TokenSecret() string
 	SetApp(app *pocketbase.PocketBase)
-	FindUserForExtention(userId string, extentionToken string, jwt string) (*models.Record, error)
 	FindUserFromExtentionToken(userId string, extentionToken string) (*users.UserDetails, error)
 	FindUserFromJWT(jwt string) (*models.Record, error)
 	FindUserFromJWTInContext(c echo.Context) (*models.Record, error)
@@ -48,30 +45,6 @@ func (controller AuthController) AppDao() *daos.Dao {
 
 func (controller *AuthController) TokenSecret() string {
 	return controller.App.Settings().RecordAuthToken.Secret
-}
-
-func (authController AuthController) FindUserForExtention(userId string, extentionToken string, jwt string) (*models.Record, error) {
-	log.Debug().Msgf("FindUserForExtention %s %s %s", userId, extentionToken, jwt)
-	if jwt != "" {
-		userRecord, err := authController.FindUserFromJWT(jwt)
-		if err != nil {
-			return nil, err
-		}
-		return userRecord, nil
-	}
-
-	u, err := authController.FindUserFromExtentionToken(userId, extentionToken)
-	if err != nil {
-		return nil, err
-	}
-
-	if u != nil {
-		userRecord := &models.Record{}
-		userRecord.Id = u.RelatedUser
-		return userRecord, nil
-	}
-
-	return nil, errors.New("user not found")
 }
 
 func (authController AuthController) FindUserFromExtentionToken(userId string, extentionToken string) (*users.UserDetails, error) {

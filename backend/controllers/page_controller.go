@@ -2,8 +2,8 @@ package controllers
 
 import (
 	page "be/pkg/page"
-	"be/pkg/rest"
 	users "be/pkg/users"
+	web "be/pkg/web"
 	u "be/utils"
 	"crypto/sha256"
 	"encoding/hex"
@@ -19,7 +19,6 @@ import (
 	"github.com/pocketbase/pocketbase/daos"
 
 	cats "be/pkg/categories"
-	tfs_page_doc "be/pkg/fts_page_doc"
 )
 
 type PageController struct {
@@ -32,11 +31,10 @@ type PageController struct {
 type PageControllerInterface interface {
 	CommonController
 	SetPBDAO(dao *daos.Dao)
-	CountUserPagesByOriginThisMonth(userid string, originType page.AvailableOrigin) (int, error)
 	RemoveCategoryFromPage(pageId string, categoryName string) error
 	RemoveCategoryFromPageWithOwner(owner string, pageId string, categoryName string) error
-	PageSearch(query string, users []string, categories []string) (*[]rest.PageResponse, error)
-	PageID2FullPageData(owner string, pageId string) (*page.Page, []cats.Category, *tfs_page_doc.FTSPageDoc, error)
+	PageSearch(query string, users []string, categories []string) (*[]web.PageResponse, error)
+	PageID2FullPageData(owner string, pageId string) (*page.Page, []cats.Category, *page.FTSPageDoc, error)
 	SaveNewPage(owner string,
 		url string,
 		pageTitle string,
@@ -82,18 +80,6 @@ func (controller *PageController) AppDao() *daos.Dao {
 
 func (controller *PageController) SetPBDAO(dao *daos.Dao) {
 	controller.PBDao = dao
-}
-
-func (controller PageController) CountUserPagesByOriginThisMonth(userid string, originType page.AvailableOrigin) (int, error) {
-	pages, err := page.ByUserIdAndOrigin(controller.PBDao, userid, originType)
-	if err != nil {
-		return 0, err
-	}
-
-	counted := page.CountThisMonth(&pages)
-	log.Debug().Msgf("counter %d", counted)
-
-	return counted, nil
 }
 
 func (controller PageController) RemoveCategoryFromPage(pageId string, categoryName string) error {
@@ -149,7 +135,7 @@ func (controller PageController) RemoveCategoryFromPageWithOwner(owner string, p
 }
 
 // categories comes ','-separated
-func (controller PageController) PageSearch(query string, users []string, categories []string) (*[]rest.PageResponse, error) {
+func (controller PageController) PageSearch(query string, users []string, categories []string) (*[]web.PageResponse, error) {
 
 	// parse categories array (if not empty)
 	// into meili search filter query
@@ -172,7 +158,7 @@ func (controller PageController) PageSearch(query string, users []string, catego
 		meiliSearchRequest = meilisearch.SearchRequest{}
 	}
 
-	var pages []rest.PageResponse
+	var pages []web.PageResponse
 	for _, userIndex := range users {
 		resp, err := controller.MeiliClient.Index(userIndex).Search(query, &meiliSearchRequest)
 		if err != nil {
@@ -191,11 +177,11 @@ func (controller PageController) PageSearch(query string, users []string, catego
 	return &pages, nil
 }
 
-func (controller PageController) parseMeiliResponse(hit interface{}) (rest.PageResponse, error) {
-	pageResp := rest.PageResponse{}
+func (controller PageController) parseMeiliResponse(hit interface{}) (web.PageResponse, error) {
+	pageResp := web.PageResponse{}
 
 	// get doc
-	doc, err := tfs_page_doc.FromMeiliResultInterface(hit)
+	doc, err := page.FromMeiliResultInterface(hit)
 	if err != nil {
 		return pageResp, u.WrapError("couldnt convert meili result to fts doc", err)
 	}
@@ -221,11 +207,11 @@ func (controller PageController) parseMeiliResponse(hit interface{}) (rest.PageR
 	return pageResp, nil
 }
 
-func (controller PageController) PageID2FullPageData(owner string, pageId string) (*page.Page, []cats.Category, *tfs_page_doc.FTSPageDoc, error) {
+func (controller PageController) PageID2FullPageData(owner string, pageId string) (*page.Page, []cats.Category, *page.FTSPageDoc, error) {
 
 	// get page
-	var page page.Page
-	err := page.FillWithUserAndId(controller.PBDao, owner, pageId)
+	var simplePage page.Page
+	err := simplePage.FillWithUserAndId(controller.PBDao, owner, pageId)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -237,12 +223,12 @@ func (controller PageController) PageID2FullPageData(owner string, pageId string
 	}
 
 	// get fts doc
-	ftsDoc, err := tfs_page_doc.FromIndexAndRef(controller.MeiliClient, owner, page.FTSRef)
+	ftsDoc, err := page.FromIndexAndRef(controller.MeiliClient, owner, simplePage.FTSRef)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	return &page, categories, &ftsDoc, nil
+	return &simplePage, categories, &ftsDoc, nil
 }
 
 func (controller PageController) SaveNewPage(owner string,
@@ -275,12 +261,12 @@ func (controller PageController) SaveNewPage(owner string,
 	}()
 
 	go func() {
-		doc := tfs_page_doc.FTSPageDoc{
+		doc := page.FTSPageDoc{
 			ID:       reference,
 			Category: []string{},
 			Content:  content,
 		}
-		errs <- doc.Save(controller.MeiliClient, owner)
+		errs <- page.Save(&doc, controller.MeiliClient, owner)
 	}()
 
 	// maybe errored

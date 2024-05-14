@@ -1,8 +1,7 @@
-package rest
+package web
 
 import (
 	categories "be/pkg/categories"
-	fts_page_doc "be/pkg/fts_page_doc"
 	page "be/pkg/page"
 )
 
@@ -23,9 +22,9 @@ type UrlWithHTML struct {
 }
 
 type PageResponse struct {
-	Page       page.Page               `json:"page"`
-	Categories []categories.Category   `json:"categories"`
-	FTSDoc     fts_page_doc.FTSPageDoc `json:"ftsdoc"`
+	Page       page.Page             `json:"page"`
+	Categories []categories.Category `json:"categories"`
+	FTSDoc     page.FTSPageDoc       `json:"ftsdoc"`
 }
 
 type DeleteCategoryRequest struct {

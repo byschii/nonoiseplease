@@ -1,6 +1,7 @@
 package jobs
 
 import (
+	"be/pkg/config"
 	"be/pkg/page"
 	"be/pkg/users"
 
@@ -23,7 +24,29 @@ func ScrapeBufferedPages(dao *daos.Dao) error {
 			continue
 		}
 
-		for _, page := range pages {
+		// cout already scraped pages
+		scraped, err := page.CountUserPagesScrapedThisMonth(dao, user.Id)
+		if err != nil {
+			log.Error().Msgf("failed to count scraped pages for user %s error: %v", user.Id, err)
+			continue
+		}
+		// get max scrape per month
+		maxScraperPerMonth := config.CountMaxScrapePerMonth(dao)
+		// log ser info on auto scraping
+		log.Debug().Msgf(
+			"user %s scraped %d pages this month, %d pages yet to be scraped from buffer, but up to %d pages per month, goint to scrape %d pages",
+			user.Id,
+			scraped,
+			len(pages),
+			maxScraperPerMonth,
+			maxScraperPerMonth-scraped,
+		)
+
+		for i, _ := range pages {
+			if i >= maxScraperPerMonth-scraped {
+				break
+			}
+			// scrape url and get info
 
 		}
 	}

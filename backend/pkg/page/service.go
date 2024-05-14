@@ -29,7 +29,7 @@ func ByUserIdAndOrigin(dao *daos.Dao, userId string, originType AvailableOrigin)
 	return pages, err
 }
 
-func CountThisMonth(pages *[]Page) int {
+func countThisMonth(pages *[]Page) int {
 	counter := 0
 	nowMonth := time.Now().Month()
 	nowYear := time.Now().Year()
@@ -41,6 +41,15 @@ func CountThisMonth(pages *[]Page) int {
 	}
 
 	return counter
+}
+
+func CountUserPagesScrapedThisMonth(dao *daos.Dao, userId string) (int, error) {
+	pages, err := ByUserIdAndOrigin(dao, userId, AvailableOriginScrape)
+	if err != nil {
+		return 0, err
+	}
+
+	return countThisMonth(&pages), nil
 }
 
 // convert page id to fts id

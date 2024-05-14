@@ -1,4 +1,4 @@
-package fts_page
+package page
 
 import (
 	"encoding/json"
@@ -37,6 +37,24 @@ func SetCategoriesForFTSDoc(meiliClient *meilisearch.Client, owner string, FTSRe
 		return err
 	}
 
-	ftsDoc.UpdateCategories(meiliClient, owner, categories)
+	updateCategories(&ftsDoc, meiliClient, owner, categories)
 	return nil
+}
+
+func updateCategories(d *FTSPageDoc, meiliClient *meilisearch.Client, indexName string, categories []string) error {
+	d.Category = categories
+
+	// delete category from fts via update
+	idx, err := meiliClient.GetIndex(indexName)
+	if err != nil {
+		return err
+	}
+	// update = add with same id
+	idx.UpdateDocuments(d, "id")
+	return err
+}
+
+func Save(d *FTSPageDoc, meiliClient *meilisearch.Client, indexName string) error {
+	_, err := meiliClient.Index(indexName).AddDocuments(d, "id")
+	return err
 }
