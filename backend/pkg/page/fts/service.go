@@ -1,7 +1,12 @@
 package page
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
+	"fmt"
+	"math/rand"
+	"time"
 
 	"github.com/meilisearch/meilisearch-go"
 )
@@ -52,6 +57,16 @@ func updateCategories(d *FTSPageDoc, meiliClient *meilisearch.Client, indexName 
 	// update = add with same id
 	idx.UpdateDocuments(d, "id")
 	return err
+}
+
+func NewFtsDocRef(owner string,
+	url string,
+	pageTitle string) string {
+	// create doc id with sha
+	hash := sha256.New()
+	hash.Write([]byte(url + pageTitle + owner + fmt.Sprint(rand.Intn(1000000)) + time.Now().String()))
+	reference := hex.EncodeToString(hash.Sum(nil))
+	return reference
 }
 
 func Save(d *FTSPageDoc, meiliClient *meilisearch.Client, indexName string) error {

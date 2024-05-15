@@ -2,7 +2,8 @@ package jobs
 
 import (
 	"be/pkg/config"
-	"be/pkg/page"
+	pagebuffer "be/pkg/page/buffer"
+	pagepage "be/pkg/page/page"
 	"be/pkg/users"
 
 	"github.com/pocketbase/pocketbase/daos"
@@ -18,14 +19,14 @@ func ScrapeBufferedPages(dao *daos.Dao) error {
 		return err
 	}
 	for _, user := range userList {
-		pages, err := page.ByUserId(dao, user.Id)
+		bufferedPages, err := pagebuffer.BufferedByUserId(dao, user.Id)
 		if err != nil {
-			log.Error().Msgf("failed to get pages for user %s error: %v", user.Id, err)
+			log.Error().Msgf("failed to get buffered pages for user %s error: %v", user.Id, err)
 			continue
 		}
 
 		// cout already scraped pages
-		scraped, err := page.CountUserPagesScrapedThisMonth(dao, user.Id)
+		scraped, err := pagepage.CountUserPagesScrapedThisMonth(dao, user.Id)
 		if err != nil {
 			log.Error().Msgf("failed to count scraped pages for user %s error: %v", user.Id, err)
 			continue
@@ -37,12 +38,12 @@ func ScrapeBufferedPages(dao *daos.Dao) error {
 			"user %s scraped %d pages this month, %d pages yet to be scraped from buffer, but up to %d pages per month, goint to scrape %d pages",
 			user.Id,
 			scraped,
-			len(pages),
+			len(bufferedPages),
 			maxScraperPerMonth,
 			maxScraperPerMonth-scraped,
 		)
 
-		for i, _ := range pages {
+		for i, _ := range bufferedPages {
 			if i >= maxScraperPerMonth-scraped {
 				break
 			}

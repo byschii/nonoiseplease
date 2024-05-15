@@ -5,13 +5,9 @@ import (
 	users "be/pkg/users"
 	web "be/pkg/web"
 	u "be/utils"
-	"crypto/sha256"
-	"encoding/hex"
 	"errors"
 	"fmt"
-	"math/rand"
 	"strings"
-	"time"
 
 	"github.com/rs/zerolog/log"
 
@@ -231,7 +227,8 @@ func (controller PageController) PageID2FullPageData(owner string, pageId string
 	return &simplePage, categories, &ftsDoc, nil
 }
 
-func (controller PageController) SaveNewPage(owner string,
+func (controller PageController) SaveNewPage(
+	owner string,
 	url string,
 	pageTitle string,
 	categories []string,
@@ -239,10 +236,7 @@ func (controller PageController) SaveNewPage(owner string,
 	originType page.AvailableOrigin,
 	withProxy bool) (string, error) {
 
-	// create doc id with sha
-	hash := sha256.New()
-	hash.Write([]byte(url + pageTitle + owner + fmt.Sprint(rand.Intn(1000000)) + time.Now().String()))
-	reference := hex.EncodeToString(hash.Sum(nil))
+	reference := page.NewFtsDocRef(owner, url, pageTitle)
 
 	// checking for errors
 	errs := make(chan error, 2)

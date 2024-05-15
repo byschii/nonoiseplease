@@ -5,6 +5,8 @@ import (
 
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"
+
+	pagecommons "be/pkg/page/commons"
 )
 
 // get all pages from 'userId'
@@ -18,7 +20,7 @@ func ByUserId(dao *daos.Dao, userId string) ([]Page, error) {
 }
 
 // get all pages from 'userId'
-func ByUserIdAndOrigin(dao *daos.Dao, userId string, originType AvailableOrigin) ([]Page, error) {
+func ByUserIdAndOrigin(dao *daos.Dao, userId string, originType pagecommons.AvailableOrigin) ([]Page, error) {
 
 	var pages []Page
 	err := dao.ModelQuery(&Page{}).
@@ -44,7 +46,7 @@ func countThisMonth(pages *[]Page) int {
 }
 
 func CountUserPagesScrapedThisMonth(dao *daos.Dao, userId string) (int, error) {
-	pages, err := ByUserIdAndOrigin(dao, userId, AvailableOriginScrape)
+	pages, err := ByUserIdAndOrigin(dao, userId, pagecommons.AvailableOriginScrape)
 	if err != nil {
 		return 0, err
 	}
@@ -60,4 +62,8 @@ func FromId(dao *daos.Dao, pageId string) (Page, error) {
 		One(&page)
 
 	return page, err
+}
+
+func Save(dao *daos.Dao, page *Page) error {
+	return dao.Save(page)
 }

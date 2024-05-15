@@ -9,6 +9,8 @@ func InitConfigFromYaml(dao *daos.Dao, configMap []interface{}, proxyMap []inter
 	log.Debug().Msg("init config from yaml")
 
 	for _, config := range configMap {
+		log.Debug().Msgf("init %s from yaml", config.(map[string]interface{})["key"].(string))
+
 		// every config is a map "string" -> any
 		configEntity := Config{
 			Key:          config.(map[string]interface{})["key"].(string),

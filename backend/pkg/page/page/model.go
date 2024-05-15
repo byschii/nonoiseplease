@@ -4,14 +4,8 @@ import (
 	"github.com/pocketbase/dbx"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/pocketbase/pocketbase/models"
-)
 
-// activity to category mapping
-type AvailableOrigin string
-
-const (
-	AvailableOriginScrape    AvailableOrigin = "scrape"
-	AvailableOriginExtention AvailableOrigin = "extention"
+	pagecommons "be/pkg/page/commons"
 )
 
 /*
@@ -22,13 +16,13 @@ these data are ment to be low importance and editable by the user
 type Page struct {
 	models.BaseModel
 
-	Owner     string          `db:"owner" json:"owner"`
-	Link      string          `db:"link" json:"link"`
-	PageTitle string          `db:"page_title" json:"page_title"`
-	FTSRef    string          `db:"fts_ref" json:"fts_ref"`
-	Votes     int             `db:"votes" json:"votes"`
-	WithProxy bool            `db:"with_proxy" json:"with_proxy"`
-	Origin    AvailableOrigin `db:"origin" json:"origin"`
+	Owner     string                      `db:"owner" json:"owner"`
+	Link      string                      `db:"link" json:"link"`
+	PageTitle string                      `db:"page_title" json:"page_title"`
+	FTSRef    string                      `db:"fts_ref" json:"fts_ref"`
+	Votes     int                         `db:"votes" json:"votes"`
+	WithProxy bool                        `db:"with_proxy" json:"with_proxy"`
+	Origin    pagecommons.AvailableOrigin `db:"origin" json:"origin"`
 }
 
 func (m *Page) TableName() string {
