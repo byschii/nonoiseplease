@@ -11,11 +11,11 @@ import (
 	"github.com/rs/zerolog/log"
 
 	_ "be/migrations"
-	"be/pkg/jobs"
 
 	controllers "be/controllers"
 	categories "be/pkg/categories"
 	conf "be/pkg/config"
+	"be/pkg/jobs"
 	servepublic "be/serve_public"
 
 	"github.com/labstack/echo/v5"

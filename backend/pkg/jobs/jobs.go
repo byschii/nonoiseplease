@@ -42,12 +42,12 @@ func ScrapeBufferedPages(dao *daos.Dao, meiliClient *meilisearch.Client) error {
 		maxScraperPerMonth := config.CountMaxScrapePerMonth(dao)
 		// log ser info on auto scraping
 		log.Debug().Msgf(
-			"user %s scraped %d pages this month, %d pages yet to be scraped from buffer, but up to %d pages per month, goint to scrape %d pages",
+			"user-%s %d-pages-scraped-in-month, %d-pages-to-be-scraped-in-buffer %d-max-pages-per-month goint to scrape %d pages",
 			user.Id,
 			scraped,
 			len(bufferedPages),
 			maxScraperPerMonth,
-			maxScraperPerMonth-scraped,
+			min(maxScraperPerMonth-scraped, len(bufferedPages)),
 		)
 
 		for i, bufferedPage := range bufferedPages {
@@ -74,23 +74,12 @@ func ScrapeBufferedPages(dao *daos.Dao, meiliClient *meilisearch.Client) error {
 			}
 			// remove from buffer
 			err = pagebuffer.Remove(dao, bufferedPage.Id)
+			if err != nil {
+				log.Debug().Msgf("failed to remove page from buffer, %v\n", err)
+				continue
+			}
 		}
 	}
-
-	/*
-
-		// scrape url and get info
-
-
-		meili_ref, err := controller.PageController.SaveNewPage(
-			userRecord.Id, urlData.Url, article.Title, []string{}, article.TextContent, page.AvailableOriginScrape, withProxy,
-		)
-		if err != nil {
-			log.Debug().Msgf("failed to save page, %v\n", err)
-			return c.String(http.StatusBadRequest, u.WrapError("failed to save page ", err).Error())
-		}
-
-	*/
 
 	return nil
 }

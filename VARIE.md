@@ -3,7 +3,7 @@
 ## PRE-RELEASE
 - fix ui on web page (maybe with a menu on top)
 - fare marketing home
-- fare importazione bookmark
+- controllare regole
 - https://github.com/securego/gosec
 
 ## NICE TO HAVE
@@ -12,8 +12,8 @@
 - persist user activity
     - also make it available to user
 - optional do not save double urls
-- automatizzare test per estensioni
-    - NON CI STANNO maniere, forse con python
-- magari quando si aggiunge una pagina e ho successo > link a edit pagina 
+- code test for extension
+    - maybe with pyautogui
+- when page added to web > link a edit (?) 
 
 
