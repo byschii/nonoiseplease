@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	cats "be/pkg/categories"
-	"be/pkg/page"
+	page "be/pkg/page/page"
 	users "be/pkg/users"
 
 	u "be/utils"

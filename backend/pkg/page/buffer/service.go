@@ -13,3 +13,19 @@ func BufferedByUserId(dao *daos.Dao, userId string) ([]PageBuffer, error) {
 
 	return pages, err
 }
+
+func Remove(dao *daos.Dao, pageId string) error {
+
+	var pages PageBuffer
+	err := dao.ModelQuery(&PageBuffer{}).
+		AndWhere(dbx.HashExp{"id": pageId}).
+		One(&pages)
+
+	if err != nil {
+		return err
+	}
+
+	err = dao.Delete(&pages)
+	return err
+
+}

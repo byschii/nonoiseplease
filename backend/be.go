@@ -10,8 +10,8 @@ import (
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 
-	"be/jobs"
 	_ "be/migrations"
+	"be/pkg/jobs"
 
 	controllers "be/controllers"
 	categories "be/pkg/categories"
@@ -28,20 +28,6 @@ import (
 	"github.com/pocketbase/pocketbase/tools/cron"
 	"github.com/spf13/viper"
 )
-
-/*func setResponseACAOHeaderFromRequest(req http.Request, resp echo.Response) {
-	resp.Header().Set(echo.HeaderAccessControlAllowOrigin,
-		req.Header.Get(echo.HeaderOrigin))
-}
-
-func ACAOHeaderOverwriteMiddleware(next echo.HandlerFunc) echo.HandlerFunc {
-	return func(ctx echo.Context) error {
-		ctx.Response().Before(func() {
-			setResponseACAOHeaderFromRequest(*ctx.Request(), *ctx.Response())
-		})
-		return next(ctx)
-	}
-}*/
 
 func main() {
 
@@ -129,7 +115,7 @@ func main() {
 		scheduler := cron.New()
 
 		scheduler.MustAdd("ScrapeBufferedPages", "* * * * *", func() {
-			_ = jobs.ScrapeBufferedPages(app.Dao())
+			_ = jobs.ScrapeBufferedPages(app.Dao(), meiliClient)
 		})
 		scheduler.Start()
 		return nil

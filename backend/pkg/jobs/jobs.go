@@ -1,16 +1,22 @@
 package jobs
 
 import (
-	"be/pkg/config"
+	config "be/pkg/config"
 	pagebuffer "be/pkg/page/buffer"
+	pagecommons "be/pkg/page/commons"
 	pagepage "be/pkg/page/page"
-	"be/pkg/users"
+	pageservice "be/pkg/page/service"
 
+	"be/pkg/scraping"
+	"be/pkg/users"
+	"math/rand"
+
+	"github.com/meilisearch/meilisearch-go"
 	"github.com/pocketbase/pocketbase/daos"
 	"github.com/rs/zerolog/log"
 )
 
-func ScrapeBufferedPages(dao *daos.Dao) error {
+func ScrapeBufferedPages(dao *daos.Dao, meiliClient *meilisearch.Client) error {
 
 	// get all users
 	userList, err := users.List(dao)
@@ -18,6 +24,7 @@ func ScrapeBufferedPages(dao *daos.Dao) error {
 		log.Error().Msgf("authenticating user")
 		return err
 	}
+	proxyProb := config.ProxyProb(dao)
 	for _, user := range userList {
 		bufferedPages, err := pagebuffer.BufferedByUserId(dao, user.Id)
 		if err != nil {
@@ -43,23 +50,37 @@ func ScrapeBufferedPages(dao *daos.Dao) error {
 			maxScraperPerMonth-scraped,
 		)
 
-		for i, _ := range bufferedPages {
+		for i, bufferedPage := range bufferedPages {
 			if i >= maxScraperPerMonth-scraped {
 				break
 			}
-			// scrape url and get info
+			useProxy := rand.Float32() < proxyProb
+			article, withProxy, err := scraping.GetArticle(dao, bufferedPage.PageUrl, useProxy)
+			if err != nil {
+				log.Debug().Msgf("failed to parse %s, %v\n", bufferedPage.PageUrl, err)
+				continue
+			}
 
+			// save page
+			_, err = pageservice.SaveNewPage(
+				dao,
+				meiliClient,
+				bufferedPage.Owner, bufferedPage.PageUrl, article.Title, []string{}, article.TextContent, pagecommons.AvailableOriginScrape,
+				withProxy,
+			)
+			if err != nil {
+				log.Debug().Msgf("failed to save page, %v\n", err)
+				continue
+			}
+			// remove from buffer
+			err = pagebuffer.Remove(dao, bufferedPage.Id)
 		}
 	}
 
 	/*
 
 		// scrape url and get info
-		article, withProxy, err := GetArticle(urlData.Url, false, controller.ConfigController)
-		if err != nil {
-			log.Debug().Msgf("failed to parse %s, %v\n", urlData.Url, err)
-			return c.String(http.StatusBadRequest, "failed to parse url")
-		}
+
 
 		meili_ref, err := controller.PageController.SaveNewPage(
 			userRecord.Id, urlData.Url, article.Title, []string{}, article.TextContent, page.AvailableOriginScrape, withProxy,

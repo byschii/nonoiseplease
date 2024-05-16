@@ -8,7 +8,8 @@ import (
 	"github.com/rs/zerolog/log"
 
 	cats "be/pkg/categories"
-	page "be/pkg/page"
+	pagefts "be/pkg/page/fts"
+	page "be/pkg/page/page"
 
 	"github.com/meilisearch/meilisearch-go"
 	"github.com/pocketbase/pocketbase/daos"
@@ -65,7 +66,7 @@ func (controller FTSController) SetDBCategoriesOnFTSDoc(owner string, FTSRef str
 	for _, category := range categories {
 		categoryNames = append(categoryNames, category.Name)
 	}
-	err := page.SetCategoriesForFTSDoc(controller.MeiliClient, owner, FTSRef, categoryNames)
+	err := pagefts.SetCategoriesForFTSDoc(controller.MeiliClient, owner, FTSRef, categoryNames)
 	if err != nil {
 		log.Debug().Msgf("error while setting categories for doc %s: %s , cannot align db e fts", FTSRef, err.Error())
 	}
@@ -104,6 +105,6 @@ func (controller FTSController) CreateNewFTSIndex(indexName string, waitTimeRang
 	}
 
 	// make it searchable
-	_, err = controller.MeiliClient.Index(indexName).UpdateFilterableAttributes(&page.FTSDOCATTRIBUTES)
+	_, err = controller.MeiliClient.Index(indexName).UpdateFilterableAttributes(&pagefts.FTSDOCATTRIBUTES)
 	return err
 }

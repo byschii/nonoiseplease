@@ -1,7 +1,11 @@
 package controllers
 
 import (
-	page "be/pkg/page"
+	pagebuffer "be/pkg/page/buffer"
+	pagecommons "be/pkg/page/commons"
+	pagefts "be/pkg/page/fts"
+	page "be/pkg/page/page"
+	pageservice "be/pkg/page/service"
 	users "be/pkg/users"
 	web "be/pkg/web"
 	u "be/utils"
@@ -30,19 +34,19 @@ type PageControllerInterface interface {
 	RemoveCategoryFromPage(pageId string, categoryName string) error
 	RemoveCategoryFromPageWithOwner(owner string, pageId string, categoryName string) error
 	PageSearch(query string, users []string, categories []string) (*[]web.PageResponse, error)
-	PageID2FullPageData(owner string, pageId string) (*page.Page, []cats.Category, *page.FTSPageDoc, error)
+	PageID2FullPageData(owner string, pageId string) (*page.Page, []cats.Category, *pagefts.FTSPageDoc, error)
 	SaveNewPage(owner string,
 		url string,
 		pageTitle string,
 		categories []string,
 		content string,
-		originType page.AvailableOrigin,
+		originType pagecommons.AvailableOrigin,
 		withProxy bool) (string, error)
 	RemoveDocFTSIndex(pageId string) error
 	FindCategoriesFromUser(user *users.User) ([]cats.Category, error)
 	AddCategoryToPage(owner string, pageId string, categoryName string) error
 	SetDBCategoriesOnFTSDoc(owner string, FTSRef string, categories []cats.Category) error
-	AddToBuffer(owner string, url string, priority int, origin page.AvailableOrigin) error
+	AddToBuffer(owner string, url string, priority int, origin pagecommons.AvailableOrigin) error
 }
 
 func NewPageController(dao *daos.Dao, meiliClient *meilisearch.Client, categoryController CategoryControllerInterface, fulltextsearchController FTSControllerInterface) PageControllerInterface {
@@ -177,7 +181,7 @@ func (controller PageController) parseMeiliResponse(hit interface{}) (web.PageRe
 	pageResp := web.PageResponse{}
 
 	// get doc
-	doc, err := page.FromMeiliResultInterface(hit)
+	doc, err := pagefts.FromMeiliResultInterface(hit)
 	if err != nil {
 		return pageResp, u.WrapError("couldnt convert meili result to fts doc", err)
 	}
@@ -203,7 +207,7 @@ func (controller PageController) parseMeiliResponse(hit interface{}) (web.PageRe
 	return pageResp, nil
 }
 
-func (controller PageController) PageID2FullPageData(owner string, pageId string) (*page.Page, []cats.Category, *page.FTSPageDoc, error) {
+func (controller PageController) PageID2FullPageData(owner string, pageId string) (*page.Page, []cats.Category, *pagefts.FTSPageDoc, error) {
 
 	// get page
 	var simplePage page.Page
@@ -219,7 +223,7 @@ func (controller PageController) PageID2FullPageData(owner string, pageId string
 	}
 
 	// get fts doc
-	ftsDoc, err := page.FromIndexAndRef(controller.MeiliClient, owner, simplePage.FTSRef)
+	ftsDoc, err := pagefts.FromIndexAndRef(controller.MeiliClient, owner, simplePage.FTSRef)
 	if err != nil {
 		return nil, nil, nil, err
 	}
@@ -233,50 +237,27 @@ func (controller PageController) SaveNewPage(
 	pageTitle string,
 	categories []string,
 	content string,
-	originType page.AvailableOrigin,
+	originType pagecommons.AvailableOrigin,
 	withProxy bool) (string, error) {
 
-	reference := page.NewFtsDocRef(owner, url, pageTitle)
+	//page.service
+	reference, err := pageservice.SaveNewPage(
+		controller.PBDao,
+		controller.MeiliClient,
+		owner,
+		url,
+		pageTitle,
+		categories,
+		content,
+		originType,
+		withProxy,
+	)
 
-	// checking for errors
-	errs := make(chan error, 2)
-
-	go func() {
-		savedArticle := page.Page{
-			Link:      url,
-			PageTitle: pageTitle,
-			Owner:     owner,
-			FTSRef:    reference,
-			Votes:     0,
-			WithProxy: withProxy,
-			Origin:    originType,
-		}
-		errs <- controller.PBDao.Save(&savedArticle)
-	}()
-
-	go func() {
-		doc := page.FTSPageDoc{
-			ID:       reference,
-			Category: []string{},
-			Content:  content,
-		}
-		errs <- page.Save(&doc, controller.MeiliClient, owner)
-	}()
-
-	// maybe errored
-	for i := 0; i < 2; i++ {
-		err := <-errs
-		if err != nil {
-			return "", err
-		}
-	}
-
-	return reference, nil
-
+	return reference, err
 }
 
-func (controller PageController) AddToBuffer(owner string, url string, priority int, origin page.AvailableOrigin) error {
-	buffer := page.PageBuffer{
+func (controller PageController) AddToBuffer(owner string, url string, priority int, origin pagecommons.AvailableOrigin) error {
+	buffer := pagebuffer.PageBuffer{
 		Owner:    owner,
 		PageUrl:  url,
 		Priority: priority,

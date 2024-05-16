@@ -11,7 +11,9 @@ import (
 
 	"github.com/rs/zerolog/log"
 
-	page "be/pkg/page"
+	pagecommons "be/pkg/page/commons"
+	page "be/pkg/page/page"
+	scraping "be/pkg/scraping"
 	web "be/pkg/web"
 
 	"github.com/labstack/echo/v5"
@@ -151,7 +153,7 @@ func (controller WebController) PostBookmarkScrape(c echo.Context) error {
 		go func(url string) {
 			defer wg.Done()
 			log.Debug().Msgf("adding %s to buffer for user %s\n", url, userRecord.Id)
-			err := controller.PageController.AddToBuffer(userRecord.Id, url, 0, page.AvailableOriginScrape)
+			err := controller.PageController.AddToBuffer(userRecord.Id, url, 0, pagecommons.AvailableOriginScrape)
 			if err != nil {
 				errors <- err
 			}
@@ -198,7 +200,7 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 	// if user has reached the limit, return error
 	if pagesAlreadyScraped >= controller.ConfigController.MaxScrapePerMonth() {
 		// save page in the buffer
-		err = controller.PageController.AddToBuffer(userRecord.Id, urlData.Url, 1, page.AvailableOriginScrape)
+		err = controller.PageController.AddToBuffer(userRecord.Id, urlData.Url, 1, pagecommons.AvailableOriginScrape)
 		if err != nil {
 			log.Debug().Msgf("failed to add page to buffer, %v\n", err)
 			return c.String(http.StatusInternalServerError, "you have reached the limit of pages you can scrape, but the page could not be buffered")
@@ -207,14 +209,14 @@ func (controller WebController) PostUrlScrape(c echo.Context) error {
 	}
 
 	// scrape url and get info
-	article, withProxy, err := GetArticle(urlData.Url, false, controller.ConfigController)
+	article, withProxy, err := scraping.GetArticle(controller.ConfigController.AppDao(), urlData.Url, controller.ConfigController.UseProxy())
 	if err != nil {
 		log.Debug().Msgf("failed to parse %s, %v\n", urlData.Url, err)
 		return c.String(http.StatusBadRequest, "failed to parse url")
 	}
 
 	meili_ref, err := controller.PageController.SaveNewPage(
-		userRecord.Id, urlData.Url, article.Title, []string{}, article.TextContent, page.AvailableOriginScrape, withProxy,
+		userRecord.Id, urlData.Url, article.Title, []string{}, article.TextContent, pagecommons.AvailableOriginScrape, withProxy,
 	)
 	if err != nil {
 		log.Debug().Msgf("failed to save page, %v\n", err)
@@ -337,7 +339,7 @@ func (controller WebController) PostPagemanageLoad(c echo.Context) error {
 	}
 	log.Debug().Msgf("postData %+v", postData)
 
-	article, err := GetArticleFromHtml(postData.HTML, postData.Url)
+	article, err := scraping.GetArticleFromHtml(postData.HTML, postData.Url)
 	log.Debug().Msgf("article %+v", article)
 	if err != nil {
 		log.Debug().Msgf("failed to parse %s, %v\n", postData.Url, err)
@@ -345,7 +347,7 @@ func (controller WebController) PostPagemanageLoad(c echo.Context) error {
 	}
 
 	meili_ref, err := controller.PageController.SaveNewPage(
-		record.Id, postData.Url, postData.Title, []string{}, article.TextContent, page.AvailableOriginExtention, false,
+		record.Id, postData.Url, postData.Title, []string{}, article.TextContent, pagecommons.AvailableOriginExtention, false,
 	)
 	if err != nil {
 		log.Debug().Msgf("failed to save page, %v\n", err)

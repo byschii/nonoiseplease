@@ -1,4 +1,4 @@
-package controllers
+package scraping
 
 import (
 	"be/pkg/config"
@@ -12,24 +12,13 @@ import (
 	"strings"
 
 	"github.com/go-shiori/go-readability"
+	"github.com/pocketbase/pocketbase/daos"
 )
 
-type html struct {
-	Body body `xml:"body"`
-}
-type body struct {
-	Content string `xml:",innerxml"`
-}
-
-type ParsedPage struct {
-	Title       string `json:"title"`
-	TextContent string `json:"text_content"`
-}
-
-func GetArticle(pageUrl string, onlyArticle bool, state AppStateControllerInterface) (*ParsedPage, bool, error) {
+func GetArticle(dao *daos.Dao, pageUrl string, onlyArticle bool) (*ParsedPage, bool, error) {
 
 	// get html
-	html, withProxy, err := getHtml(pageUrl, state, true)
+	html, withProxy, err := getHtml(dao, pageUrl, true)
 	if err != nil {
 		return nil, withProxy, err
 	}
@@ -84,9 +73,9 @@ func getTextInBody(pageHtml string) (string, error) {
 	return h.Body.Content, nil
 }
 
-func getProxyUrl(state AppStateControllerInterface) (*url.URL, error) {
+func getProxyUrl(dao *daos.Dao) (*url.URL, error) {
 	// set proxy
-	proxy, err := config.GetRandomProxy(state.AppDao())
+	proxy, err := config.GetRandomProxy(dao)
 	if err != nil {
 		return nil, err
 	}
@@ -104,20 +93,18 @@ func getProxyUrl(state AppStateControllerInterface) (*url.URL, error) {
 
 // function that takes a url, makes an http request to it, and returns the html
 // if the request is done with proxy, it returns true as second return value
-func getHtml(pageUrl string, state AppStateControllerInterface, tryProxy bool) (string, bool, error) {
+// pageUrl: url to make request to
 
-	proxyng := false
-	if tryProxy {
-		proxyng = state.UseProxy()
-		if proxyng {
-			proxyUrl, err := getProxyUrl(state)
-			if err != nil {
-				return "", proxyng, err
-			}
-			http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
-		} else {
-			http.DefaultTransport = &http.Transport{Proxy: nil}
+func getHtml(dao *daos.Dao, pageUrl string, useProxy bool) (string, bool, error) {
+
+	if useProxy {
+		proxyUrl, err := getProxyUrl(dao)
+		if err != nil {
+			return "", useProxy, err
 		}
+		http.DefaultTransport = &http.Transport{Proxy: http.ProxyURL(proxyUrl)}
+	} else {
+		http.DefaultTransport = &http.Transport{Proxy: nil}
 	}
 
 	// make http request
@@ -127,20 +114,17 @@ func getHtml(pageUrl string, state AppStateControllerInterface, tryProxy bool) (
 	}
 	resp, err := http.Get(pageUrl)
 	if err != nil {
-		if proxyng {
-			return getHtml(pageUrl, state, tryProxy)
-		}
-		return "", proxyng, err
+		return "", useProxy, err
 	}
 	defer resp.Body.Close()
 
 	// read response body
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return "", proxyng, err
+		return "", useProxy, err
 	}
 
 	// convert []byte to string
 	html := string(body)
-	return html, proxyng, nil
+	return html, useProxy, nil
 }

@@ -72,11 +72,16 @@ func IsGreatWallEnabled(dao *daos.Dao) bool {
 
 // return 0 and please use default value, do not handle error
 func UseProxy(dao *daos.Dao) bool {
+	return rand.Float32() < ProxyProb(dao)
+}
+
+// return 0 and please use default value, do not handle error
+func ProxyProb(dao *daos.Dao) float32 {
 	config, err := getConfigByKey(dao, UseProxyProb)
 	if err != nil || !config.BooleanValue {
-		return false
+		return 0
 	}
 
-	value := config.FloatValue
-	return rand.Float32() < value
+	return config.FloatValue
+
 }
