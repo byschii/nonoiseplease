@@ -21,14 +21,20 @@
 
     <header>
         <h1>No Noise Please</h1>
-        <span>scraper you own web</span>
+        <span>scrape your own web</span>
     </header>
     <main>
-        <h2>Me</h2>
+          
         <div x-data="me">
+            <h1>Me</h1>
+            <a href="/me/account"> <button> Account details</button> </a> <button x-on:click="logout"> Logout </button>     
             <template x-if="!missingJwt()" >  
                 <div x-init="downloadSearchInfo">
                     <code style="display: none;" x-text="myJwt" id="pbjwt"></code>
+                    <p>
+                        <h1>Pages</h1>
+                        <a href="/me/pages"> <button>Manage</button> </a>
+                    </p>
                     <h3>Search</h3>
                     <form  action="/search.html" method="get">
                         <input type="text" name="query" placeholder="Search by key word"> 
@@ -54,24 +60,25 @@
                         <button type="submit"><i class="mi-search"></i>Search</button>
                     </form>
                     <h3>Add URL</h3>
+                    <form @submit.prevent="addUrl">
                     <input type="url" name="url" id="url" placeholder="URL">
-                    <button x-on:click="addUrl">Scrape</button><span x-text="lastMsg"></span>
-                    <br>
+                    <button>Scrape</button><span x-text="lastMsg"></span>
+                    <br />
                     <span>
                         or better, if possible, use a browser Extension <br />
-                        <b>Firefox Add On: </b> from <a href="https://addons.mozilla.org/firefox/downloads/file/4252909/64af83a438904bcfbb21-2.1.xpi">here</a> or <a href="/static_import/nonoisepleaseextention.xpi" download="nonoisepleaseextention.xpi">here</a> , while <a href="https://extensionworkshop.com/documentation/publish/distribute-sideloading/#install-addon-from-file">here</a> instructions to install.
+                        <b>Firefox Add On: </b> from <a href="https://addons.mozilla.org/firefox/downloads/file/4287919/64af83a438904bcfbb21-2.3.xpi">here</a> or <a href="/static_import/nonoisepleaseextention.xpi" download="nonoisepleaseextention.xpi">here</a> , while <a href="https://extensionworkshop.com/documentation/publish/distribute-sideloading/#install-addon-from-file">here</a> instructions to install.
                         <br />
                         <b>If you actually can use only Chrome...</b> try with <a href="/static_import/chrome_extension.crx" download="chrome_extension.crx">this</a>
                         <br />
                         Consider i m not a great developer, i actually tested Firefox version only, and i m not sure if it works on Chrome. Also, it's open source, so you can check code on github.
 
                     </span>
-                    <p>Check Your alerady saved <a href="/me/pages"> <button>Pages</button> </a> </p>
-                    <hr>
-                    <span>Go To Your <a href="/me/account"> Account details </a> or <button x-on:click="logout"> Logout </button></span>               
+                    </form>
                 </div>
             </template>
             <template x-if="missingJwt()">
+                <h1>Me</h1>
+
                 <div>
                     <p>Not logged in</p>
                     <div>
@@ -111,6 +118,7 @@
                 })
             },
             addUrl(){
+                
                 this.lastMsg = 'Adding url'
                 let url = document.getElementById('url').value
                 fetch('/api/url/scrape', {
@@ -125,7 +133,7 @@
                     // clear input
                     if(!data.ok){
                         this.lastMsg = 'Url NOT added'
-                        console.error('Error:', error);
+                        console.error('Error:', data);
                     }else{
                         this.lastMsg = 'Url added'
                         document.getElementById('url').value = ''

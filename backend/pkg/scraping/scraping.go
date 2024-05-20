@@ -9,10 +9,12 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/go-shiori/go-readability"
 	"github.com/pocketbase/pocketbase/daos"
+	"github.com/rs/zerolog/log"
 )
 
 func GetArticle(dao *daos.Dao, pageUrl string, onlyArticle bool) (*ParsedPage, bool, error) {
@@ -114,6 +116,11 @@ func getHtml(dao *daos.Dao, pageUrl string, useProxy bool) (string, bool, error)
 	}
 	resp, err := http.Get(pageUrl)
 	if err != nil {
+		if useProxy {
+			// if request with proxy fails, try without proxy
+			return getHtml(dao, pageUrl, false)
+		}
+		log.Error().Msgf("failed to make http request %s %v", strconv.FormatBool(useProxy), err)
 		return "", useProxy, err
 	}
 	defer resp.Body.Close()
