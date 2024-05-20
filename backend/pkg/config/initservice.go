@@ -30,6 +30,12 @@ func InitConfigFromYaml(dao *daos.Dao, configMap []interface{}, proxyMap []inter
 		}
 	}
 
+	// delete all proxies
+	err := CleanProxy(dao)
+	if err != nil {
+		return err
+	}
+
 	for _, proxy := range proxyMap {
 		// every proxy is a map "string" -> any (address->string, port->int)
 		proxyEntity := ProxyConnection{

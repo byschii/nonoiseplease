@@ -57,6 +57,23 @@ func CountMaxScrapePerMonth(dao *daos.Dao) int {
 	return value
 }
 
+func CleanProxy(dao *daos.Dao) error {
+	// get all proxies
+	var proxy []ProxyConnection
+	err := dao.ModelQuery(&ProxyConnection{}).
+		All(&proxy)
+	if err != nil {
+		return err
+	}
+
+	// delete all proxies
+	for _, p := range proxy {
+		dao.Delete(&p)
+	}
+
+	return err
+}
+
 // if any error, return false
 // great wall is used to block new user actions (like register, ecc)
 func IsGreatWallEnabled(dao *daos.Dao) bool {
