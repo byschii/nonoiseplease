@@ -74,8 +74,20 @@ actually it s optional, it s just to avoid scraping from backend ip and serving 
 	- when you search on google, the extensione recognize that and does the same search on backend, which respondes with html
 - allows you to upload you current page to backend
 	- simply by reading the source
-- eventually: records the pages you visit locally (in background script) and send them to backend if you notice you found something interesting
+- eventually:
+	- records the pages you visit locally (in background script) and send them to backend if you notice you found something interesting
+ 	- upload your bookmarks. they get buffered and patiently (slowly) scraped 
 - saves cookies to remember your options
+
+Not Released
+------------
+
+I have 
+- some playwright (and other python) to test the website. Currently i dont test the extension.
+- some data i test and develop on
+- some shell to build, deploy, rollback almost autocatically
+But these are *definetly* not ready to be shared publicly
+
 
 Limitations
 -----------
@@ -103,7 +115,6 @@ nonoiseplease is still missing some features, I know, but I'm working on it.
 
 *   browser extention
     *   fix the terrible UX and auth
-    *   add in batch all of your bookmark (i really want it cause i m lazy but i dont know how to do without massive scraping)
 *   improve the "scraper"
     *   to get the transcript of a Youtube video
     *   find a way to reliably read PDF
