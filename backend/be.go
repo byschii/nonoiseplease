@@ -63,7 +63,7 @@ func main() {
 	}
 
 	logDestination := os.Stdout
-	if os.Getenv("RUNNING") == "PUBLIC" {
+	if os.Getenv("RUNNING") == "PUBLIC" && false {
 		APP_URL = "https://nonoiseplease.com"
 		MEILI_HOST_ADDRESS = "http://0.0.0.0:7700"
 

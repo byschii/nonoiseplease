@@ -45,7 +45,6 @@ func StaticDirectoryHandlerWHTMLAdder(
 		}
 		p = tmpPath
 
-		log.Debug().Msgf("StaticDirectoryHandlerWHTMLAdder %+v", p)
 		name := filepath.ToSlash(filepath.Clean(strings.TrimPrefix(p, "/")))
 		// if name doesnt ends with '.html' and autoAddHtml is true, add '.html' to the end of name
 		if name != "." && autoAddHtml {
@@ -57,6 +56,7 @@ func StaticDirectoryHandlerWHTMLAdder(
 		for _, templatedPage := range getTemplatedPages() {
 			// if static file is a "templated"
 			if name == templatedPage.TemplateName {
+				log.Debug().Msgf("templating: %s", templatedPage.TemplateName)
 				// get go template
 				// pageTemplate := templatedPage.ParsedTemplate
 				// try to extract user from request
@@ -79,10 +79,14 @@ func StaticDirectoryHandlerWHTMLAdder(
 		}
 
 		// try to respond with file
+		log.Debug().Msgf("fileSystem %s %+v", name, fileSystem)
 		fileErr := c.FileFS(name, fileSystem)
+		log.Debug().Msgf("fileErr %+v", fileErr)
 		if fileErr != nil && errors.Is(fileErr, echo.ErrNotFound) {
 			if indexFallback {
-				return c.FileFS("index.html", fileSystem)
+				log.Debug().Msgf("indexFallback %+v", fileSystem)
+				err = c.FileFS("index.html", fileSystem)
+				return err
 			} else {
 				apis.NewNotFoundError("not found", "not found")
 			}

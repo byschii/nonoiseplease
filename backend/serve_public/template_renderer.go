@@ -20,8 +20,10 @@ type TemplateRenderer struct {
 func getTemplatedPages() []*TemplateRenderer {
 	var templatedNames = []*TemplateRenderer{}
 
-	meAccount := MeAccountTemplate("me/account.html")
 	register := RegisterTemplate("register.html")
+	meAccount := MeAccountTemplate("me/account.html")
+	log.Debug().Msgf("templatedNames %+v", templatedNames)
+
 	templatedNames = append(
 		templatedNames,
 		meAccount,
@@ -32,11 +34,12 @@ func getTemplatedPages() []*TemplateRenderer {
 
 // manage template for 'register.html'
 func RegisterTemplate(name string) *TemplateRenderer {
-	templateToLoad := template.Must(
-		template.ParseFiles(
-			"pb_public/register.html",
-			"views_template/prova_template.html",
-		))
+	templateFiles, err := template.ParseFiles("pb_public/register.html", "views_template/prova_template.html")
+	if err != nil {
+		log.Error().Msgf("error parsing files %v", err)
+	}
+
+	templateToLoad := template.Must(templateFiles, err)
 
 	return &TemplateRenderer{
 		TemplateName:   name,

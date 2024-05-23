@@ -7,6 +7,7 @@ WORKDIR /pb
 
 COPY ./bedocker .
 COPY ./pb_public ./pb_public
+COPY ./views_template ./views_template
 
 # expose port
 EXPOSE 8090
