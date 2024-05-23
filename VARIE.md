@@ -3,7 +3,6 @@
 ## PRE-RELEASE
 - fix ui on web page (maybe with a menu on top)
 - controllare regole
-- controllare 1crb
 - https://github.com/securego/gosec
 
 ## NICE TO HAVE
@@ -17,6 +16,3 @@
 - when page added to web > link a edit (?) 
 
 
-FAILED test_page_load.py::test_dynamic_check_categories_removal_when_useless - playwright._impl._errors.TimeoutError: Timeout 30000ms exceeded.
-FAILED test_page_load.py::test_static_check_categories_removal_when_useless - playwright._impl._errors.TimeoutError: Timeout 30000ms exceeded.
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

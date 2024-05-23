@@ -149,6 +149,8 @@ func main() {
 			Method: http.MethodGet,
 			Path:   "/version",
 			Handler: func(c echo.Context) error {
+				print("version")
+				log.Debug().Msgf("version")
 				return c.String(http.StatusOK, VERSION)
 			},
 		})
