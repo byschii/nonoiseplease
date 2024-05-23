@@ -1,7 +1,6 @@
 # TODO
 
 ## PRE-RELEASE
-- fix ui on web page (maybe with a menu on top)
 - controllare regole
 - https://github.com/securego/gosec
 
