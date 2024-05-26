@@ -16,7 +16,8 @@ B.runtime.onMessage.addListener((message, sender, sendResponse) => {
         // insert at top of page a list of page
         // https://grrr.tech/posts/create-dom-node-from-html-string/
         let resultDiv = document.createElement("div");
-        resultDiv.setHTML(message.result);
+        let htmlToInsert = message.result;
+        resultDiv.innerHTML = htmlToInsert; 
         console.log("resultDiv: ", resultDiv);
 
         document.body.insertBefore(

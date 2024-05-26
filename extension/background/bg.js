@@ -145,7 +145,7 @@ storedState.then((currentState) => {
             B.tabs.query({active: true, currentWindow: true}, function(tabs) {
                 let currentTab = tabs[0];
                 B.tabs.executeScript(currentTab.id, { code: 'document.documentElement.outerHTML' }, function(htmlContent) {
-                    sendPage(nnp_address, currentState.jwt, htmlContent[0], currentTab.url, currentTab.title.then((res) => {
+                    sendPage(nnp_address, currentState.jwt, htmlContent[0], currentTab.url, currentTab.title).then((res) => {
                         if(res){
                             popupLog("page sent");
                         } else {
@@ -153,7 +153,7 @@ storedState.then((currentState) => {
                         }
                     }).catch(() => {
                         popupLogError("page not sent");
-                    }));
+                    });
                 });
             });
         }

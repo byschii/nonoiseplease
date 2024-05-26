@@ -189,3 +189,27 @@ nonoiseplease is still missing some features, I know, but I'm working on it.
             <h3><a href="https://del.icio.us">del.icio.us</a></h3>
             <span>✨maybe somethong to aspire to✨</span>
         </div>
+
+Screenshot Dump
+---------------
+
+Home
+![home](https://github.com/byschii/nonoiseplease/screenshot/1main.png)
+
+Browser Extension
+![Extension](https://github.com/byschii/nonoiseplease/screenshot/2ext.png)
+
+Account
+![Account](https://github.com/byschii/nonoiseplease/screenshot/3acc.png)
+
+Scraped Pages
+![Scraped Pages](https://github.com/byschii/nonoiseplease/screenshot/4pages.png)
+
+Page Details
+![details](https://github.com/byschii/nonoiseplease/screenshot/5detail.png)
+
+Search
+![search](https://github.com/byschii/nonoiseplease/screenshot/6search.png)
+
+In-google search (for extension)
+![googlesearch](https://github.com/byschii/nonoiseplease/screenshot/7gs.png)
