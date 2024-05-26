@@ -212,5 +212,5 @@ Search
 ![search](https://github.com/byschii/blob/master/nonoiseplease/screenshots/6search.png)
 
 In-google search (for extension)
-![googlesearch](https://github.com/byschii/blob/master/nonoiseplease/screenshots/7gs.png)
+![googlesearch](https://github.com/byschii/nonoiseplease/blob/master/screenshots/7gs.png)
 
