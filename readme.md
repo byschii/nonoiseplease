@@ -194,22 +194,23 @@ Screenshot Dump
 ---------------
 
 Home
-![home](https://github.com/byschii/nonoiseplease/screenshots/1main.png)
+![home](https://github.com/byschii/blob/master/nonoiseplease/screenshots/1main.png)
 
 Browser Extension
-![Extension](https://github.com/byschii/nonoiseplease/screenshots/2ext.png)
+![Extension](https://github.com/byschii/blob/master/nonoiseplease/screenshots/2ext.png)
 
 Account
-![Account](https://github.com/byschii/nonoiseplease/screenshots/3acc.png)
+![Account](https://github.com/byschii/blob/master/nonoiseplease/screenshots/3acc.png)
 
 Scraped Pages
-![Scraped Pages](https://github.com/byschii/nonoiseplease/screenshots/4pages.png)
+![Scraped Pages](https://github.com/byschii/blob/master/nonoiseplease/screenshots/4pages.png)
 
 Page Details
-![details](https://github.com/byschii/nonoiseplease/screenshots/5detail.png)
+![details](https://github.com/byschii/blob/master/nonoiseplease/screenshots/5detail.png)
 
 Search
-![search](https://github.com/byschii/nonoiseplease/screenshots/6search.png)
+![search](https://github.com/byschii/blob/master/nonoiseplease/screenshots/6search.png)
 
 In-google search (for extension)
-![googlesearch](https://github.com/byschii/nonoiseplease/screenshots/7gs.png)
+![googlesearch](https://github.com/byschii/blob/master/nonoiseplease/screenshots/7gs.png)
+
