@@ -39,7 +39,7 @@ Also, AI will generate a ton of noise on the internet and i want to try to incre
 let s split in actual backend (pocketbase) and frontend
 #### PocketBase
 god bless pocketbase, the right spot between simple, complex, extendible... also, coming from i bit of python, i really needed types
-- it is still a giant mess
+- it is still a giant mess (i cant write idiomatic go)
 	- i have a set of controller with their interfaces
 	- every api call is handled by WebController (NoNoiseInterface) and i listed in be.go
 		-  WebController handle everything that is not handled by PocketBase exposed api

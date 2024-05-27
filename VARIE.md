@@ -1,8 +1,6 @@
 # TODO
 
 ## PRE-RELEASE
-- controllare regole
-- make nicer pages
 - https://github.com/securego/gosec
 
 ## NICE TO HAVE
