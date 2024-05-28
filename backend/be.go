@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/rs/zerolog"
@@ -55,7 +56,6 @@ func main() {
 	INITIAL_DB_CONFIGS := viper.Get("default_config").([]interface{})
 	PROXIES := viper.Get("proxies").([]interface{})
 	print(fmt.Sprintf("INITIAL_DB_CONFIGS: %+v \n", INITIAL_DB_CONFIGS))
-
 	VERSION := "0.0.1"
 
 	if os.Getenv("VERSION") != "" {
@@ -63,19 +63,20 @@ func main() {
 	}
 
 	logDestination := os.Stdout
-	if os.Getenv("RUNNING") == "PUBLIC" && false {
+	if os.Getenv("RUNNING") == "PUBLIC" {
 		APP_URL = "https://nonoiseplease.com"
 		MEILI_HOST_ADDRESS = "http://0.0.0.0:7700"
 
 		// create log folder if not exists
 		if _, err := os.Stat(LOG_FOLDER); os.IsNotExist(err) {
 			print("creating log folder")
-			os.Mkdir(LOG_FOLDER, 0755)
+			os.Mkdir(LOG_FOLDER, 0750)
 		} else {
 			print("log folder exists")
 		}
 		// open a file
-		logDestination, err = os.OpenFile(LOG_FOLDER+"/"+LOG_FILENAME, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		filePath := filepath.Clean(filepath.Join(LOG_FOLDER, LOG_FILENAME))
+		logDestination, err = os.OpenFile(filePath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0600)
 		if err != nil {
 			// format error and panic
 			panic(fmt.Sprintf("error opening file: %v", err))

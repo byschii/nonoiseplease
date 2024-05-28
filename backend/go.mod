@@ -72,12 +72,14 @@ require (
 	github.com/meilisearch/meilisearch-go v0.23.0 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/nbutton23/zxcvbn-go v0.0.0-20180912185939-ae427f1e4c1d // indirect
 	github.com/ncruces/go-strftime v0.1.9 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.8 // indirect
 	github.com/pocketbase/dbx v1.10.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rs/zerolog v1.32.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
+	github.com/securego/gosec v0.0.0-20200401082031-e946c8c39989 // indirect
 	github.com/sirupsen/logrus v1.9.0 // indirect
 	github.com/spf13/afero v1.9.5 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
@@ -111,6 +113,7 @@ require (
 	google.golang.org/grpc v1.63.2 // indirect
 	google.golang.org/protobuf v1.33.0 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
+	gopkg.in/yaml.v2 v2.2.8 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	lukechampine.com/uint128 v1.3.0 // indirect
 	modernc.org/cc/v3 v3.41.0 // indirect
