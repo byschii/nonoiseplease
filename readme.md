@@ -20,16 +20,9 @@ Also, AI will generate a ton of noise on the internet and i want to try to incre
 
 ## How To use
 
-*   Create an account: You can use a **temporary email service** like Temp-Mail or a tool like Firefox Relay. It's fine if you choose either of those options; I just needed a way to differentiate users and their indexes.
-*   Log in: Enter your credentials to access your account.
-*   Add URLs to scrape: Provide the software with a URL to scrape. I understand that it might be considered unethical to take content from others, but I couldn't think of a better approach. The scraped content will be added to your index.
-*   Repeat the process: You can repeat steps 3 multiple times to add more content to your index. However, please note that this functionality is currently limited due to the risk of IP banning or blacklisting.
-*   Alternatively, use the Firefox extension: I have created a Firefox extension that allows you to upload your current page directly to your index. This extension is useful because it has no limits, and it can upload personal data displayed on dynamic pages. However, please be cautious as I am still a rando person on the internet.
-*   Manage your pages: You can add categories to your pages in the "/me/pages" section
-*   Search for pages: Visit the provided website and use the search function with "keywords" (I mean... the query is sent directly to MeiliSearch). You will receive a list of pages from your index that match the query.
+(please can you read on the website? i was repeating/fragmenting to much information, sorry)
 
-
-## how it works
+## How it works
 
 3 main components
 - backend
