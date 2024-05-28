@@ -6,8 +6,9 @@ What
 
 [Demo](https://nonoiseplease.com)
 
-nonoiseplease is where i would like to save my bookmarks  
+nonoiseplease is an experiment to try an "enahnce" my web search results.
 It lets you "index" pages from the web and makes them searchable through a full-text search engine.  
+Eventually, with an extension, it can show indexed pages onto google results.
 
 Why
 ---
