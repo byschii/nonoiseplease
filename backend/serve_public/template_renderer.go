@@ -1,8 +1,6 @@
 package servestatic
 
 import (
-	"html/template"
-
 	"github.com/rs/zerolog/log"
 
 	controller "be/controllers"
@@ -10,40 +8,26 @@ import (
 )
 
 type TemplateRenderer struct {
-	TemplateName          string
-	ParsedTemplate        template.Template
 	DataRetrieverWithUser func(controller.UserControllerInterface, string, controller.AppStateControllerInterface) interface{}
 	DataRetriever         func(controller.UserControllerInterface, controller.AppStateControllerInterface) interface{}
 }
 
 // returns a list of all templates that are used in the app
-func getTemplatedPages() []*TemplateRenderer {
-	var templatedNames = []*TemplateRenderer{}
+func getTemplatedPages() map[string]*TemplateRenderer {
+	var templatedNames = make(map[string]*TemplateRenderer)
 
-	register := RegisterTemplate("register.html")
-	meAccount := MeAccountTemplate("me/account.html")
-	log.Debug().Msgf("templatedNames %+v", templatedNames)
+	templatedNames["register.html"] = RegisterTemplate()
+	templatedNames["me/account.html"] = MeAccountTemplate()
 
-	templatedNames = append(
-		templatedNames,
-		meAccount,
-		register,
-	)
+	// template.ParseFiles("pb_public/register.html", "views_template/prova_template.html")
+
 	return templatedNames
 }
 
 // manage template for 'register.html'
-func RegisterTemplate(name string) *TemplateRenderer {
-	templateFiles, err := template.ParseFiles("pb_public/register.html", "views_template/prova_template.html")
-	if err != nil {
-		log.Error().Msgf("error parsing files %v", err)
-	}
-
-	templateToLoad := template.Must(templateFiles, err)
+func RegisterTemplate() *TemplateRenderer {
 
 	return &TemplateRenderer{
-		TemplateName:   name,
-		ParsedTemplate: *templateToLoad,
 		DataRetriever: func(uc controller.UserControllerInterface, confController controller.AppStateControllerInterface) interface{} {
 
 			msg := ""
@@ -77,13 +61,9 @@ func RegisterTemplate(name string) *TemplateRenderer {
 }
 
 // manage template for 'me/account.html'
-func MeAccountTemplate(name string) *TemplateRenderer {
-
-	templateToLoad := template.Must(template.ParseFiles("pb_public/me/account.html"))
+func MeAccountTemplate() *TemplateRenderer {
 
 	return &TemplateRenderer{
-		TemplateName:   name,
-		ParsedTemplate: *templateToLoad,
 		DataRetrieverWithUser: func(uc controller.UserControllerInterface, userId string, confController controller.AppStateControllerInterface) interface{} {
 			log.Debug().Msgf("retrive data for user %s", userId)
 			if userId == "" {

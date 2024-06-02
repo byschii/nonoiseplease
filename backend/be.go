@@ -27,6 +27,7 @@ import (
 	"github.com/pocketbase/pocketbase/models/settings"
 	"github.com/pocketbase/pocketbase/plugins/migratecmd"
 	"github.com/pocketbase/pocketbase/tools/cron"
+
 	"github.com/spf13/viper"
 )
 
@@ -122,6 +123,16 @@ func main() {
 		return nil
 	})
 
+	// read all file names in views_template
+	entries, err := os.ReadDir("./views_template")
+	if err != nil {
+		panic(err)
+	}
+	templatePartNames := make([]string, 0)
+	for _, entry := range entries {
+		templatePartNames = append(templatePartNames, "views_template/"+entry.Name())
+	}
+
 	app.OnBeforeServe().Add(func(e *core.ServeEvent) error {
 		log.Debug().Msgf("lessgoozz!!")
 		userController.SetApp(app)
@@ -136,7 +147,8 @@ func main() {
 
 		e.Router.GET("/*", servepublic.StaticDirectoryHandlerWOptionalHTML(
 			echo.MustSubFS(e.Router.Filesystem, FRONTEND_FOLDER),
-			false,
+			echo.MustSubFS(e.Router.Filesystem, "views_template"),
+			templatePartNames,
 			userController,
 			authController,
 			confController),
