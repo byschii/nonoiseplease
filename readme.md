@@ -199,7 +199,7 @@ Browser Extension
 <br />
 ![Extension](https://github.com/byschii/nonoiseplease/blob/master/screenshots/2ext.png)
 
-In-google search (for extension)
+In-google search **(funny results)** (from the extension)
 ![googlesearch](https://github.com/byschii/nonoiseplease/blob/master/screenshots/7gs.png)
 
 Account
