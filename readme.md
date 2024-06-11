@@ -191,7 +191,11 @@ Home
 ![home](https://github.com/byschii/nonoiseplease/blob/master/screenshots/1main.png)
 
 Browser Extension
+<br />
 ![Extension](https://github.com/byschii/nonoiseplease/blob/master/screenshots/2ext.png)
+
+In-google search (for extension)
+![googlesearch](https://github.com/byschii/nonoiseplease/blob/master/screenshots/7gs.png)
 
 Account
 ![Account](https://github.com/byschii/nonoiseplease/blob/master/screenshots/3acc.png)
@@ -205,6 +209,5 @@ Page Details
 Search
 ![search](https://github.com/byschii/nonoiseplease/blob/master/screenshots/6search.png)
 
-In-google search (for extension)
-![googlesearch](https://github.com/byschii/nonoiseplease/blob/master/screenshots/7gs.png)
+
 
