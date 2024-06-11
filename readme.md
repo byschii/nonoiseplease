@@ -121,6 +121,11 @@ nonoiseplease is still missing some features, I know, but I'm working on it.
     *   maybe also add a way to "group" pages (like a tag, but with a description)
 *   got to add a local client
     *   maybe gui (https://mattn.github.io/go-gtk/), maybe not
+*   in a far away future: write my own browser
+    *   it might be an oversimplified perspective but, i love to have related things close togher but in a sort of hierarchy way
+        * the internet, with new info, in the cloud
+        * bookmarks, knowledge i m interested, in a browser (kind of like a bridge)
+        * books and notes, as consolidated knowledge, offline   
 
 
 ---
